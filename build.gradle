@@ -1,0 +1,33 @@
+import buildsrc.*
+
+buildscript {
+    repositories {
+        google()
+        mavenCentral()
+    }
+    dependencies {
+        Libraries.buildscriptPlugins.each { lib ->
+            classpath lib
+        }
+    }
+}
+
+apply plugin: AutoConfigBuildPlugin
+
+autoConfigBuild {
+    javaVersion = JavaVersion.VERSION_11.toString()
+}
+
+allprojects {
+    version = VERSION_NAME
+    group = GROUP
+
+    repositories {
+        google()
+        mavenCentral()
+    }
+}
+
+task clean(type: Delete) {
+    delete rootProject.buildDir
+}

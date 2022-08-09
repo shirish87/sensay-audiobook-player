@@ -1,0 +1,28 @@
+import buildsrc.Libraries
+import buildsrc.TestLibraries
+
+plugins {
+    id 'com.android.application'
+}
+
+kapt {
+    correctErrorTypes = true
+    useBuildCache = true
+}
+
+android {
+    defaultConfig {
+        testInstrumentationRunner = "com.dotslashlabs.sensay.runner.HiltTestRunner"
+    }
+}
+
+dependencies {
+    implementation Libraries.Accompanist.accompanistNavigation
+    implementation Libraries.Palette.palette
+
+    implementation Libraries.Compose.materialIconsExtended
+    implementation Libraries.Coil.coil
+
+    // Espresso dependencies
+    androidTestImplementation TestLibraries.Espresso.espressoCore
+}

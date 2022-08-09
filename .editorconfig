@@ -1,0 +1,15 @@
+# EditorConfig is awesome: https://EditorConfig.org
+
+# top-most EditorConfig file
+root = true
+
+# Unix-style newlines with a newline ending every file
+[*]
+end_of_line = lf
+insert_final_newline = true
+
+# Comma-separated list of rules to disable (Since 0.34.0)
+# Note that rules in any ruleset other than the standard ruleset will need to be prefixed 
+# by the ruleset identifier.
+disabled_rules=no-wildcard-imports,experimental:annotation
+
