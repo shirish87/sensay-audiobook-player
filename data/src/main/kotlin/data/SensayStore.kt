@@ -47,7 +47,11 @@ class SensayStore @Inject constructor(
             }
         }
 
-    fun booksProgressWithBookAndChapters() = bookProgressRepository.booksProgressWithBookAndChapters()
+    fun booksProgressWithBookAndChapters() =
+        bookProgressRepository.booksProgressWithBookAndChapters()
+
+    fun bookProgressWithBookAndChapters(bookId: Long) =
+        bookProgressRepository.bookProgressWithBookAndChapters(bookId)
 
     fun booksCount() = bookRepository.booksCount()
 
