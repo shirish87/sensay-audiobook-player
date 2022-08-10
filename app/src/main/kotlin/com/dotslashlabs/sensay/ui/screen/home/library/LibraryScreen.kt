@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
@@ -18,7 +17,6 @@ import com.dotslashlabs.sensay.ActivityBridge
 import com.dotslashlabs.sensay.ui.screen.Destination
 import com.dotslashlabs.sensay.ui.screen.SensayScreen
 import com.dotslashlabs.sensay.ui.screen.common.SensayFrame
-import com.dotslashlabs.sensay.ui.screen.home.HomeViewModel
 
 object LibraryScreen : SensayScreen {
     @Composable
@@ -28,11 +26,7 @@ object LibraryScreen : SensayScreen {
         navHostController: NavHostController,
         backStackEntry: NavBackStackEntry,
     ) {
-        val parentBackStackEntryEntry = remember {
-            navHostController.getBackStackEntry(destination.parentRoute())
-        }
-
-        val viewModel: HomeViewModel = mavericksViewModel(parentBackStackEntryEntry)
+        val viewModel: LibraryViewModel = mavericksViewModel(backStackEntry)
         val state by viewModel.collectAsState()
 
         SensayFrame(
@@ -40,7 +34,7 @@ object LibraryScreen : SensayScreen {
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Text(
-                text = "${destination.route} ${state.activeLayout}",
+                text = "${destination.route} ${state.homeLayout}",
                 textAlign = TextAlign.Center,
                 modifier = Modifier
                     .fillMaxWidth()

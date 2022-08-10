@@ -1,0 +1,29 @@
+import buildsrc.Libraries
+
+plugins {
+    id 'com.android.library'
+}
+
+android {
+    defaultConfig {
+        javaCompileOptions {
+            annotationProcessorOptions {
+                arguments = [
+                    "room.incremental": "true",
+                    "room.expandProjection": "true",
+                ]
+            }
+        }
+    }
+}
+
+dependencies {
+    api Libraries.JavaX.javaXInject
+
+    kapt Libraries.Room.AnnotationProcessor.roomCompiler
+    api Libraries.Room.roomRuntime
+    implementation Libraries.Room.room
+    implementation Libraries.Room.roomPaging
+
+    implementation Libraries.AndroidX.dataStore
+}

@@ -89,6 +89,19 @@ object Libraries {
         const val accompanistNavigation = "com.google.accompanist:accompanist-navigation-animation:$version"
     }
 
+    object Room {
+        private const val version = "2.4.3"
+        private const val versionRoomPaging = "2.5.0-alpha01"
+
+        const val room = "androidx.room:room-ktx:$version"
+        const val roomPaging = "androidx.room:room-paging:$versionRoomPaging"
+        const val roomRuntime = "androidx.room:room-runtime:$version"
+
+        object AnnotationProcessor {
+            const val roomCompiler = "androidx.room:room-compiler:$version"
+        }
+    }
+
     object Coil {
         private const val version = "2.0.0"
 

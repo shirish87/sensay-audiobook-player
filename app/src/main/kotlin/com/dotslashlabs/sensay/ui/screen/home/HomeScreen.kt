@@ -51,9 +51,9 @@ fun HomeContent(
             topBar = {
                 HomeAppBar(
                     isBusy = false,
-                    activeLayout = state.activeLayout,
+                    activeLayout = state.homeLayout,
                     onChangeLayout = {
-                        viewModel.setActiveLayout(it)
+                        viewModel.setHomeLayout(it)
                     },
                     onAdd = {
                         navHostController.navigate(Destination.Sources.route)

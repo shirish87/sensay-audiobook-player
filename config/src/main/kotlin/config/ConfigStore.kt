@@ -13,6 +13,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import logcat.logcat
 import javax.inject.Inject
 
 class ConfigStore @Inject constructor(
@@ -23,6 +24,7 @@ class ConfigStore @Inject constructor(
         private const val USER_PREFERENCES = "user_preferences"
 
         private val KEY_AUDIOBOOKS_HOME = stringPreferencesKey("KEY_AUDIOBOOKS_HOME")
+        private val KEY_HOME_LAYOUT = stringPreferencesKey("KEY_HOME_LAYOUT")
 
         fun instance(appContext: Context) = ConfigStore(
             PreferenceDataStoreFactory.create(
@@ -46,4 +48,13 @@ class ConfigStore @Inject constructor(
         preferences[KEY_AUDIOBOOKS_HOME]?.toUri()
     }
 
+    suspend fun setHomeLayout(layout: HomeLayout) = dataStore.edit { preferences ->
+        preferences[KEY_HOME_LAYOUT] = layout.name
+    }
+
+    fun getHomeLayout(): Flow<HomeLayout?> = dataStore.data.map { preferences ->
+        preferences[KEY_HOME_LAYOUT]?.toString()?.let {
+            HomeLayout.valueOf(it)
+        }
+    }
 }

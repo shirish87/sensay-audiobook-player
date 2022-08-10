@@ -2,9 +2,10 @@ package com.dotslashlabs.sensay
 
 import android.net.Uri
 import config.ConfigStore
+import config.HomeLayout
 import dagger.hilt.android.testing.HiltAndroidTest
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Test
 import javax.inject.Inject
@@ -16,11 +17,14 @@ class ConfigTest : BaseTest() {
     lateinit var configStore: ConfigStore
 
     @Test
-    @Throws(Exception::class)
-    fun setAudiobooksHome() = runBlocking {
+    fun test() = runTest {
         val uri = Uri.parse("/mnt/sdcard/audiobooks")
-
         configStore.setAudiobooksHome(uri)
         assertEquals(uri, configStore.getAudiobooksHome().first())
+
+        HomeLayout.values().forEach { layout ->
+            configStore.setHomeLayout(layout)
+            assertEquals(layout, configStore.getHomeLayout().first())
+        }
     }
 }

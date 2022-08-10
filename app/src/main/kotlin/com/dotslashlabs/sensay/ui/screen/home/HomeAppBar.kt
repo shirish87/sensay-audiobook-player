@@ -7,15 +7,16 @@ import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material.icons.outlined.ViewList
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import config.HomeLayout
 
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeAppBar(
     isBusy: Boolean,
-    activeLayout: Layout,
+    activeLayout: HomeLayout,
     onAdd: () -> Unit,
-    onChangeLayout: (layout: Layout) -> Unit,
+    onChangeLayout: (layout: HomeLayout) -> Unit,
     onSettings: () -> Unit,
 ) {
     SmallTopAppBar(
@@ -35,15 +36,15 @@ fun HomeAppBar(
             IconButton(onClick = {
                 onChangeLayout(
                     when (activeLayout) {
-                        Layout.LIST -> Layout.GRID
-                        Layout.GRID -> Layout.LIST
+                        HomeLayout.LIST -> HomeLayout.GRID
+                        HomeLayout.GRID -> HomeLayout.LIST
                     }
                 )
             }) {
                 Icon(
                     imageVector = when (activeLayout) {
-                        Layout.LIST -> Icons.Outlined.GridView
-                        Layout.GRID -> Icons.Outlined.ViewList
+                        HomeLayout.LIST -> Icons.Outlined.GridView
+                        HomeLayout.GRID -> Icons.Outlined.ViewList
                     },
                     contentDescription = "",
                 )
