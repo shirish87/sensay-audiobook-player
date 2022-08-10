@@ -13,7 +13,6 @@ import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import data.SensayStore
 import data.entity.Book
-import data.entity.BookProgressWithBookAndShelves
 import data.entity.BookWithChapters
 import data.entity.Chapter
 import data.util.Time
@@ -25,7 +24,6 @@ import scanner.MediaScanner
 val DEFAULT_HOME_LAYOUT = HomeLayout.LIST
 
 data class HomeViewState(
-    val books: Async<List<BookProgressWithBookAndShelves>> = Uninitialized,
     val homeLayout: HomeLayout = DEFAULT_HOME_LAYOUT,
     val audiobookFolders: Async<Set<Uri>> = Uninitialized,
     val isScanningFolders: Boolean = false,
