@@ -17,6 +17,8 @@ android {
 }
 
 dependencies {
+    implementation project(path: ":config")
+
     implementation Libraries.Accompanist.accompanistNavigation
     implementation Libraries.Palette.palette
 
