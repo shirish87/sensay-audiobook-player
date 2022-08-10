@@ -1,6 +1,11 @@
 package com.dotslashlabs.sensay.ui.screen.home
 
 import android.annotation.SuppressLint
+import android.content.Context
+import android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION
+import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -10,6 +15,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavHostController
 import com.airbnb.mvrx.compose.collectAsState
@@ -20,6 +26,7 @@ import com.dotslashlabs.sensay.ui.screen.SensayScreen
 import com.dotslashlabs.sensay.ui.screen.common.SensayFrame
 import com.google.accompanist.navigation.animation.AnimatedNavHost
 import com.google.accompanist.navigation.animation.rememberAnimatedNavController
+import kotlinx.coroutines.launch
 
 object HomeScreen : SensayScreen {
     @Composable
@@ -46,17 +53,33 @@ fun HomeContent(
     val state by viewModel.collectAsState()
     val homeNavController = rememberAnimatedNavController()
 
+    val context: Context = LocalContext.current
+    val launcher = rememberLauncherForActivityResult(
+        ActivityResultContracts.OpenDocumentTree(),
+    ) { uri ->
+        if (uri == null) return@rememberLauncherForActivityResult
+
+        context.contentResolver.takePersistableUriPermission(uri, FLAG_GRANT_READ_URI_PERMISSION)
+
+        viewModel.addAudiobookFolders(setOf(uri))
+            .invokeOnCompletion {
+                if (it != null) return@invokeOnCompletion
+
+                viewModel.scanFolders(context)
+            }
+    }
+
     SensayFrame {
         Scaffold(
             topBar = {
                 HomeAppBar(
-                    isBusy = false,
+                    isBusy = state.isScanningFolders,
                     activeLayout = state.homeLayout,
                     onChangeLayout = {
                         viewModel.setHomeLayout(it)
                     },
-                    onAdd = {
-                        navHostController.navigate(Destination.Sources.route)
+                    onScan = {
+                        launcher.launch(null)
                     },
                     onSettings = {
                         navHostController.navigate(Destination.Settings.route)

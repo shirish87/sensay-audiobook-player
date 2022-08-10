@@ -1,6 +1,7 @@
 package com.dotslashlabs.sensay
 
 import androidx.core.net.toUri
+import com.airbnb.mvrx.compose.collectAsState
 import com.dotslashlabs.sensay.ui.screen.home.HomeViewModel
 import com.dotslashlabs.sensay.ui.screen.home.HomeViewState
 import config.ConfigStore
@@ -14,6 +15,8 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Test
+import scanner.CoverScanner
+import scanner.MediaScanner
 import javax.inject.Inject
 import kotlin.time.Duration.Companion.hours
 
@@ -26,12 +29,20 @@ class HomeViewModelTest : BaseTest() {
     @Inject
     lateinit var configStore: ConfigStore
 
+    @Inject
+    lateinit var mediaScanner: MediaScanner
+
+    @Inject
+    lateinit var coverScanner: CoverScanner
+
     @Test
     fun testHomeViewModel() = runTest {
         val viewModel = HomeViewModel(
             HomeViewState(),
             sensayStore,
             configStore,
+            mediaScanner,
+            coverScanner,
         )
 
         val booksWithChapters = (1..10).map { bookId ->

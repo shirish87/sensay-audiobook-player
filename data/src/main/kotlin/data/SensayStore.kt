@@ -1,5 +1,6 @@
 package data
 
+import android.net.Uri
 import data.entity.BookChapterCrossRef
 import data.entity.BookProgress
 import data.entity.BookWithChapters
@@ -49,6 +50,9 @@ class SensayStore @Inject constructor(
     fun booksWithChapters() = chapterRepository.booksWithChapters()
 
     fun booksCount() = bookRepository.booksCount()
+
+    fun booksByUri(uri: Uri) = bookRepository.booksByUri(uri)
+
     fun chaptersCount() = chapterRepository.chaptersCount()
     fun shelvesCount() = shelfRepository.shelvesCount()
     fun tagsCount() = tagRepository.tagsCount()

@@ -34,7 +34,7 @@ object LibraryScreen : SensayScreen {
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Text(
-                text = "${destination.route} ${state.homeLayout}",
+                text = "${destination.route} ${state.homeLayout} books=${state.booksCount}",
                 textAlign = TextAlign.Center,
                 modifier = Modifier
                     .fillMaxWidth()

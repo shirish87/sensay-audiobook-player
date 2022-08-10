@@ -19,8 +19,8 @@ class ConfigTest : BaseTest() {
     @Test
     fun test() = runTest {
         val uri = Uri.parse("/mnt/sdcard/audiobooks")
-        configStore.setAudiobooksHome(uri)
-        assertEquals(uri, configStore.getAudiobooksHome().first())
+        configStore.setAudiobookFolders(setOf(uri))
+        assertEquals(uri, configStore.getAudiobookFolders().first().first())
 
         HomeLayout.values().forEach { layout ->
             configStore.setHomeLayout(layout)

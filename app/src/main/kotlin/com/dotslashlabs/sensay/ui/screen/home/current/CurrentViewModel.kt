@@ -15,7 +15,8 @@ import dagger.assisted.AssistedInject
 import data.SensayStore
 
 data class CurrentViewState(
-    @PersistState val homeLayout: HomeLayout = DEFAULT_HOME_LAYOUT,
+    val homeLayout: HomeLayout = DEFAULT_HOME_LAYOUT,
+    val booksCount: Int = 0,
 ) : MavericksState
 
 class CurrentViewModel @AssistedInject constructor(
@@ -26,7 +27,11 @@ class CurrentViewModel @AssistedInject constructor(
 
     init {
         configStore.getHomeLayout().execute {
-            copy(homeLayout = it.invoke() ?: DEFAULT_HOME_LAYOUT)
+            copy(homeLayout = it.invoke() ?: this.homeLayout)
+        }
+
+        store.booksCount().execute {
+            copy(booksCount = it.invoke() ?: this.booksCount)
         }
     }
 

@@ -1,0 +1,15 @@
+import buildsrc.Libraries
+
+plugins {
+    id 'com.android.library'
+    id 'org.jetbrains.kotlin.plugin.serialization' version '1.7.10'
+}
+
+dependencies {
+    implementation project(path: ":config")
+    api Libraries.JavaX.javaXInject
+
+    implementation Libraries.DocumentFile.documentFile
+    implementation Libraries.FfmpegKitAudio.ffmpegKitAudio
+    implementation Libraries.Json.kotlinxSerializationJson
+}

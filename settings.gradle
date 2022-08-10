@@ -1,3 +1,4 @@
 include ':config'
 include ':data'
+include ':scanner'
 include ':app'

@@ -18,7 +18,7 @@ abstract class Destination(vararg routeSegments: String) {
     abstract val screen: SensayScreen?
     abstract val arguments: List<NamedNavArgument>
 
-    abstract val children: Collection<Destination>
+    abstract val children: List<Destination>
     abstract val defaultChild: Destination?
 
     fun parentRoute() = route.substringBeforeLast(File.separator)
@@ -27,7 +27,7 @@ abstract class Destination(vararg routeSegments: String) {
         override val screen: SensayScreen? = null
         override val arguments: List<NamedNavArgument> = emptyList()
 
-        override val children: Collection<Destination> = listOf(Home, Book, Sources, Settings)
+        override val children: List<Destination> = listOf(Home, Book, Sources, Settings)
         override val defaultChild: Destination = Home
     }
 
@@ -35,14 +35,14 @@ abstract class Destination(vararg routeSegments: String) {
         override val screen: SensayScreen = HomeScreen
         override val arguments: List<NamedNavArgument> = emptyList()
 
-        override val children: Collection<Destination> = listOf(Current, Library)
+        override val children: List<Destination> = listOf(Current, Library)
         override val defaultChild: Destination = Current
 
         object Current : Destination(this.route, "current") {
             override val screen: SensayScreen = CurrentScreen
             override val arguments: List<NamedNavArgument> = emptyList()
 
-            override val children: Collection<Destination> = emptyList()
+            override val children: List<Destination> = emptyList()
             override val defaultChild: Destination? = null
         }
 
@@ -50,7 +50,7 @@ abstract class Destination(vararg routeSegments: String) {
             override val screen: SensayScreen = LibraryScreen
             override val arguments: List<NamedNavArgument> = emptyList()
 
-            override val children: Collection<Destination> = emptyList()
+            override val children: List<Destination> = emptyList()
             override val defaultChild: Destination? = null
         }
     }
@@ -64,14 +64,14 @@ abstract class Destination(vararg routeSegments: String) {
             }
         )
 
-        override val children: Collection<Destination> = listOf(Player)
+        override val children: List<Destination> = listOf(Player)
         override val defaultChild: Destination = Player
 
         object Player : Destination(this.route, "player") {
             override val screen: SensayScreen = PlayerScreen
             override val arguments: List<NamedNavArgument> = emptyList()
 
-            override val children: Collection<Destination> = emptyList()
+            override val children: List<Destination> = emptyList()
             override val defaultChild: Destination? = null
 
             fun useRoute(bookId: Long) = this.route.replace("{bookId}", "$bookId")
@@ -82,7 +82,7 @@ abstract class Destination(vararg routeSegments: String) {
         override val screen: SensayScreen = SettingsScreen
         override val arguments: List<NamedNavArgument> = emptyList()
 
-        override val children: Collection<Destination> = emptyList()
+        override val children: List<Destination> = emptyList()
         override val defaultChild: Destination? = null
     }
 
@@ -90,7 +90,7 @@ abstract class Destination(vararg routeSegments: String) {
         override val screen: SensayScreen = SourcesScreen
         override val arguments: List<NamedNavArgument> = emptyList()
 
-        override val children: Collection<Destination> = emptyList()
+        override val children: List<Destination> = emptyList()
         override val defaultChild: Destination? = null
     }
 }

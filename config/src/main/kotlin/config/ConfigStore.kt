@@ -23,7 +23,7 @@ class ConfigStore @Inject constructor(
     companion object {
         private const val USER_PREFERENCES = "user_preferences"
 
-        private val KEY_AUDIOBOOKS_HOME = stringPreferencesKey("KEY_AUDIOBOOKS_HOME")
+        private val KEY_AUDIOBOOKS_FOLDERS = stringSetPreferencesKey("KEY_AUDIOBOOKS_FOLDERS")
         private val KEY_HOME_LAYOUT = stringPreferencesKey("KEY_HOME_LAYOUT")
 
         fun instance(appContext: Context) = ConfigStore(
@@ -40,12 +40,21 @@ class ConfigStore @Inject constructor(
         )
     }
 
-    suspend fun setAudiobooksHome(uri: Uri?) = dataStore.edit { preferences ->
-        uri?.toString()?.let { preferences[KEY_AUDIOBOOKS_HOME] = it }
+    suspend fun setAudiobookFolders(uris: Set<Uri>) = dataStore.edit { preferences ->
+        preferences[KEY_AUDIOBOOKS_FOLDERS] = uris.map { it.toString() }.toSet()
     }
 
-    fun getAudiobooksHome(): Flow<Uri?> = dataStore.data.map { preferences ->
-        preferences[KEY_AUDIOBOOKS_HOME]?.toUri()
+    suspend fun addAudiobookFolders(uris: Set<Uri>) = dataStore.edit { preferences ->
+        val value = preferences[KEY_AUDIOBOOKS_FOLDERS] ?: emptySet()
+        preferences[KEY_AUDIOBOOKS_FOLDERS] = value + uris.map { it.toString() }.toSet()
+    }
+
+    suspend fun clearAudiobookFolders() = dataStore.edit { preferences ->
+        preferences[KEY_AUDIOBOOKS_FOLDERS] = emptySet()
+    }
+
+    fun getAudiobookFolders(): Flow<Set<Uri>> = dataStore.data.map { preferences ->
+        (preferences[KEY_AUDIOBOOKS_FOLDERS] ?: emptySet()).map { it.toUri() }.toSet()
     }
 
     suspend fun setHomeLayout(layout: HomeLayout) = dataStore.edit { preferences ->

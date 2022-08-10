@@ -15,7 +15,7 @@ import config.HomeLayout
 fun HomeAppBar(
     isBusy: Boolean,
     activeLayout: HomeLayout,
-    onAdd: () -> Unit,
+    onScan: () -> Unit,
     onChangeLayout: (layout: HomeLayout) -> Unit,
     onSettings: () -> Unit,
 ) {
@@ -27,7 +27,7 @@ fun HomeAppBar(
                     CircularProgressIndicator()
                 }
             }
-            IconButton(onClick = onAdd) {
+            IconButton(onClick = onScan) {
                 Icon(
                     imageVector = Icons.Outlined.Book,
                     contentDescription = "",

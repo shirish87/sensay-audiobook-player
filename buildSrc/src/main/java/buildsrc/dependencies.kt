@@ -114,6 +114,24 @@ object Libraries {
         const val palette = "androidx.palette:palette-ktx:$version"
     }
 
+    object FfmpegKitAudio {
+        private const val version = "4.5.1-1"
+
+        const val ffmpegKitAudio = "com.arthenica:ffmpeg-kit-audio:$version"
+    }
+
+    object DocumentFile {
+        private const val version = "1.0.1"
+
+        const val documentFile = "androidx.documentfile:documentfile:$version"
+    }
+
+    object Json {
+        private const val version = "1.3.3"
+
+        const val kotlinxSerializationJson = "org.jetbrains.kotlinx:kotlinx-serialization-json:$version"
+    }
+
     object Logcat {
         private const val version = "0.1"
 

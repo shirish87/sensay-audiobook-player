@@ -1,5 +1,6 @@
 package data.repository
 
+import android.net.Uri
 import data.dao.BookDao
 import data.dao.runInTransaction
 import data.entity.Book
@@ -8,6 +9,9 @@ import javax.inject.Inject
 class BookRepository @Inject constructor(
     private val bookDao: BookDao,
 ) {
+
+    fun booksByUri(uri: Uri) = bookDao.bookByUri(uri)
+
     fun booksCount() = bookDao.booksCount()
 
     suspend fun createBooks(
