@@ -3,9 +3,9 @@ package buildsrc
 object Versions {
     // Build tools and SDK
     const val buildTools = "33.0.0"
-    const val compileSdk = 32
+    const val compileSdk = 33
     const val minSdk = 30
-    const val targetSdk = 32
+    const val targetSdk = 33
 }
 
 object Libraries {
@@ -61,8 +61,8 @@ object Libraries {
     }
 
     object Compose {
-        const val version = "1.2.0"
-        private const val materialComposeVersion = "1.0.0-alpha15"
+        const val version = "1.2.1"
+        private const val materialComposeVersion = "1.0.0-alpha16"
 
         const val activityCompose = "androidx.activity:activity-compose:1.5.1"
         const val navigationCompose = "androidx.navigation:navigation-compose:2.5.1"
@@ -74,6 +74,10 @@ object Libraries {
 
         const val composeTooling = "androidx.compose.ui:ui-tooling:$version"
         const val composeToolingPreview = "androidx.compose.ui:ui-tooling-preview:$version"
+
+        object Compiler {
+            const val version = "1.3.0"
+        }
     }
 
     object Mavericks {
@@ -84,7 +88,7 @@ object Libraries {
     }
 
     object Accompanist {
-        private const val version = "0.25.0"
+        private const val version = "0.25.1"
 
         const val accompanistNavigation = "com.google.accompanist:accompanist-navigation-animation:$version"
     }

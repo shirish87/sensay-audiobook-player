@@ -196,7 +196,7 @@ fun BaseExtension.configure(
                 compose = true
             }
             composeOptions {
-                kotlinCompilerExtensionVersion = Libraries.Compose.version
+                kotlinCompilerExtensionVersion = Libraries.Compose.Compiler.version
             }
             packagingOptions {
                 resources {
