@@ -1,5 +1,3 @@
-import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
-
 repositories {
     google()
     maven(url = "https://plugins.gradle.org/m2/")
@@ -12,26 +10,15 @@ plugins {
 
 val javaVersion = JavaVersion.VERSION_11
 
-java {
-    sourceCompatibility = javaVersion
-    targetCompatibility = javaVersion
-}
-
 kotlin {
-    target {
-        compilations.all {
-            kotlinOptions {
-                jvmTarget = javaVersion.toString()
-            }
-        }
+    jvmToolchain {
+        (this as JavaToolchainSpec).languageVersion.set(
+            JavaLanguageVersion.of(javaVersion.toString())
+        )
     }
-}
 
-tasks.withType<KotlinCompile> {
-    kotlinOptions {
-        jvmTarget = javaVersion.toString()
-        sourceCompatibility = javaVersion.toString()
-        targetCompatibility = javaVersion.toString()
+    kotlinDslPluginOptions {
+        jvmTarget.set(javaVersion.toString())
     }
 }
 
