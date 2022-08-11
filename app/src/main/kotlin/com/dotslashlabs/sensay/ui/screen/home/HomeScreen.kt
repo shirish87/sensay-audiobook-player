@@ -2,10 +2,7 @@ package com.dotslashlabs.sensay.ui.screen.home
 
 import android.annotation.SuppressLint
 import android.content.Context
-import android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION
 import android.widget.Toast
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -13,6 +10,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -52,21 +50,10 @@ fun HomeContent(
     val viewModel: HomeViewModel = mavericksViewModel(backStackEntry)
     val state by viewModel.collectAsState()
     val homeNavController = rememberAnimatedNavController()
-
     val context: Context = LocalContext.current
-    val launcher = rememberLauncherForActivityResult(
-        ActivityResultContracts.OpenDocumentTree(),
-    ) { uri ->
-        if (uri == null) return@rememberLauncherForActivityResult
 
-        context.contentResolver.takePersistableUriPermission(uri, FLAG_GRANT_READ_URI_PERMISSION)
-
-        viewModel.addAudiobookFolders(setOf(uri))
-            .invokeOnCompletion {
-                if (it != null) return@invokeOnCompletion
-
-                viewModel.scanFolders(context)
-            }
+    LaunchedEffect(Unit) {
+        viewModel.scanFolders(context)
     }
 
     SensayFrame {
@@ -78,8 +65,15 @@ fun HomeContent(
                     onChangeLayout = {
                         viewModel.setHomeLayout(it)
                     },
-                    onScan = {
-                        launcher.launch(null)
+                    onSources = {
+                        navHostController.navigate(Destination.Sources.route)
+                    },
+                    onScanCancel = {
+                        viewModel.cancelScanFolders()
+
+                        viewModel.viewModelScope.launch {
+                            Toast.makeText(context, "Cancelled scan", Toast.LENGTH_SHORT).show()
+                        }
                     },
                     onSettings = {
                         navHostController.navigate(Destination.Settings.route)

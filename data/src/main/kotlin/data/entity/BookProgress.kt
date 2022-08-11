@@ -5,17 +5,20 @@ import data.BookCategory
 import data.util.Time
 
 
-@Entity
+@Entity(
+    indices = [
+        Index(value = ["bookId"], unique = true),
+    ],
+)
 data class BookProgress(
-    @PrimaryKey(autoGenerate = true)
-    @ColumnInfo(name = "bookProgressId") val bookProgressId: Long = 0,
-    @ColumnInfo(name = "bookId", index = true) val bookId: Long,
-    @ColumnInfo(name = "chapterId") val chapterId: Long,
-    @ColumnInfo(name = "totalChapters") val totalChapters: Int,
-    @ColumnInfo(name = "currentChapter") val currentChapter: Int = 0,
-    @ColumnInfo(name = "bookProgress") val bookProgress: Time = Time.zero(),
-    @ColumnInfo(name = "chapterProgress") val chapterProgress: Time = Time.zero(),
-    @ColumnInfo(name = "bookCategory") val bookCategory: BookCategory = BookCategory.NOT_STARTED,
+    @PrimaryKey(autoGenerate = true) val bookProgressId: Long = 0,
+    val bookId: Long,
+    val chapterId: Long,
+    val totalChapters: Int,
+    val currentChapter: Int = 0,
+    val bookProgress: Time = Time.zero(),
+    val chapterProgress: Time = Time.zero(),
+    val bookCategory: BookCategory = BookCategory.NOT_STARTED,
 )
 
 data class BookProgressWithBookAndShelves(

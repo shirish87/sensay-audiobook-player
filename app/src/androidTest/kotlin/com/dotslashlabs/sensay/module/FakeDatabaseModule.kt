@@ -75,6 +75,9 @@ object FakeDatabaseModule {
     @Provides
     fun provideBookProgressDao(database: SensayDatabase) = database.bookProgressDao()
 
+    @Provides
+    fun provideSourceDao(database: SensayDatabase) = database.sourceDao()
+
     @Singleton
     @Provides
     fun provideSensayStore(
@@ -83,11 +86,13 @@ object FakeDatabaseModule {
         shelfRepository: ShelfRepository,
         tagRepository: TagRepository,
         bookProgressRepository: BookProgressRepository,
+        sourceRepository: SourceRepository,
     ) = SensayStore(
         bookRepository,
         chapterRepository,
         shelfRepository,
         tagRepository,
         bookProgressRepository,
+        sourceRepository,
     )
 }

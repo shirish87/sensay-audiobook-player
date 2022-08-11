@@ -7,6 +7,7 @@ import com.dotslashlabs.sensay.ui.screen.book.player.PlayerViewModel
 import com.dotslashlabs.sensay.ui.screen.home.HomeViewModel
 import com.dotslashlabs.sensay.ui.screen.home.current.CurrentViewModel
 import com.dotslashlabs.sensay.ui.screen.home.library.LibraryViewModel
+import com.dotslashlabs.sensay.ui.screen.sources.SourcesViewModel
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -40,4 +41,9 @@ interface ViewModelsModule {
     @IntoMap
     @ViewModelKey(LibraryViewModel::class)
     fun libraryViewModelFactory(factory: LibraryViewModel.Factory): AssistedViewModelFactory<*, *>
+
+    @Binds
+    @IntoMap
+    @ViewModelKey(SourcesViewModel::class)
+    fun sourcesViewModelFactory(factory: SourcesViewModel.Factory): AssistedViewModelFactory<*, *>
 }

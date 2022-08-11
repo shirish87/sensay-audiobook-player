@@ -1,7 +1,6 @@
 package com.dotslashlabs.sensay
 
 import androidx.core.net.toUri
-import com.airbnb.mvrx.compose.collectAsState
 import com.dotslashlabs.sensay.ui.screen.home.HomeViewModel
 import com.dotslashlabs.sensay.ui.screen.home.HomeViewState
 import config.ConfigStore
@@ -66,7 +65,7 @@ class HomeViewModelTest : BaseTest() {
             )
         }
 
-        viewModel.createBooksWithChapters(booksWithChapters)
-        assertEquals(booksWithChapters.size, viewModel.booksCount().first())
+        sensayStore.createBooksWithChapters(1L, booksWithChapters)
+        assertEquals(booksWithChapters.size, sensayStore.booksCount().first())
     }
 }

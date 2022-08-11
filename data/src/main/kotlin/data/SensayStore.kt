@@ -1,10 +1,11 @@
 package data
 
 import android.net.Uri
-import data.entity.BookChapterCrossRef
-import data.entity.BookProgress
-import data.entity.BookWithChapters
+import androidx.room.Transaction
+import data.entity.*
 import data.repository.*
+import kotlinx.coroutines.flow.firstOrNull
+import logcat.logcat
 import javax.inject.Inject
 
 class SensayStore @Inject constructor(
@@ -13,19 +14,29 @@ class SensayStore @Inject constructor(
     private val shelfRepository: ShelfRepository,
     private val tagRepository: TagRepository,
     private val bookProgressRepository: BookProgressRepository,
+    private val sourceRepository: SourceRepository,
 ) {
 
-    suspend fun createBooksWithChapters(booksWithChapters: List<BookWithChapters>) =
-        bookRepository.createBooks(booksWithChapters.map { it.book }) { bookIds ->
-            bookIds.forEachIndexed { index, bookId ->
-                val chapters = booksWithChapters[index].chapters.sortedBy { it.trackId }
-                if (chapters.isEmpty()) {
-                    return@forEachIndexed
-                }
+    suspend fun createBooksWithChapters(
+        sourceId: Long,
+        booksWithChapters: List<BookWithChapters>,
+    ): List<Long> {
 
-                val chapterIds = chapterRepository.createChapters(chapters)
-                if (chapterIds.isEmpty()) {
-                    return@forEachIndexed
+        return booksWithChapters.mapNotNull {
+            if (it.chapters.isEmpty()) {
+                return@mapNotNull null
+            }
+
+            try {
+                val bookId = bookRepository.createBook(it.book)
+                if (bookId == -1L) return@mapNotNull null
+
+                val chapterIds = chapterRepository.createChapters(
+                    it.chapters.sortedBy { o -> o.trackId },
+                )
+
+                if (chapterIds.any { c -> c == -1L }) {
+                    return@mapNotNull null
                 }
 
                 chapterRepository.insertBookChapterCrossRefs(
@@ -44,8 +55,22 @@ class SensayStore @Inject constructor(
                         totalChapters = chapterIds.size,
                     )
                 )
+
+                sourceRepository.insertSourceBookCrossRef(
+                    SourceBookCrossRef(
+                        sourceId = sourceId,
+                        bookId = bookId,
+                    )
+                )
+
+                bookId
+            } catch (ex: Exception) {
+                logcat { "createBooksWithChapters: Error importing book: ${ex.message}" }
+                return@mapNotNull null
             }
         }
+    }
+
 
     fun booksProgressWithBookAndChapters() =
         bookProgressRepository.booksProgressWithBookAndChapters()
@@ -55,10 +80,39 @@ class SensayStore @Inject constructor(
 
     fun booksCount() = bookRepository.booksCount()
 
-    fun booksByUri(uri: Uri) = bookRepository.booksByUri(uri)
+    fun bookByUri(uri: Uri) = bookRepository.bookByUri(uri)
 
     fun chaptersCount() = chapterRepository.chaptersCount()
     fun shelvesCount() = shelfRepository.shelvesCount()
     fun tagsCount() = tagRepository.tagsCount()
     fun bookProgressCount() = bookProgressRepository.bookProgressCount()
+
+    fun sources() = sourceRepository.sources()
+    fun sources(isActive: Boolean = true) = sourceRepository.sources(isActive)
+    fun sourcesMaxCreatedAtTime() = sourceRepository.sourcesMaxCreatedAtTime()
+    suspend fun addSources(sources: Collection<Source>) = sourceRepository.addSources(sources)
+
+    suspend fun deleteSource(sourceId: Long): Boolean {
+        try {
+            runInTransaction {
+                val sourceWithBooks =
+                    sourceRepository.sourceWithBooks(sourceId).firstOrNull() ?: return false
+                val bookIds = sourceWithBooks.books.map { it.bookId }
+
+                shelfRepository.deleteShelves(bookIds)
+                tagRepository.deleteTags(bookIds)
+                bookProgressRepository.deleteBooksProgress(bookIds)
+                chapterRepository.deleteChapters(bookIds)
+                bookRepository.deleteBooks(sourceWithBooks.books)
+                sourceRepository.deleteSource(sourceWithBooks.source)
+            }
+
+            return true
+        } catch (ex: Exception) {
+            return false
+        }
+    }
 }
+
+@Transaction
+inline fun <reified U> SensayStore.runInTransaction(tx: () -> U): U = tx()

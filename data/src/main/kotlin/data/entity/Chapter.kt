@@ -4,30 +4,39 @@ import android.net.Uri
 import androidx.room.*
 import data.util.Time
 
-@Entity
+@Entity(
+    indices = [
+        Index(value = ["uri", "hash"], unique = true),
+    ],
+)
 data class Chapter(
-    @PrimaryKey(autoGenerate = true) @ColumnInfo(name = "chapterId") val chapterId: Long = 0,
-    @ColumnInfo(name = "hash", index = true) val hash: String,
-    @ColumnInfo(name = "uri") val uri: Uri,
-    @ColumnInfo(name = "trackId") val trackId: Int,
-    @ColumnInfo(name = "title") val title: String,
-    @ColumnInfo(name = "description") val description: String? = null,
-    @ColumnInfo(name = "author") val author: String? = null,
-    @ColumnInfo(name = "coverUri") val coverUri: Uri? = null,
+    @PrimaryKey(autoGenerate = true) val chapterId: Long = 0,
+    val uri: Uri,
+    val hash: String,
+    val trackId: Int,
+    val title: String,
+    val description: String? = null,
+    val author: String? = null,
+    val coverUri: Uri? = null,
 
-    @ColumnInfo(name = "duration") val duration: Time,
-    @ColumnInfo(name = "start") val start: Time? = null,
-    @ColumnInfo(name = "end") val end: Time? = null,
+    val duration: Time,
+    val start: Time? = null,
+    val end: Time? = null,
 
-    @ColumnInfo(name = "createdAt") val createdAt: Time = Time.now(),
+    val createdAt: Time = Time.now(),
 )
 
-@Entity(primaryKeys = ["bookId", "chapterId"])
+@Entity(
+    primaryKeys = ["bookId", "chapterId"],
+    indices = [
+        Index(value = ["chapterId"], unique = true),
+    ],
+)
 data class BookChapterCrossRef(
-    @ColumnInfo(name = "bookId") val bookId: Long,
-    @ColumnInfo(name = "chapterId", index = true) val chapterId: Long,
+    val bookId: Long,
+    val chapterId: Long,
 
-    @ColumnInfo(name = "createdAt") val createdAt: Time = Time.now(),
+    val createdAt: Time = Time.now(),
 )
 
 data class BookWithChapters(

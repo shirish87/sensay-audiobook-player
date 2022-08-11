@@ -15,6 +15,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
 import data.entity.BookProgressWithBookAndChapters
+import logcat.logcat
 import kotlin.math.roundToInt
 
 
@@ -69,6 +70,8 @@ fun BooksGrid(
             } else {
                 PaddingValues(start = defaultPadding, end = defaultPadding, top = topPadding, bottom = bottomPadding)
             }
+
+            logcat { "hash=${books[index].book.hash} uri=${books[index].book.uri.path}" }
 
             BookCell(
                 books[index],

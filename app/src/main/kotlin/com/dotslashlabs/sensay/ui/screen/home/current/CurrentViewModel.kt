@@ -38,8 +38,6 @@ class CurrentViewModel @AssistedInject constructor(
         }
     }
 
-    fun booksWithChapters() = store.bookProgressCount()
-
     @AssistedFactory
     interface Factory : AssistedViewModelFactory<CurrentViewModel, CurrentViewState> {
         override fun create(state: CurrentViewState): CurrentViewModel

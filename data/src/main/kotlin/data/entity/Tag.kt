@@ -3,21 +3,30 @@ package data.entity
 import androidx.room.*
 import data.util.Time
 
-@Entity
+@Entity(
+    indices = [
+        Index(value = ["name"], unique = true),
+    ],
+)
 data class Tag(
-    @PrimaryKey(autoGenerate = true) @ColumnInfo(name = "tagId") val tagId: Long = 0,
-    @ColumnInfo(name = "name") val name: String,
-    @ColumnInfo(name = "sortOrder") val sortOrder: Long = 0,
+    @PrimaryKey(autoGenerate = true) val tagId: Long = 0,
+    val name: String,
+    val sortOrder: Long = 0,
 
-    @ColumnInfo(name = "createdAt") val createdAt: Time = Time.now(),
+    val createdAt: Time = Time.now(),
 )
 
-@Entity(primaryKeys = ["bookId", "tagId"])
+@Entity(
+    primaryKeys = ["bookId", "tagId"],
+    indices = [
+        Index(value = ["tagId"]),
+    ],
+)
 data class BookTagCrossRef(
-    @ColumnInfo(name = "bookId") val bookId: Long,
-    @ColumnInfo(name = "tagId", index = true) val tagId: Long,
+    val bookId: Long,
+    val tagId: Long,
 
-    @ColumnInfo(name = "createdAt") val createdAt: Time = Time.now(),
+    val createdAt: Time = Time.now(),
 )
 
 data class TagWithBooks(

@@ -7,7 +7,6 @@ import kotlinx.serialization.json.Json
 import logcat.asLog
 import logcat.logcat
 import javax.inject.Inject
-import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
 
 class MediaAnalyzer @Inject constructor(private val context: Context) {

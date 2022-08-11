@@ -1,6 +1,5 @@
 package com.dotslashlabs.sensay
 
-import android.net.Uri
 import config.ConfigStore
 import config.HomeLayout
 import dagger.hilt.android.testing.HiltAndroidTest
@@ -18,10 +17,6 @@ class ConfigTest : BaseTest() {
 
     @Test
     fun test() = runTest {
-        val uri = Uri.parse("/mnt/sdcard/audiobooks")
-        configStore.setAudiobookFolders(setOf(uri))
-        assertEquals(uri, configStore.getAudiobookFolders().first().first())
-
         HomeLayout.values().forEach { layout ->
             configStore.setHomeLayout(layout)
             assertEquals(layout, configStore.getHomeLayout().first())

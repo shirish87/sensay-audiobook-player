@@ -37,4 +37,8 @@ interface BookProgressDao : BaseDao<BookProgress> {
     @Transaction
     @Query("SELECT * FROM BookProgress")
     fun booksProgressWithBookAndChapters(): Flow<List<BookProgressWithBookAndChapters>>
+
+    @Transaction
+    @Query("SELECT * FROM BookProgress WHERE bookId IN (:bookIds)")
+    fun booksProgress(bookIds: Collection<Long>): Flow<List<BookProgress>>
 }

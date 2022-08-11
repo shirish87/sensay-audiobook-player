@@ -16,9 +16,11 @@ import data.util.DataTypeConverters
         Shelf::class,
         Tag::class,
         BookProgress::class,
+        Source::class,
         BookChapterCrossRef::class,
         BookShelfCrossRef::class,
         BookTagCrossRef::class,
+        SourceBookCrossRef::class,
     ],
     version = SensayDatabase.VERSION,
     exportSchema = false,
@@ -41,4 +43,5 @@ abstract class SensayDatabase : RoomDatabase() {
     abstract fun shelfDao(): ShelfDao
     abstract fun tagDao(): TagDao
     abstract fun bookProgressDao(): BookProgressDao
+    abstract fun sourceDao(): SourceDao
 }

@@ -3,23 +3,32 @@ package data.entity
 import androidx.room.*
 import data.util.Time
 
-@Entity
+@Entity(
+    indices = [
+        Index(value = ["name"], unique = true),
+    ],
+)
 data class Shelf(
-    @PrimaryKey(autoGenerate = true) @ColumnInfo(name = "shelfId") val shelfId: Long = 0,
-    @ColumnInfo(name = "name") val name: String,
-    @ColumnInfo(name = "sortOrder") val sortOrder: Long = 0,
+    @PrimaryKey(autoGenerate = true) val shelfId: Long = 0,
+    val name: String,
+    val sortOrder: Long = 0,
 
-    @ColumnInfo(name = "createdAt") val createdAt: Time = Time.now(),
+    val createdAt: Time = Time.now(),
 ) {
     companion object {
         val ALL = Shelf(shelfId = -1, name = "ALL")
     }
 }
 
-@Entity(primaryKeys = ["bookId", "shelfId"])
+@Entity(
+    primaryKeys = ["bookId", "shelfId"],
+    indices = [
+        Index(value = ["shelfId"]),
+    ],
+)
 data class BookShelfCrossRef(
-    @ColumnInfo(name = "bookId") val bookId: Long,
-    @ColumnInfo(name = "shelfId", index = true) val shelfId: Long,
+    val bookId: Long,
+    val shelfId: Long,
 
     @ColumnInfo(name = "createdAt") val createdAt: Time = Time.now(),
 )

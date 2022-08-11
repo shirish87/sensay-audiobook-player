@@ -7,6 +7,7 @@ interface BaseDao<T> {
     @Insert(onConflict = OnConflictStrategy.ABORT)
     suspend fun insert(entity: T): Long
 
+    @Transaction
     @Insert(onConflict = OnConflictStrategy.ABORT)
     suspend fun insertAll(entities: Collection<T>): List<Long>
 
@@ -15,6 +16,10 @@ interface BaseDao<T> {
 
     @Delete
     suspend fun delete(entity: T): Int
+
+    @Transaction
+    @Delete
+    suspend fun deleteAll(entities: Collection<T>): Int
 }
 
 @Transaction
@@ -27,6 +32,3 @@ suspend inline fun <reified T> BaseDao<T>.insertOrUpdate(item: T): Long? {
     update(item)
     return null
 }
-
-@Transaction
-inline fun <reified T, reified U> BaseDao<T>.runInTransaction(tx: () -> U): U = tx()

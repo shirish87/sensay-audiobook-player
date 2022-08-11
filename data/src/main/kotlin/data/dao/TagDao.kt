@@ -15,14 +15,17 @@ interface TagDao : BaseDao<Tag> {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertBookTagCrossRefs(refs: Collection<BookTagCrossRef>): Array<Long>
 
-    @Delete
-    suspend fun deleteBookTagCrossRef(ref: BookTagCrossRef): Int
+    @Query("SELECT * FROM BookTagCrossRef WHERE bookId IN (:bookIds)")
+    fun booksTagsCrossRefs(bookIds: Collection<Long>): Flow<List<BookTagCrossRef>>
 
     @Delete
     suspend fun deleteBookTagCrossRefs(refs: Collection<BookTagCrossRef>): Int
 
     @Query("SELECT * FROM Tag")
     fun tags(): Flow<List<Tag>>
+
+    @Query("SELECT * FROM Tag WHERE tagId IN (:tagIds)")
+    fun tags(tagIds: Collection<Long>): Flow<List<Tag>>
 
     @Transaction
     @Query("SELECT * FROM Tag WHERE tagId = :tagId")
