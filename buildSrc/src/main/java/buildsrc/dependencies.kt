@@ -124,6 +124,22 @@ object Libraries {
         const val ffmpegKitAudio = "com.arthenica:ffmpeg-kit-audio:$version"
     }
 
+    object Media3 {
+        private const val version = "1.0.0-beta02"
+
+        // For media playback using ExoPlayer
+        const val exoplayer = "androidx.media3:media3-exoplayer:$version"
+
+        // For exposing and controlling media sessions
+        const val session = "androidx.media3:media3-session:$version"
+
+        @JvmStatic
+        val bundle = listOf(
+            exoplayer,
+            session,
+        )
+    }
+
     object DocumentFile {
         private const val version = "1.0.1"
 
@@ -182,5 +198,4 @@ object TestLibraries {
 
         const val espressoCore = "androidx.test.espresso:espresso-core:$version"
     }
-
 }

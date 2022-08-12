@@ -1,8 +1,9 @@
-package com.dotslashlabs.sensay.ui.app
+package com.dotslashlabs.sensay.module
 
 import com.airbnb.mvrx.hilt.AssistedViewModelFactory
 import com.airbnb.mvrx.hilt.MavericksViewModelComponent
 import com.airbnb.mvrx.hilt.ViewModelKey
+import com.dotslashlabs.sensay.ui.app.SensayAppViewModel
 import com.dotslashlabs.sensay.ui.screen.book.player.PlayerViewModel
 import com.dotslashlabs.sensay.ui.screen.home.HomeViewModel
 import com.dotslashlabs.sensay.ui.screen.home.current.CurrentViewModel
@@ -15,7 +16,7 @@ import dagger.multibindings.IntoMap
 
 @Module
 @InstallIn(MavericksViewModelComponent::class)
-interface ViewModelsModule {
+interface ViewModelModule {
 
     @Binds
     @IntoMap

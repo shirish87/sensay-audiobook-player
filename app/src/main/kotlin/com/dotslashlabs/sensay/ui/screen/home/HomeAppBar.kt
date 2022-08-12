@@ -28,12 +28,6 @@ fun HomeAppBar(
                     CircularProgressIndicator()
                 }
             }
-            IconButton(onClick = onSources) {
-                Icon(
-                    imageVector = Icons.Outlined.Book,
-                    contentDescription = "",
-                )
-            }
             IconButton(onClick = {
                 onChangeLayout(
                     when (activeLayout) {
@@ -47,6 +41,12 @@ fun HomeAppBar(
                         HomeLayout.LIST -> Icons.Outlined.GridView
                         HomeLayout.GRID -> Icons.Outlined.ViewList
                     },
+                    contentDescription = "",
+                )
+            }
+            IconButton(onClick = onSources) {
+                Icon(
+                    imageVector = Icons.Outlined.Book,
                     contentDescription = "",
                 )
             }
