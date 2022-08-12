@@ -1,7 +1,6 @@
 package com.dotslashlabs.sensay.ui.screen.home
 
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.grid.GridCells
@@ -45,12 +44,20 @@ fun BooksList(
     val books = resolveAsyncState(items)
 
     LazyColumn(state = state) {
+        item {
+            Spacer(modifier = Modifier.height(8.dp))
+        }
+
         items(count = books.size) { index ->
             BookRow(
                 books[index],
                 onNavToBook,
                 modifier = Modifier,
             )
+        }
+
+        item {
+            Spacer(modifier = Modifier.height(36.dp))
         }
     }
 }
@@ -65,53 +72,39 @@ fun BooksGrid(
 
     val books = resolveAsyncState(items)
 
+    val lastRowStartCell =
+        books.size - (if (books.size % cellCount == 0) cellCount else books.size % cellCount)
+
     LazyVerticalGrid(
         state = state,
         columns = GridCells.Fixed(cellCount),
+        modifier = Modifier.fillMaxSize(),
     ) {
         if (books.isEmpty()) return@LazyVerticalGrid
 
-        val defaultPadding = 6.dp
-        val borderPadding = 16.dp
-        val bottomEdgePadding = 16.dp
-
         items(count = books.size) { index ->
-            val cell = index + 1
-
-            val topPadding = if (cell <= cellCount) borderPadding else defaultPadding
-            val bottomPadding = if (cell > books.size - (books.size % cellCount))
-                bottomEdgePadding
-            else defaultPadding
-
-            val paddingValues: PaddingValues = if (cell % cellCount == 1) {
-                PaddingValues(
-                    start = borderPadding,
-                    end = defaultPadding,
-                    top = topPadding,
-                    bottom = bottomPadding
-                )
-            } else if (cell % cellCount == 0) {
-                PaddingValues(
-                    start = defaultPadding,
-                    end = borderPadding,
-                    top = topPadding,
-                    bottom = bottomPadding
-                )
-            } else {
-                PaddingValues(
-                    start = defaultPadding,
-                    end = defaultPadding,
-                    top = topPadding,
-                    bottom = bottomPadding
-                )
-            }
-
             BookCell(
                 books[index],
                 onNavToBook,
-                modifier = Modifier.padding(paddingValues),
+                modifier = Modifier.padding(
+                    paddingValuesForCell(index + 1, cellCount, lastRowStartCell),
+                ),
             )
         }
+    }
+}
+
+fun paddingValuesForCell(cell: Int, cellCount: Int, lastRowStartCell: Int): PaddingValues {
+    val startPadding = if (cell % cellCount == 1) 16.dp else 0.dp
+
+    return if (cell <= cellCount) {
+        // first row
+        PaddingValues(top = 16.dp, start = startPadding, bottom = 16.dp, end = 16.dp)
+    } else if (cell > lastRowStartCell) {
+        // last row
+        PaddingValues(start = startPadding, bottom = 36.dp, end = 16.dp)
+    } else {
+        PaddingValues(start = startPadding, bottom = 16.dp, end = 16.dp)
     }
 }
 

@@ -28,6 +28,13 @@ data class BookProgress(
             totalChapters = 0,
         )
     }
+
+    fun chapterProgressDisplayFormat() = "${if (currentChapter > 0) {
+        listOf(
+            currentChapter,
+            totalChapters,
+        ).joinToString(separator = " / ")
+    } else totalChapters} chapters"
 }
 
 data class BookProgressWithBookAndShelves(
