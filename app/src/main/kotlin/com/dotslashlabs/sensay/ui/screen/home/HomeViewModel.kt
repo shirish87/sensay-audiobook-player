@@ -29,12 +29,11 @@ val DEFAULT_HOME_LAYOUT = HomeLayout.LIST
 data class HomeViewState(
     val homeLayout: HomeLayout = DEFAULT_HOME_LAYOUT,
     val isScanningFolders: Boolean = false,
-    val audiobookFoldersUpdateTime: Async<Instant?> = Uninitialized,
-    val lastScanTime: Instant = Instant.ofEpochMilli(0L),
+    val audiobookFoldersUpdateTime: Async<Long?> = Uninitialized,
+    val lastScanTime: Long = 0,
 ) : MavericksState {
 
-    val shouldScan =
-        (audiobookFoldersUpdateTime.invoke() ?: Instant.ofEpochMilli(0L)) > lastScanTime
+    val shouldScan = ((audiobookFoldersUpdateTime.invoke() ?: 0L) > lastScanTime)
 }
 
 class HomeViewModel @AssistedInject constructor(
@@ -53,7 +52,7 @@ class HomeViewModel @AssistedInject constructor(
         }
 
         configStore.getAudiobookFoldersUpdateTime()
-            .map { Instant.ofEpochMilli(it.toEpochMilli()) }
+            .map { it.toEpochMilli() }
             .execute(retainValue = HomeViewState::audiobookFoldersUpdateTime) {
                 copy(audiobookFoldersUpdateTime = it)
             }
@@ -82,7 +81,7 @@ class HomeViewModel @AssistedInject constructor(
                 if (activeSources.isEmpty()) return@launch
 
                 scanFolders(context, activeSources)
-                setState { copy(lastScanTime = Instant.now()) }
+                setState { copy(lastScanTime = Instant.now().toEpochMilli()) }
             } finally {
                 setScanningFolders(false)
             }
