@@ -19,7 +19,16 @@ data class BookProgress(
     val bookProgress: Time = Time.zero(),
     val chapterProgress: Time = Time.zero(),
     val bookCategory: BookCategory = BookCategory.NOT_STARTED,
-)
+) {
+
+    companion object {
+        fun empty() = BookProgress(
+            bookId = 0L,
+            chapterId = 0L,
+            totalChapters = 0,
+        )
+    }
+}
 
 data class BookProgressWithBookAndShelves(
     @Embedded
@@ -71,4 +80,14 @@ data class BookProgressWithBookAndChapters(
         associateBy = Junction(BookChapterCrossRef::class),
     )
     val chapters: List<Chapter>,
-)
+) {
+
+    companion object {
+        fun empty() = BookProgressWithBookAndChapters(
+            bookProgress = BookProgress.empty(),
+            book = Book.empty(),
+            chapter = Chapter.empty(),
+            chapters = emptyList(),
+        )
+    }
+}

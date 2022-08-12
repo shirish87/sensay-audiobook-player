@@ -24,7 +24,18 @@ data class Chapter(
     val end: Time? = null,
 
     val createdAt: Time = Time.now(),
-)
+) {
+
+    companion object {
+        fun empty() = Chapter(
+            uri = Uri.EMPTY,
+            hash = "",
+            trackId = 0,
+            title = "",
+            duration = Time.zero(),
+        )
+    }
+}
 
 @Entity(
     primaryKeys = ["bookId", "chapterId"],

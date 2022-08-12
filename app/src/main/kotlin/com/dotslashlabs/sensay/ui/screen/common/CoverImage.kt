@@ -14,7 +14,7 @@ import logcat.logcat
 fun CoverImage(
     coverUri: Uri?,
     modifier: Modifier = Modifier,
-    drawableResId: Int = R.drawable.ic_launcher_background,
+    drawableResId: Int = R.drawable.empty,
 ) {
     AsyncImage(
         model = coverUri ?: drawableResId,

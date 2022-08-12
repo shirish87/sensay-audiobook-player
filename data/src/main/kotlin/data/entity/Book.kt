@@ -28,4 +28,14 @@ data class Book(
     val coverUri: Uri? = null,
 
     val createdAt: Time = Time.now(),
-)
+) {
+
+    companion object {
+        fun empty() = Book(
+            hash = "",
+            uri = Uri.EMPTY,
+            title = "",
+            duration = Time.zero(),
+        )
+    }
+}

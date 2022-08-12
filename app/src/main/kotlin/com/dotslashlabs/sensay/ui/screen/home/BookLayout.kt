@@ -14,17 +14,35 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
+import com.airbnb.mvrx.Async
+import com.airbnb.mvrx.Loading
+import com.airbnb.mvrx.Success
 import data.entity.BookProgressWithBookAndChapters
-import logcat.logcat
 import kotlin.math.roundToInt
 
 
+fun resolveAsyncState(
+    items: Async<List<BookProgressWithBookAndChapters>>,
+    emptyListItemsCount: Int = 12,
+) = when (items) {
+    is Success -> {
+        items()
+    }
+    is Loading -> {
+        List(emptyListItemsCount) { BookProgressWithBookAndChapters.empty() }
+    }
+    else -> {
+        emptyList()
+    }
+}
+
 @Composable
 fun BooksList(
-    books: List<BookProgressWithBookAndChapters>,
+    items: Async<List<BookProgressWithBookAndChapters>>,
     onNavToBook: (bookId: Long) -> Unit,
 ) {
     val state: LazyListState = rememberLazyListState()
+    val books = resolveAsyncState(items)
 
     LazyColumn(state = state) {
         items(count = books.size) { index ->
@@ -39,11 +57,13 @@ fun BooksList(
 
 @Composable
 fun BooksGrid(
-    books: List<BookProgressWithBookAndChapters>,
+    items: Async<List<BookProgressWithBookAndChapters>>,
     onNavToBook: (bookId: Long) -> Unit,
 ) {
     val state: LazyGridState = rememberLazyGridState()
     val cellCount = gridColumnCount()
+
+    val books = resolveAsyncState(items)
 
     LazyVerticalGrid(
         state = state,
@@ -64,14 +84,27 @@ fun BooksGrid(
             else defaultPadding
 
             val paddingValues: PaddingValues = if (cell % cellCount == 1) {
-                PaddingValues(start = borderPadding, end = defaultPadding, top = topPadding, bottom = bottomPadding)
+                PaddingValues(
+                    start = borderPadding,
+                    end = defaultPadding,
+                    top = topPadding,
+                    bottom = bottomPadding
+                )
             } else if (cell % cellCount == 0) {
-                PaddingValues(start = defaultPadding, end = borderPadding, top = topPadding, bottom = bottomPadding)
+                PaddingValues(
+                    start = defaultPadding,
+                    end = borderPadding,
+                    top = topPadding,
+                    bottom = bottomPadding
+                )
             } else {
-                PaddingValues(start = defaultPadding, end = defaultPadding, top = topPadding, bottom = bottomPadding)
+                PaddingValues(
+                    start = defaultPadding,
+                    end = defaultPadding,
+                    top = topPadding,
+                    bottom = bottomPadding
+                )
             }
-
-            logcat { "hash=${books[index].book.hash} uri=${books[index].book.uri.path}" }
 
             BookCell(
                 books[index],

@@ -10,10 +10,14 @@ data class Time(val value: Duration) {
         fun zero() = Time(value = 0.milliseconds)
     }
 
-    fun format() = value.toComponents { hh, mm, ss, _ ->
-        listOf(hh, mm, ss).joinToString(":") { part ->
-            "$part".padStart(2, '0')
+    fun format() = if (value > Duration.ZERO) {
+        value.toComponents { hh, mm, ss, _ ->
+            listOf(hh, mm, ss).joinToString(":") { part ->
+                "$part".padStart(2, '0')
+            }
         }
+    } else {
+        ""
     }
 
     override fun toString(): String {

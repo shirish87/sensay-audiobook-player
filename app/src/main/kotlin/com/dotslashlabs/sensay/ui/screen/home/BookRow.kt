@@ -89,4 +89,3 @@ private fun BookView(bookProgressWithChapters: BookProgressWithBookAndChapters) 
         }
     }
 }
-
