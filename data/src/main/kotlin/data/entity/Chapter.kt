@@ -2,7 +2,8 @@ package data.entity
 
 import android.net.Uri
 import androidx.room.*
-import data.util.Time
+import data.util.ContentDuration
+import java.time.Instant
 
 @Entity(
     indices = [
@@ -19,11 +20,11 @@ data class Chapter(
     val author: String? = null,
     val coverUri: Uri? = null,
 
-    val duration: Time,
-    val start: Time? = null,
-    val end: Time? = null,
+    val duration: ContentDuration,
+    val start: ContentDuration? = null,
+    val end: ContentDuration? = null,
 
-    val createdAt: Time = Time.now(),
+    val createdAt: Instant = Instant.now(),
 ) {
 
     companion object {
@@ -32,7 +33,7 @@ data class Chapter(
             hash = "",
             trackId = 0,
             title = "",
-            duration = Time.zero(),
+            duration = ContentDuration.ZERO,
         )
     }
 }
@@ -47,7 +48,7 @@ data class BookChapterCrossRef(
     val bookId: Long,
     val chapterId: Long,
 
-    val createdAt: Time = Time.now(),
+    val createdAt: Instant = Instant.now(),
 )
 
 data class BookWithChapters(

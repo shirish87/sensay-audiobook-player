@@ -2,7 +2,7 @@ package data.entity
 
 import android.net.Uri
 import androidx.room.*
-import data.util.Time
+import java.time.Instant
 
 @Entity(
     indices = [
@@ -17,7 +17,7 @@ data class Source(
     val isActive: Boolean = true,
     val inactiveReason: String? = null,
 
-    val createdAt: Time = Time.now(),
+    val createdAt: Instant = Instant.now(),
 )
 
 @Entity(
@@ -30,7 +30,7 @@ data class SourceBookCrossRef(
     val sourceId: Long,
     val bookId: Long,
 
-    val createdAt: Time = Time.now(),
+    val createdAt: Instant = Instant.now(),
 )
 
 data class SourceWithBooks(

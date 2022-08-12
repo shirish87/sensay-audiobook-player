@@ -10,6 +10,7 @@ import config.ConfigStore
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
+import dagger.hilt.android.qualifiers.ApplicationContext
 import data.SensayStore
 import data.entity.Source
 import kotlinx.coroutines.flow.map
@@ -22,19 +23,20 @@ data class SourcesViewState(
 
 class SourcesViewModel @AssistedInject constructor(
     @Assisted private val state: SourcesViewState,
+    @ApplicationContext private val context: Context,
     private val store: SensayStore,
     private val configStore: ConfigStore,
 ) : MavericksViewModel<SourcesViewState>(state) {
 
     init {
         store.sources()
-            .map { it.sortedBy { r -> -r.createdAt.value } }
+            .map { it.sortedBy { r -> -r.createdAt.toEpochMilli() } }
             .execute(retainValue = SourcesViewState::sources) {
                 copy(sources = it)
             }
     }
 
-    fun addAudiobookFolders(context: Context, uris: Set<Uri>) = viewModelScope.launch {
+    fun addAudiobookFolders(uris: Set<Uri>) = viewModelScope.launch {
         val sources = uris.mapNotNull { uri ->
             val f = DocumentFile.fromTreeUri(context, uri) ?: return@mapNotNull null
             val displayName = f.name ?: uri.toString().split("/").last()

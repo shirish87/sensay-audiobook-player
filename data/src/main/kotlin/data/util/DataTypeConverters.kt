@@ -3,6 +3,7 @@ package data.util
 import android.net.Uri
 import androidx.core.net.toUri
 import androidx.room.TypeConverter
+import java.time.Instant
 import kotlin.time.Duration.Companion.milliseconds
 
 /**
@@ -12,14 +13,26 @@ object DataTypeConverters {
 
     @TypeConverter
     @JvmStatic
-    fun fromTime(time: Time?): Long? {
-        return time?.value?.inWholeMilliseconds
+    fun fromContentDuration(contentDuration: ContentDuration?): Long? {
+        return contentDuration?.value?.inWholeMilliseconds
     }
 
     @TypeConverter
     @JvmStatic
-    fun toTime(value: Long?): Time? {
-        return value?.let { Time(value = it.milliseconds) }
+    fun toContentDuration(value: Long?): ContentDuration? {
+        return value?.let { ContentDuration(value = it.milliseconds) }
+    }
+
+    @TypeConverter
+    @JvmStatic
+    fun fromInstant(instant: Instant?): Long? {
+        return instant?.toEpochMilli()
+    }
+
+    @TypeConverter
+    @JvmStatic
+    fun toInstant(value: Long?): Instant? {
+        return value?.let { Instant.ofEpochMilli(value) }
     }
 
     @TypeConverter

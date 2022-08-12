@@ -5,7 +5,7 @@ import androidx.room.*
 import data.entity.Source
 import data.entity.SourceBookCrossRef
 import data.entity.SourceWithBooks
-import data.util.Time
+import data.util.ContentDuration
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -26,7 +26,7 @@ interface SourceDao : BaseDao<Source> {
     fun sourcesCount(): Flow<Int>
 
     @Query("SELECT MAX(createdAt) FROM Source")
-    fun sourcesMaxCreatedAtTime(): Flow<Time?>
+    fun sourcesMaxCreatedAtTime(): Flow<ContentDuration?>
 
     @Transaction
     @Query("SELECT * FROM Source WHERE sourceId = :sourceId")

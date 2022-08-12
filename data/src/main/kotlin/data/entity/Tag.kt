@@ -1,7 +1,7 @@
 package data.entity
 
 import androidx.room.*
-import data.util.Time
+import java.time.Instant
 
 @Entity(
     indices = [
@@ -13,7 +13,7 @@ data class Tag(
     val name: String,
     val sortOrder: Long = 0,
 
-    val createdAt: Time = Time.now(),
+    val createdAt: Instant = Instant.now(),
 )
 
 @Entity(
@@ -26,7 +26,7 @@ data class BookTagCrossRef(
     val bookId: Long,
     val tagId: Long,
 
-    val createdAt: Time = Time.now(),
+    val createdAt: Instant = Instant.now(),
 )
 
 data class TagWithBooks(

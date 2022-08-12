@@ -4,7 +4,8 @@ import android.net.Uri
 import androidx.room.Entity
 import androidx.room.Index
 import androidx.room.PrimaryKey
-import data.util.Time
+import data.util.ContentDuration
+import java.time.Instant
 
 @Entity(
     indices = [
@@ -17,7 +18,7 @@ data class Book(
     val hash: String,
     val uri: Uri,
     val title: String,
-    val duration: Time,
+    val duration: ContentDuration,
 
     val series: String? = null,
     val bookNo: Float? = null,
@@ -27,7 +28,7 @@ data class Book(
     val year: String? = null,
     val coverUri: Uri? = null,
 
-    val createdAt: Time = Time.now(),
+    val createdAt: Instant = Instant.now(),
 ) {
 
     companion object {
@@ -35,7 +36,7 @@ data class Book(
             hash = "",
             uri = Uri.EMPTY,
             title = "",
-            duration = Time.zero(),
+            duration = ContentDuration.ZERO,
         )
     }
 }

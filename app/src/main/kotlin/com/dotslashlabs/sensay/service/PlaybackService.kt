@@ -20,8 +20,6 @@ import javax.inject.Inject
 
 @AndroidEntryPoint
 class PlaybackService : MediaSessionService() {
-    @Inject
-    lateinit var dataSourceFactory: DataSource.Factory
 
     @Inject
     lateinit var player: ExoPlayer

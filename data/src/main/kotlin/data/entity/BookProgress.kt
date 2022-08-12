@@ -2,7 +2,8 @@ package data.entity
 
 import androidx.room.*
 import data.BookCategory
-import data.util.Time
+import data.util.ContentDuration
+import java.time.Instant
 
 
 @Entity(
@@ -16,9 +17,10 @@ data class BookProgress(
     val chapterId: Long,
     val totalChapters: Int,
     val currentChapter: Int = 0,
-    val bookProgress: Time = Time.zero(),
-    val chapterProgress: Time = Time.zero(),
+    val bookProgress: ContentDuration = ContentDuration.ZERO,
+    val chapterProgress: ContentDuration = ContentDuration.ZERO,
     val bookCategory: BookCategory = BookCategory.NOT_STARTED,
+    val lastUpdatedAt: Instant = Instant.now(),
 ) {
 
     companion object {

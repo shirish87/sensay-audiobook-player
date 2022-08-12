@@ -71,6 +71,8 @@ class SensayStore @Inject constructor(
         }
     }
 
+    fun booksProgressWithBookAndChapters(bookCategories: Collection<BookCategory>) =
+        bookProgressRepository.booksProgressWithBookAndChapters(bookCategories)
 
     fun booksProgressWithBookAndChapters() =
         bookProgressRepository.booksProgressWithBookAndChapters()
@@ -82,14 +84,9 @@ class SensayStore @Inject constructor(
 
     fun bookByUri(uri: Uri) = bookRepository.bookByUri(uri)
 
-    fun chaptersCount() = chapterRepository.chaptersCount()
-    fun shelvesCount() = shelfRepository.shelvesCount()
-    fun tagsCount() = tagRepository.tagsCount()
-    fun bookProgressCount() = bookProgressRepository.bookProgressCount()
-
     fun sources() = sourceRepository.sources()
     fun sources(isActive: Boolean = true) = sourceRepository.sources(isActive)
-    fun sourcesMaxCreatedAtTime() = sourceRepository.sourcesMaxCreatedAtTime()
+
     suspend fun addSources(sources: Collection<Source>) = sourceRepository.addSources(sources)
 
     suspend fun deleteSource(sourceId: Long): Boolean {

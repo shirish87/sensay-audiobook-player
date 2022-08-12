@@ -5,8 +5,11 @@ import androidx.compose.runtime.getValue
 import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavHostController
 import com.airbnb.mvrx.compose.collectAsState
+import com.airbnb.mvrx.compose.mavericksActivityViewModel
 import com.airbnb.mvrx.compose.mavericksViewModel
 import com.dotslashlabs.sensay.ActivityBridge
+import com.dotslashlabs.sensay.ui.app.SensayAppState
+import com.dotslashlabs.sensay.ui.app.SensayAppViewModel
 import com.dotslashlabs.sensay.ui.screen.Destination
 import com.dotslashlabs.sensay.ui.screen.SensayScreen
 import com.dotslashlabs.sensay.ui.screen.common.SensayFrame
@@ -22,6 +25,10 @@ object LibraryScreen : SensayScreen {
         navHostController: NavHostController,
         backStackEntry: NavBackStackEntry,
     ) {
+
+        val appViewModel: SensayAppViewModel = mavericksActivityViewModel()
+        val homeLayout by appViewModel.collectAsState(SensayAppState::homeLayout)
+
         val viewModel: LibraryViewModel = mavericksViewModel(backStackEntry)
         val state by viewModel.collectAsState()
 
@@ -30,7 +37,7 @@ object LibraryScreen : SensayScreen {
         }
 
         SensayFrame {
-            when (state.homeLayout) {
+            when (homeLayout) {
                 HomeLayout.LIST -> BooksList(state.books, onNavToBook = onNavToBook)
                 HomeLayout.GRID -> BooksGrid(state.books, onNavToBook = onNavToBook)
             }

@@ -23,25 +23,7 @@ fun PlayerAppBar(onBackPress: () -> Unit) {
         actions = {
             IconButton(onClick = { /* TODO */ }) {
                 Icon(
-                    imageVector = Icons.Default.Alarm,
-                    contentDescription = "",
-                )
-            }
-            IconButton(onClick = { /* TODO */ }) {
-                Icon(
                     imageVector = Icons.Default.BookmarkAdd,
-                    contentDescription = "",
-                )
-            }
-            IconButton(onClick = { /* TODO */ }) {
-                Icon(
-                    imageVector = Icons.Default.Speed,
-                    contentDescription = "",
-                )
-            }
-            IconButton(onClick = { /* TODO */ }) {
-                Icon(
-                    imageVector = Icons.Default.MoreVert,
                     contentDescription = "",
                 )
             }

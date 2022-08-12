@@ -17,8 +17,9 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavHostController
 import com.airbnb.mvrx.compose.collectAsState
-import com.airbnb.mvrx.compose.mavericksViewModel
+import com.airbnb.mvrx.compose.mavericksActivityViewModel
 import com.dotslashlabs.sensay.ActivityBridge
+import com.dotslashlabs.sensay.ui.app.SensayAppViewModel
 import com.dotslashlabs.sensay.ui.screen.Destination
 import com.dotslashlabs.sensay.ui.screen.SensayScreen
 import com.dotslashlabs.sensay.ui.screen.common.SensayFrame
@@ -47,13 +48,15 @@ fun HomeContent(
     @Suppress("UNUSED_PARAMETER") navHostController: NavHostController,
     @Suppress("UNUSED_PARAMETER") backStackEntry: NavBackStackEntry,
 ) {
-    val viewModel: HomeViewModel = mavericksViewModel(backStackEntry)
+
+    val viewModel: SensayAppViewModel = mavericksActivityViewModel()
     val state by viewModel.collectAsState()
+
     val homeNavController = rememberAnimatedNavController()
     val context: Context = LocalContext.current
 
     LaunchedEffect(Unit) {
-        viewModel.scanFolders(context)
+        viewModel.scanFolders()
     }
 
     SensayFrame {

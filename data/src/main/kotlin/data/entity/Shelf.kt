@@ -1,7 +1,7 @@
 package data.entity
 
 import androidx.room.*
-import data.util.Time
+import java.time.Instant
 
 @Entity(
     indices = [
@@ -13,7 +13,7 @@ data class Shelf(
     val name: String,
     val sortOrder: Long = 0,
 
-    val createdAt: Time = Time.now(),
+    val createdAt: Instant = Instant.now(),
 ) {
     companion object {
         val ALL = Shelf(shelfId = -1, name = "ALL")
@@ -30,7 +30,7 @@ data class BookShelfCrossRef(
     val bookId: Long,
     val shelfId: Long,
 
-    @ColumnInfo(name = "createdAt") val createdAt: Time = Time.now(),
+    val createdAt: Instant = Instant.now(),
 )
 
 data class ShelfWithBooks(
