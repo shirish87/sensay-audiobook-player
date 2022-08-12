@@ -1,4 +1,4 @@
-package com.dotslashlabs.sensay.ui.app
+package com.dotslashlabs.sensay.ui
 
 import android.content.Context
 import androidx.documentfile.provider.DocumentFile

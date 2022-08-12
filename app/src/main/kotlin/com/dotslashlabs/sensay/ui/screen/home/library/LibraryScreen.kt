@@ -8,8 +8,8 @@ import com.airbnb.mvrx.compose.collectAsState
 import com.airbnb.mvrx.compose.mavericksActivityViewModel
 import com.airbnb.mvrx.compose.mavericksViewModel
 import com.dotslashlabs.sensay.ActivityBridge
-import com.dotslashlabs.sensay.ui.app.SensayAppState
-import com.dotslashlabs.sensay.ui.app.SensayAppViewModel
+import com.dotslashlabs.sensay.ui.SensayAppState
+import com.dotslashlabs.sensay.ui.SensayAppViewModel
 import com.dotslashlabs.sensay.ui.screen.Destination
 import com.dotslashlabs.sensay.ui.screen.SensayScreen
 import com.dotslashlabs.sensay.ui.screen.common.SensayFrame

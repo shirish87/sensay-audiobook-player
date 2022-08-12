@@ -5,8 +5,6 @@ import android.content.Context
 import android.content.Intent
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -19,7 +17,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.unit.dp
 import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavHostController
 import com.airbnb.mvrx.Success
@@ -27,8 +24,8 @@ import com.airbnb.mvrx.compose.collectAsState
 import com.airbnb.mvrx.compose.mavericksActivityViewModel
 import com.airbnb.mvrx.compose.mavericksViewModel
 import com.dotslashlabs.sensay.ActivityBridge
-import com.dotslashlabs.sensay.ui.app.SensayAppState
-import com.dotslashlabs.sensay.ui.app.SensayAppViewModel
+import com.dotslashlabs.sensay.ui.SensayAppState
+import com.dotslashlabs.sensay.ui.SensayAppViewModel
 import com.dotslashlabs.sensay.ui.screen.Destination
 import com.dotslashlabs.sensay.ui.screen.SensayScreen
 import com.dotslashlabs.sensay.ui.screen.common.SensayFrame

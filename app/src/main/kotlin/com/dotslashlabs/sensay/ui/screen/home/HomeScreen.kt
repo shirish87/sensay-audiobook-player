@@ -19,7 +19,7 @@ import androidx.navigation.NavHostController
 import com.airbnb.mvrx.compose.collectAsState
 import com.airbnb.mvrx.compose.mavericksActivityViewModel
 import com.dotslashlabs.sensay.ActivityBridge
-import com.dotslashlabs.sensay.ui.app.SensayAppViewModel
+import com.dotslashlabs.sensay.ui.SensayAppViewModel
 import com.dotslashlabs.sensay.ui.screen.Destination
 import com.dotslashlabs.sensay.ui.screen.SensayScreen
 import com.dotslashlabs.sensay.ui.screen.common.SensayFrame

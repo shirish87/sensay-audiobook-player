@@ -8,7 +8,7 @@ import androidx.core.view.WindowCompat
 import androidx.media3.session.MediaController
 import androidx.media3.session.SessionToken
 import com.dotslashlabs.sensay.service.PlaybackService
-import com.dotslashlabs.sensay.ui.app.SensayApp
+import com.dotslashlabs.sensay.ui.SensayApp
 import com.google.common.util.concurrent.ListenableFuture
 import dagger.hilt.android.AndroidEntryPoint
 

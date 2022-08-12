@@ -1,4 +1,4 @@
-package com.dotslashlabs.sensay.ui.app
+package com.dotslashlabs.sensay.ui
 
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.runtime.Composable
