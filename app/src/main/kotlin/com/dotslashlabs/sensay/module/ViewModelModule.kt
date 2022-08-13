@@ -3,6 +3,7 @@ package com.dotslashlabs.sensay.module
 import com.airbnb.mvrx.hilt.AssistedViewModelFactory
 import com.airbnb.mvrx.hilt.MavericksViewModelComponent
 import com.airbnb.mvrx.hilt.ViewModelKey
+import com.dotslashlabs.sensay.ui.PlaybackViewModel
 import com.dotslashlabs.sensay.ui.SensayAppViewModel
 import com.dotslashlabs.sensay.ui.screen.book.player.PlayerViewModel
 import com.dotslashlabs.sensay.ui.screen.home.current.CurrentViewModel
@@ -21,6 +22,11 @@ interface ViewModelModule {
     @IntoMap
     @ViewModelKey(SensayAppViewModel::class)
     fun sensayAppViewModelFactory(factory: SensayAppViewModel.Factory): AssistedViewModelFactory<*, *>
+
+    @Binds
+    @IntoMap
+    @ViewModelKey(PlaybackViewModel::class)
+    fun playbackViewModelFactory(factory: PlaybackViewModel.Factory): AssistedViewModelFactory<*, *>
 
     @Binds
     @IntoMap

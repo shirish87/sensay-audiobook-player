@@ -3,6 +3,7 @@ package com.dotslashlabs.sensay.module
 import android.content.Context
 import androidx.media3.common.AudioAttributes
 import androidx.media3.common.C
+import androidx.media3.common.Player
 import androidx.media3.exoplayer.ExoPlayer
 import dagger.Module
 import dagger.Provides
@@ -24,13 +25,11 @@ object PlaybackServiceModule {
 
     @Provides
     @ServiceScoped
-    fun provideExoPlayer(
+    fun providePlayer(
         @ApplicationContext context: Context,
         audioAttributes: AudioAttributes,
-    ): ExoPlayer = ExoPlayer.Builder(context)
+    ): Player = ExoPlayer.Builder(context)
+        .setAudioAttributes(audioAttributes, true)
+        .setHandleAudioBecomingNoisy(true)
         .build()
-        .apply {
-            setAudioAttributes(audioAttributes, true)
-            setHandleAudioBecomingNoisy(true)
-        }
 }

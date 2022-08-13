@@ -11,7 +11,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavHostController
-import com.dotslashlabs.sensay.ActivityBridge
 import com.dotslashlabs.sensay.ui.screen.Destination
 import com.dotslashlabs.sensay.ui.screen.SensayScreen
 import com.dotslashlabs.sensay.ui.screen.common.SensayFrame
@@ -20,12 +19,10 @@ object SettingsScreen : SensayScreen {
     @Composable
     override fun content(
         destination: Destination,
-        activityBridge: ActivityBridge,
         navHostController: NavHostController,
         backStackEntry: NavBackStackEntry
     ) = SettingsContent(
         destination,
-        activityBridge,
         backStackEntry,
         onBackPress = { navHostController.popBackStack() })
 }
@@ -34,7 +31,6 @@ object SettingsScreen : SensayScreen {
 @Composable
 fun SettingsContent(
     @Suppress("UNUSED_PARAMETER") destination: Destination,
-    @Suppress("UNUSED_PARAMETER") activityBridge: ActivityBridge,
     @Suppress("UNUSED_PARAMETER") backStackEntry: NavBackStackEntry,
     @Suppress("UNUSED_PARAMETER") onBackPress: () -> Unit,
 ) {

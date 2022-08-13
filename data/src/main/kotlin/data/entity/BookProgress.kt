@@ -1,5 +1,6 @@
 package data.entity
 
+import androidx.core.os.bundleOf
 import androidx.room.*
 import data.BookCategory
 import data.util.ContentDuration
@@ -37,6 +38,17 @@ data class BookProgress(
             totalChapters,
         ).joinToString(separator = " / ")
     } else totalChapters} chapters"
+
+    fun toBundle() = bundleOf(
+        "bookId" to bookId,
+        "chapterId" to chapterId,
+        "totalChapters" to totalChapters,
+        "currentChapter" to currentChapter,
+        "bookProgress" to bookProgress.format(),
+        "chapterProgress" to chapterProgress.format(),
+        "bookCategory" to bookCategory.name,
+        "lastUpdatedAt" to lastUpdatedAt.toEpochMilli(),
+    )
 }
 
 data class BookProgressWithBookAndShelves(
@@ -99,4 +111,10 @@ data class BookProgressWithBookAndChapters(
             chapters = emptyList(),
         )
     }
+
+    fun toBundle() = bundleOf(
+        "bookProgress" to bookProgress.toBundle(),
+        "book" to book.toBundle(),
+        "chapter" to chapter.toBundle(),
+    )
 }

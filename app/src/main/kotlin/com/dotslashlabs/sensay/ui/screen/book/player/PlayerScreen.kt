@@ -1,9 +1,7 @@
 package com.dotslashlabs.sensay.ui.screen.book.player
 
 import android.annotation.SuppressLint
-import android.content.Context
 import android.net.Uri
-import android.widget.Toast
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
@@ -12,23 +10,20 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.media3.common.MediaItem
-import androidx.media3.common.MediaMetadata
 import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavHostController
 import com.airbnb.mvrx.compose.collectAsState
+import com.airbnb.mvrx.compose.mavericksActivityViewModel
 import com.airbnb.mvrx.compose.mavericksViewModel
-import com.dotslashlabs.sensay.ActivityBridge
 import com.dotslashlabs.sensay.R
+import com.dotslashlabs.sensay.ui.PlaybackViewModel
 import com.dotslashlabs.sensay.ui.screen.Destination
 import com.dotslashlabs.sensay.ui.screen.SensayScreen
 import com.dotslashlabs.sensay.ui.screen.common.CoverImage
@@ -38,18 +33,14 @@ import com.dotslashlabs.sensay.ui.theme.MinContrastOfPrimaryVsSurface
 import com.dotslashlabs.sensay.ui.theme.contrastAgainst
 import com.dotslashlabs.sensay.ui.theme.rememberDominantColorState
 import com.dotslashlabs.sensay.util.verticalGradientScrim
-import data.entity.BookProgressWithBookAndChapters
-import kotlinx.coroutines.CoroutineScope
 
 object PlayerScreen : SensayScreen {
     @Composable
     override fun content(
         destination: Destination,
-        activityBridge: ActivityBridge,
         navHostController: NavHostController,
         backStackEntry: NavBackStackEntry,
     ) = PlayerContent(
-        activityBridge,
         backStackEntry,
         onBackPress = { navHostController.popBackStack() })
 }
@@ -58,9 +49,8 @@ object PlayerScreen : SensayScreen {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PlayerContent(
-    @Suppress("UNUSED_PARAMETER") activityBridge: ActivityBridge,
-    @Suppress("UNUSED_PARAMETER") backStackEntry: NavBackStackEntry,
-    @Suppress("UNUSED_PARAMETER") onBackPress: () -> Unit,
+    backStackEntry: NavBackStackEntry,
+    onBackPress: () -> Unit,
 ) {
     val argsBundle = backStackEntry.arguments ?: return
 
@@ -105,9 +95,7 @@ fun PlayerContent(
                                 modifier = Modifier.clickable { onBackPress() },
                             )
 
-                            state.bookProgressWithChapters.invoke()?.let {
-                                PlayerButtons(activityBridge, it)
-                            }
+                            PlayerButtons(state)
                         }
                     }
                 }
@@ -134,16 +122,42 @@ private fun PlayerImage(
 
 @Composable
 private fun PlayerButtons(
-    activityBridge: ActivityBridge,
-    bookWithChapters: BookProgressWithBookAndChapters,
+    state: PlayerViewState,
     modifier: Modifier = Modifier,
     playerButtonSize: Dp = 96.dp,
     sideButtonSize: Dp = 64.dp,
 ) {
-    val context: Context = LocalContext.current
+
+    val bookProgressWithChapters = state.bookProgressWithChapters() ?: return
+
+    val playbackViewModel: PlaybackViewModel = mavericksActivityViewModel()
+    val playbackState by playbackViewModel.collectAsState()
+
+    val isPreparing = playbackState.isPreparing
+    val isCurrentBook = playbackState.isCurrentBook(bookProgressWithChapters.book)
+    val isPlaying = playbackState.isPlaying
+    val isCurrentBookPlaying = (isCurrentBook && isPlaying)
+
+    Text(
+        text = bookProgressWithChapters.book.title,
+        textAlign = TextAlign.Center,
+        modifier = Modifier.fillMaxWidth().padding(top = 40.dp),
+        style = MaterialTheme.typography.headlineMedium,
+    )
+
+    bookProgressWithChapters.book.author?.let { author ->
+        Text(
+            text = author,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.fillMaxWidth().padding(top = 20.dp),
+            style = MaterialTheme.typography.bodySmall,
+        )
+    }
 
     Row(
-        modifier = modifier.fillMaxWidth().padding(vertical = 40.dp, horizontal = 20.dp),
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(vertical = 40.dp, horizontal = 20.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceEvenly,
     ) {
@@ -151,10 +165,8 @@ private fun PlayerButtons(
         val buttonsModifier = Modifier.size(sideButtonSize)
 
         OutlinedIconButton(
-            enabled = activityBridge.mediaController()?.isPlaying == true,
-            onClick = {
-                activityBridge.mediaController()?.seekBack()
-            },
+            enabled = (!isPreparing && isCurrentBook),
+            onClick = { playbackViewModel.seekBack() },
             modifier = buttonsModifier,
         ) {
             Icon(
@@ -164,48 +176,32 @@ private fun PlayerButtons(
         }
 
         OutlinedIconButton(
+            enabled = !isPreparing,
             onClick = {
-                activityBridge.mediaController()?.apply {
-                    if (currentMediaItem?.mediaId != bookWithChapters.book.bookId.toString()) {
-                        setMediaItem(
-                            MediaItem.Builder()
-                                .setUri(bookWithChapters.book.uri)
-                                .setMediaId(bookWithChapters.book.bookId.toString())
-                                .setMediaMetadata(
-                                    MediaMetadata.Builder()
-                                        .setTitle(bookWithChapters.book.title)
-                                        .setArtist(bookWithChapters.book.author)
-                                        .setIsPlayable(true)
-                                        .setArtworkUri(bookWithChapters.book.coverUri)
-                                        .build()
-                                )
-                                .setRequestMetadata(
-                                    MediaItem.RequestMetadata.Builder()
-                                        .setMediaUri(bookWithChapters.book.uri)
-                                        .build()
-                                )
-                                .build()
-                        )
-
-                        prepare()
+                if (isCurrentBook) {
+                    // current book
+                    playbackViewModel.apply {
+                        if (isPlaying) {
+                            pause()
+                        } else {
+                            // play
+                            playWhenReady = true
+                            play()
+                        }
                     }
-                }
-
-                activityBridge.mediaController()?.apply {
-                    if (isPlaying) {
-                        pause()
-                        Toast.makeText(context, "Pause", Toast.LENGTH_SHORT).show()
-                    } else {
+                } else {
+                    // other book, only play action is possible
+                    playbackViewModel.apply {
+                        prepareMediaItems(bookProgressWithChapters)
                         playWhenReady = true
                         play()
-                        Toast.makeText(context, "Play", Toast.LENGTH_SHORT).show()
                     }
                 }
             },
-            modifier = Modifier.size(playerButtonSize)
+            modifier = Modifier.size(playerButtonSize),
         ) {
             Icon(
-                imageVector = if (activityBridge.mediaController()?.isPlaying == true) {
+                imageVector = if (isCurrentBookPlaying) {
                     Icons.Filled.PauseCircleFilled
                 } else {
                     Icons.Filled.PlayCircleFilled
@@ -216,10 +212,8 @@ private fun PlayerButtons(
         }
 
         OutlinedIconButton(
-            enabled = activityBridge.mediaController()?.isPlaying == true,
-            onClick = {
-                activityBridge.mediaController()?.seekForward()
-            },
+            enabled = (!isPreparing && isCurrentBook),
+            onClick = { playbackViewModel.seekForward() },
             modifier = buttonsModifier,
         ) {
             Icon(

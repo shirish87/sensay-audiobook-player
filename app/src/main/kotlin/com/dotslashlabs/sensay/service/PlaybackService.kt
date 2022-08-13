@@ -5,8 +5,7 @@ import android.app.PendingIntent.FLAG_UPDATE_CURRENT
 import android.content.Intent
 import androidx.core.app.TaskStackBuilder
 import androidx.media3.common.MediaItem
-import androidx.media3.datasource.DataSource
-import androidx.media3.exoplayer.ExoPlayer
+import androidx.media3.common.Player
 import androidx.media3.session.MediaSession
 import androidx.media3.session.MediaSession.ControllerInfo
 import androidx.media3.session.MediaSessionService
@@ -14,6 +13,10 @@ import com.dotslashlabs.sensay.MainActivity
 import com.google.common.util.concurrent.Futures
 import com.google.common.util.concurrent.ListenableFuture
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.cancel
 import logcat.logcat
 import javax.inject.Inject
 
@@ -22,9 +25,12 @@ import javax.inject.Inject
 class PlaybackService : MediaSessionService() {
 
     @Inject
-    lateinit var player: ExoPlayer
+    lateinit var player: Player
 
     private lateinit var mediaSession: MediaSession
+
+    private val serviceJob = Job()
+    private val serviceScope = CoroutineScope(Dispatchers.Main + serviceJob)
 
     override fun onCreate() {
         super.onCreate()
@@ -58,6 +64,7 @@ class PlaybackService : MediaSessionService() {
     }
 
     override fun onDestroy() {
+        serviceScope.cancel()
         player.release()
         mediaSession.release()
 

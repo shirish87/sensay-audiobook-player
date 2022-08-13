@@ -23,7 +23,6 @@ import com.airbnb.mvrx.Success
 import com.airbnb.mvrx.compose.collectAsState
 import com.airbnb.mvrx.compose.mavericksActivityViewModel
 import com.airbnb.mvrx.compose.mavericksViewModel
-import com.dotslashlabs.sensay.ActivityBridge
 import com.dotslashlabs.sensay.ui.SensayAppState
 import com.dotslashlabs.sensay.ui.SensayAppViewModel
 import com.dotslashlabs.sensay.ui.screen.Destination
@@ -34,12 +33,10 @@ object SourcesScreen : SensayScreen {
     @Composable
     override fun content(
         destination: Destination,
-        activityBridge: ActivityBridge,
         navHostController: NavHostController,
         backStackEntry: NavBackStackEntry
     ) = SourcesContent(
         destination,
-        activityBridge,
         navHostController,
         backStackEntry,
         onBackPress = { navHostController.popBackStack() })
@@ -50,7 +47,6 @@ object SourcesScreen : SensayScreen {
 @Composable
 fun SourcesContent(
     @Suppress("UNUSED_PARAMETER") destination: Destination,
-    @Suppress("UNUSED_PARAMETER") activityBridge: ActivityBridge,
     @Suppress("UNUSED_PARAMETER") navHostController: NavHostController,
     @Suppress("UNUSED_PARAMETER") backStackEntry: NavBackStackEntry,
     @Suppress("UNUSED_PARAMETER") onBackPress: () -> Unit,

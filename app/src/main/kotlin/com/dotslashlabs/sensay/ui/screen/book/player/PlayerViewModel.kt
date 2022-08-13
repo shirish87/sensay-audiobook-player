@@ -15,14 +15,14 @@ data class PlayerViewState(
     @PersistState val bookId: Long,
     val bookProgressWithChapters: Async<BookProgressWithBookAndChapters> = Uninitialized,
 ) : MavericksState {
-    constructor(arguments: Bundle) : this(bookId = arguments.getString("bookId", "0").toLong())
+    constructor(arguments: Bundle) : this(bookId = arguments.getString("bookId")!!.toLong())
 
     val coverUri: Uri? = (bookProgressWithChapters as? Success)?.invoke()?.book?.coverUri
 }
 
 class PlayerViewModel @AssistedInject constructor(
     @Assisted private val state: PlayerViewState,
-    private val store: SensayStore,
+    store: SensayStore,
 ) : MavericksViewModel<PlayerViewState>(state) {
 
     init {

@@ -5,7 +5,6 @@ import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.navigation
-import com.dotslashlabs.sensay.ActivityBridge
 import com.dotslashlabs.sensay.ui.screen.Destination
 import com.dotslashlabs.sensay.ui.screen.SensayScreen
 
@@ -15,7 +14,6 @@ object BookScreen : SensayScreen {
         destination: Destination,
         navGraphBuilder: NavGraphBuilder,
         navHostController: NavHostController,
-        activityBridge: ActivityBridge,
     ) {
         val startDestination = destination.defaultChild?.route ?: return
 
@@ -28,7 +26,6 @@ object BookScreen : SensayScreen {
                     it,
                     navGraphBuilder,
                     navHostController,
-                    activityBridge,
                 )
             }
         }
@@ -37,7 +34,6 @@ object BookScreen : SensayScreen {
     @Composable
     override fun content(
         destination: Destination,
-        activityBridge: ActivityBridge,
         navHostController: NavHostController,
         backStackEntry: NavBackStackEntry,
     ) {

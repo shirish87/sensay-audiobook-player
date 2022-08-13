@@ -32,7 +32,7 @@ data class SensayAppState(
     val lastScanTime: Long = 0,
 ) : MavericksState {
 
-    val shouldScan = ((audiobookFoldersUpdateTime.invoke() ?: 0L) > lastScanTime)
+    val shouldScan = ((audiobookFoldersUpdateTime() ?: 0L) > lastScanTime)
 }
 
 class SensayAppViewModel @AssistedInject constructor(

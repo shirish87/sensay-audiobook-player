@@ -1,6 +1,7 @@
 package data.entity
 
 import android.net.Uri
+import androidx.core.os.bundleOf
 import androidx.room.*
 import data.util.ContentDuration
 import java.time.Instant
@@ -36,6 +37,21 @@ data class Chapter(
             duration = ContentDuration.ZERO,
         )
     }
+
+    fun toBundle() = bundleOf(
+        "chapterId" to chapterId,
+        "uri" to uri.toString(),
+        "hash" to hash,
+        "trackId" to trackId,
+        "title" to title,
+        "description" to description,
+        "author" to author,
+        "coverUri" to coverUri.toString(),
+        "duration" to duration.format(),
+        "start" to start?.format(),
+        "end" to end?.format(),
+        "createdAt" to createdAt.toEpochMilli(),
+    )
 }
 
 @Entity(

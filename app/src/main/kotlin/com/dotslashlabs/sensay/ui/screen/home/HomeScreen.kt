@@ -18,7 +18,6 @@ import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavHostController
 import com.airbnb.mvrx.compose.collectAsState
 import com.airbnb.mvrx.compose.mavericksActivityViewModel
-import com.dotslashlabs.sensay.ActivityBridge
 import com.dotslashlabs.sensay.ui.SensayAppViewModel
 import com.dotslashlabs.sensay.ui.screen.Destination
 import com.dotslashlabs.sensay.ui.screen.SensayScreen
@@ -31,10 +30,9 @@ object HomeScreen : SensayScreen {
     @Composable
     override fun content(
         destination: Destination,
-        activityBridge: ActivityBridge,
         navHostController: NavHostController,
         backStackEntry: NavBackStackEntry,
-    ) = HomeContent(destination, activityBridge, navHostController, backStackEntry)
+    ) = HomeContent(destination, navHostController, backStackEntry)
 }
 
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
@@ -44,7 +42,6 @@ object HomeScreen : SensayScreen {
 )
 fun HomeContent(
     @Suppress("UNUSED_PARAMETER") destination: Destination,
-    @Suppress("UNUSED_PARAMETER") activityBridge: ActivityBridge,
     @Suppress("UNUSED_PARAMETER") navHostController: NavHostController,
     @Suppress("UNUSED_PARAMETER") backStackEntry: NavBackStackEntry,
 ) {
@@ -99,7 +96,7 @@ fun HomeContent(
                     startDestination = startDestination,
                 ) {
                     destination.children.map { dest ->
-                        dest.screen?.navGraph(dest, this, navHostController, activityBridge)
+                        dest.screen?.navGraph(dest, this, navHostController)
                     }
                 }
             }

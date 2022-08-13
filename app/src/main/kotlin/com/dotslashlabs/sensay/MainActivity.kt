@@ -1,20 +1,19 @@
 package com.dotslashlabs.sensay
 
-import android.content.ComponentName
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.core.view.WindowCompat
-import androidx.media3.session.MediaController
-import androidx.media3.session.SessionToken
-import com.dotslashlabs.sensay.service.PlaybackService
+import com.dotslashlabs.sensay.service.PlaybackConnection
 import com.dotslashlabs.sensay.ui.SensayApp
-import com.google.common.util.concurrent.ListenableFuture
 import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
 
 @AndroidEntryPoint
-class MainActivity : ComponentActivity(), ActivityBridge {
-    private lateinit var controllerFuture: ListenableFuture<MediaController>
+class MainActivity : ComponentActivity() {
+
+    @Inject
+    lateinit var playbackConnection: PlaybackConnection
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -23,36 +22,19 @@ class MainActivity : ComponentActivity(), ActivityBridge {
         WindowCompat.setDecorFitsSystemWindows(window, false)
 
         setContent {
-            SensayApp(this)
+            SensayApp()
         }
     }
 
     override fun onStart() {
         super.onStart()
 
-        initializeController()
+        playbackConnection.start()
     }
 
     override fun onStop() {
         super.onStop()
 
-        releaseController()
-    }
-
-    private fun initializeController() {
-        controllerFuture = MediaController.Builder(
-            this,
-            SessionToken(this, ComponentName(this, PlaybackService::class.java))
-        ).buildAsync()
-    }
-
-    private fun releaseController() {
-        MediaController.releaseFuture(controllerFuture)
-    }
-
-    override val mediaController: () -> MediaController? = {
-        if (controllerFuture.isDone)
-            controllerFuture.get()
-        else null
+        playbackConnection.stop()
     }
 }
