@@ -1,9 +1,12 @@
 package data.entity
 
-import androidx.core.os.bundleOf
+import android.os.Parcelable
 import androidx.room.*
 import data.BookCategory
 import data.util.ContentDuration
+import data.util.ContentDurationParceler
+import kotlinx.parcelize.Parcelize
+import kotlinx.parcelize.TypeParceler
 import java.time.Instant
 
 
@@ -12,6 +15,8 @@ import java.time.Instant
         Index(value = ["bookId"], unique = true),
     ],
 )
+@Parcelize
+@TypeParceler<ContentDuration, ContentDurationParceler>()
 data class BookProgress(
     @PrimaryKey(autoGenerate = true) val bookProgressId: Long = 0,
     val bookId: Long,
@@ -22,7 +27,7 @@ data class BookProgress(
     val chapterProgress: ContentDuration = ContentDuration.ZERO,
     val bookCategory: BookCategory = BookCategory.NOT_STARTED,
     val lastUpdatedAt: Instant = Instant.now(),
-) {
+) : Parcelable {
 
     companion object {
         fun empty() = BookProgress(
@@ -38,19 +43,9 @@ data class BookProgress(
             totalChapters,
         ).joinToString(separator = " / ")
     } else totalChapters} chapters"
-
-    fun toBundle() = bundleOf(
-        "bookId" to bookId,
-        "chapterId" to chapterId,
-        "totalChapters" to totalChapters,
-        "currentChapter" to currentChapter,
-        "bookProgress" to bookProgress.format(),
-        "chapterProgress" to chapterProgress.format(),
-        "bookCategory" to bookCategory.name,
-        "lastUpdatedAt" to lastUpdatedAt.toEpochMilli(),
-    )
 }
 
+@Parcelize
 data class BookProgressWithBookAndShelves(
     @Embedded
     val bookProgress: BookProgress,
@@ -75,8 +70,9 @@ data class BookProgressWithBookAndShelves(
         associateBy = Junction(BookShelfCrossRef::class),
     )
     val shelves: List<Shelf>,
-)
+) : Parcelable
 
+@Parcelize
 data class BookProgressWithBookAndChapters(
     @Embedded
     val bookProgress: BookProgress,
@@ -101,7 +97,7 @@ data class BookProgressWithBookAndChapters(
         associateBy = Junction(BookChapterCrossRef::class),
     )
     val chapters: List<Chapter>,
-) {
+) : Parcelable {
 
     companion object {
         fun empty() = BookProgressWithBookAndChapters(
@@ -111,10 +107,4 @@ data class BookProgressWithBookAndChapters(
             chapters = emptyList(),
         )
     }
-
-    fun toBundle() = bundleOf(
-        "bookProgress" to bookProgress.toBundle(),
-        "book" to book.toBundle(),
-        "chapter" to chapter.toBundle(),
-    )
 }

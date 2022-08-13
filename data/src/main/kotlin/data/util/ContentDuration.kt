@@ -1,26 +1,13 @@
 package data.util
 
+import android.os.Parcel
+import kotlinx.parcelize.Parceler
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
-import kotlin.time.Duration.Companion.seconds
 
 data class ContentDuration(val value: Duration) {
     companion object {
         val ZERO = ContentDuration(value = 0.milliseconds)
-
-        fun parse(contentDurationStr: String): ContentDuration {
-            val parts = contentDurationStr.split(":")
-
-            if (parts.size == 3) {
-                return ContentDuration(
-                    ((parts[0].removePrefix("0").toInt() * 60 * 60) +
-                            (parts[1].removePrefix("0").toInt() * 60) +
-                            (parts[0].removePrefix("0").toInt())).seconds
-                )
-            }
-
-            return ZERO
-        }
     }
 
     fun format() = if (value > ZERO.value) {
@@ -31,5 +18,25 @@ data class ContentDuration(val value: Duration) {
         }
     } else {
         ""
+    }
+}
+
+object ContentDurationParceler : Parceler<ContentDuration> {
+    override fun create(parcel: Parcel) = ContentDuration(parcel.readLong().milliseconds)
+
+    override fun ContentDuration.write(parcel: Parcel, flags: Int) {
+        parcel.writeLong(value.inWholeMilliseconds)
+    }
+}
+
+object ContentDurationOptParceler : Parceler<ContentDuration?> {
+    override fun create(parcel: Parcel) = ContentDuration(parcel.readLong().milliseconds)
+
+    override fun ContentDuration?.write(parcel: Parcel, flags: Int) {
+        if (this == null) {
+            parcel.writeLong(0L)
+        } else {
+            parcel.writeLong(value.inWholeMilliseconds)
+        }
     }
 }

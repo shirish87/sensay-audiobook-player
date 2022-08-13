@@ -1,9 +1,13 @@
 package data.entity
 
 import android.net.Uri
-import androidx.core.os.bundleOf
+import android.os.Parcelable
 import androidx.room.*
 import data.util.ContentDuration
+import data.util.ContentDurationOptParceler
+import data.util.ContentDurationParceler
+import kotlinx.parcelize.Parcelize
+import kotlinx.parcelize.TypeParceler
 import java.time.Instant
 
 @Entity(
@@ -11,6 +15,9 @@ import java.time.Instant
         Index(value = ["uri", "hash"], unique = true),
     ],
 )
+@Parcelize
+@TypeParceler<ContentDuration, ContentDurationParceler>()
+@TypeParceler<ContentDuration?, ContentDurationOptParceler>()
 data class Chapter(
     @PrimaryKey(autoGenerate = true) val chapterId: Long = 0,
     val uri: Uri,
@@ -26,7 +33,7 @@ data class Chapter(
     val end: ContentDuration? = null,
 
     val createdAt: Instant = Instant.now(),
-) {
+) : Parcelable {
 
     companion object {
         fun empty() = Chapter(
@@ -37,21 +44,6 @@ data class Chapter(
             duration = ContentDuration.ZERO,
         )
     }
-
-    fun toBundle() = bundleOf(
-        "chapterId" to chapterId,
-        "uri" to uri.toString(),
-        "hash" to hash,
-        "trackId" to trackId,
-        "title" to title,
-        "description" to description,
-        "author" to author,
-        "coverUri" to coverUri.toString(),
-        "duration" to duration.format(),
-        "start" to start?.format(),
-        "end" to end?.format(),
-        "createdAt" to createdAt.toEpochMilli(),
-    )
 }
 
 @Entity(

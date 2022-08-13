@@ -1,6 +1,8 @@
 package data.entity
 
+import android.os.Parcelable
 import androidx.room.*
+import kotlinx.parcelize.Parcelize
 import java.time.Instant
 
 @Entity(
@@ -8,13 +10,14 @@ import java.time.Instant
         Index(value = ["name"], unique = true),
     ],
 )
+@Parcelize
 data class Shelf(
     @PrimaryKey(autoGenerate = true) val shelfId: Long = 0,
     val name: String,
     val sortOrder: Long = 0,
 
     val createdAt: Instant = Instant.now(),
-) {
+) : Parcelable {
     companion object {
         val ALL = Shelf(shelfId = -1, name = "ALL")
     }

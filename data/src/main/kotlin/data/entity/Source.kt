@@ -1,7 +1,9 @@
 package data.entity
 
 import android.net.Uri
+import android.os.Parcelable
 import androidx.room.*
+import kotlinx.parcelize.Parcelize
 import java.time.Instant
 
 @Entity(
@@ -9,6 +11,7 @@ import java.time.Instant
         Index(value = ["uri"], unique = true),
     ],
 )
+@Parcelize
 data class Source(
     @PrimaryKey(autoGenerate = true) val sourceId: Long = 0,
     val uri: Uri,
@@ -18,7 +21,7 @@ data class Source(
     val inactiveReason: String? = null,
 
     val createdAt: Instant = Instant.now(),
-)
+) : Parcelable
 
 @Entity(
     primaryKeys = ["sourceId", "bookId"],

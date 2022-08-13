@@ -1,6 +1,8 @@
 package data.entity
 
+import android.os.Parcelable
 import androidx.room.*
+import kotlinx.parcelize.Parcelize
 import java.time.Instant
 
 @Entity(
@@ -8,13 +10,14 @@ import java.time.Instant
         Index(value = ["name"], unique = true),
     ],
 )
+@Parcelize
 data class Tag(
     @PrimaryKey(autoGenerate = true) val tagId: Long = 0,
     val name: String,
     val sortOrder: Long = 0,
 
     val createdAt: Instant = Instant.now(),
-)
+) : Parcelable
 
 @Entity(
     primaryKeys = ["bookId", "tagId"],
