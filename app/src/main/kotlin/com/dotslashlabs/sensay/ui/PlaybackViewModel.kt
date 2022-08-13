@@ -1,5 +1,6 @@
 package com.dotslashlabs.sensay.ui
 
+import androidx.core.os.bundleOf
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MediaMetadata
 import androidx.media3.common.Player
@@ -23,7 +24,7 @@ data class PlaybackState(
     val isConnected = (_isConnected() == true)
     val isPlaying = (_isPlaying() == true)
 
-    fun isCurrentBook(book: Book): Boolean = (currentBook.invoke()?.bookId == book.bookId)
+    fun isCurrentBook(book: Book): Boolean = (book.bookId == currentBook.invoke()?.bookId)
 }
 
 class PlaybackViewModel @AssistedInject constructor(
@@ -70,7 +71,9 @@ class PlaybackViewModel @AssistedInject constructor(
                             .setArtist(book.author)
                             .setIsPlayable(true)
                             .setArtworkUri(book.coverUri)
-                            .setExtras(book.toBundle())
+                            .setExtras(bundleOf(
+                                PlaybackConnection.BUNDLE_KEY_BOOK to book,
+                            ))
                             .build()
                     )
                     .setRequestMetadata(

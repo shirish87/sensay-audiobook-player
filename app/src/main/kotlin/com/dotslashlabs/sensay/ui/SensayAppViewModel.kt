@@ -29,10 +29,10 @@ data class SensayAppState(
     val homeLayout: HomeLayout = DEFAULT_HOME_LAYOUT,
     val isScanningFolders: Boolean = false,
     val audiobookFoldersUpdateTime: Async<Long?> = Uninitialized,
-    val lastScanTime: Long = 0,
+    val lastScanTime: Instant = Instant.EPOCH,
 ) : MavericksState {
 
-    val shouldScan = ((audiobookFoldersUpdateTime() ?: 0L) > lastScanTime)
+    val shouldScan = ((audiobookFoldersUpdateTime() ?: 0L) > lastScanTime.toEpochMilli())
 }
 
 class SensayAppViewModel @AssistedInject constructor(
@@ -85,7 +85,7 @@ class SensayAppViewModel @AssistedInject constructor(
                 if (activeSources.isEmpty()) return@launch
 
                 scanFolders(activeSources)
-                setState { copy(lastScanTime = Instant.now().toEpochMilli()) }
+                setState { copy(lastScanTime = Instant.now()) }
             } finally {
                 setScanningFolders(false)
             }

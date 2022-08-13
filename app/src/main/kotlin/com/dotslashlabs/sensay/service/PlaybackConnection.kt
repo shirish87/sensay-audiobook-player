@@ -2,7 +2,7 @@ package com.dotslashlabs.sensay.service
 
 import android.content.ComponentName
 import android.content.Context
-import androidx.media3.common.MediaItem
+import android.os.Bundle
 import androidx.media3.common.MediaMetadata
 import androidx.media3.common.Player
 import androidx.media3.common.util.Assertions
@@ -13,9 +13,12 @@ import com.google.common.util.concurrent.Futures
 import data.entity.Book
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import logcat.logcat
 
 class PlaybackConnection constructor(private val context: Context) {
+
+    companion object {
+        const val BUNDLE_KEY_BOOK = "book"
+    }
 
     private var _mediaController: MediaController? = null
     val player: Player?
@@ -65,23 +68,30 @@ class PlaybackConnection constructor(private val context: Context) {
 
     private val playerListener = object : Player.Listener {
 
-        override fun onMediaMetadataChanged(mediaMetadata: MediaMetadata) {
-
-        }
-
-        override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
-//            mediaItem?.mediaMetadata?.let { register(it) }
-        }
-
         override fun onIsPlayingChanged(isPlaying: Boolean) {
             _isPlaying.value = isPlaying
-            logcat { "onIsPlayingChanged: $isPlaying" }
             player?.mediaMetadata?.let { register(it) }
         }
 
         private fun register(mediaMetadata: MediaMetadata) {
-            _currentBook.value = mediaMetadata.extras?.let { Book.fromBundle(it) }
-            logcat { "register: bookId=${_currentBook.value?.bookId}" }
+            if (mediaMetadata.extras == null) return
+
+            val book = mediaMetadata.extras!!.safelyCast(BUNDLE_KEY_BOOK, Book::class.java)
+            if (book?.bookId != null && book.bookId == _currentBook.value?.bookId) return
+
+            _currentBook.value = book
         }
+    }
+}
+
+fun <T> Bundle.safelyCast(key: String, clazz: Class<T>): T? {
+    return try {
+        this.classLoader = clazz.classLoader
+        getParcelable(key, clazz)
+    } catch (ex: NoSuchMethodError) {
+        @Suppress("DEPRECATION")
+        getParcelable(key) as? T?
+    } catch (ex: Throwable) {
+        null
     }
 }

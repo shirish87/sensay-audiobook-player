@@ -23,6 +23,7 @@ import com.airbnb.mvrx.compose.collectAsState
 import com.airbnb.mvrx.compose.mavericksActivityViewModel
 import com.airbnb.mvrx.compose.mavericksViewModel
 import com.dotslashlabs.sensay.R
+import com.dotslashlabs.sensay.ui.PlaybackState
 import com.dotslashlabs.sensay.ui.PlaybackViewModel
 import com.dotslashlabs.sensay.ui.screen.Destination
 import com.dotslashlabs.sensay.ui.screen.SensayScreen
@@ -53,6 +54,8 @@ fun PlayerContent(
     onBackPress: () -> Unit,
 ) {
     val argsBundle = backStackEntry.arguments ?: return
+
+    val playbackViewModel: PlaybackViewModel = mavericksActivityViewModel()
 
     val viewModel: PlayerViewModel = mavericksViewModel(argsFactory = { argsBundle })
     val state by viewModel.collectAsState()
@@ -90,12 +93,15 @@ fun PlayerContent(
                             modifier = Modifier.fillMaxSize(),
                             verticalArrangement = Arrangement.Top,
                         ) {
+                            val isConnected by playbackViewModel.collectAsState(PlaybackState::isConnected)
+                            if (!isConnected) return@Box
+
                             PlayerImage(
                                 coverUri = state.coverUri,
                                 modifier = Modifier.clickable { onBackPress() },
                             )
 
-                            PlayerButtons(state)
+                            PlayerButtons(playbackViewModel, state)
                         }
                     }
                 }
@@ -122,6 +128,7 @@ private fun PlayerImage(
 
 @Composable
 private fun PlayerButtons(
+    playbackViewModel: PlaybackViewModel,
     state: PlayerViewState,
     modifier: Modifier = Modifier,
     playerButtonSize: Dp = 96.dp,
@@ -129,8 +136,6 @@ private fun PlayerButtons(
 ) {
 
     val bookProgressWithChapters = state.bookProgressWithChapters() ?: return
-
-    val playbackViewModel: PlaybackViewModel = mavericksActivityViewModel()
     val playbackState by playbackViewModel.collectAsState()
 
     val isPreparing = playbackState.isPreparing
@@ -141,7 +146,9 @@ private fun PlayerButtons(
     Text(
         text = bookProgressWithChapters.book.title,
         textAlign = TextAlign.Center,
-        modifier = Modifier.fillMaxWidth().padding(top = 40.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = 40.dp),
         style = MaterialTheme.typography.headlineMedium,
     )
 
@@ -149,7 +156,9 @@ private fun PlayerButtons(
         Text(
             text = author,
             textAlign = TextAlign.Center,
-            modifier = Modifier.fillMaxWidth().padding(top = 20.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 20.dp),
             style = MaterialTheme.typography.bodySmall,
         )
     }
