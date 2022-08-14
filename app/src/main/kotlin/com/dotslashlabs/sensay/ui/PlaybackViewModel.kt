@@ -17,14 +17,15 @@ import data.entity.BookProgressWithBookAndChapters
 data class PlaybackState(
     private val _isConnected: Async<Boolean> = Uninitialized,
     private val _isPlaying: Async<Boolean> = Uninitialized,
-    val isPreparing: Boolean = false,
-    val currentBook: Async<Book?> = Uninitialized,
+    val isPreparingBookId: Long? = null,
+    val currentBookId: Async<Long?> = Uninitialized,
 ) : MavericksState {
 
     val isConnected = (_isConnected() == true)
     val isPlaying = (_isPlaying() == true)
+    val isPreparing = (isPreparingBookId != null && isPreparingBookId != currentBookId())
 
-    fun isCurrentBook(book: Book): Boolean = (book.bookId == currentBook.invoke()?.bookId)
+    fun isCurrentBook(book: Book): Boolean = (book.bookId == currentBookId())
 }
 
 class PlaybackViewModel @AssistedInject constructor(
@@ -36,9 +37,10 @@ class PlaybackViewModel @AssistedInject constructor(
         playbackConnection.isConnected.execute { copy(_isConnected = it) }
         playbackConnection.isPlaying.execute { copy(_isPlaying = it) }
 
-        playbackConnection.currentBook.execute(retainValue = PlaybackState::currentBook) {
-            copy(currentBook = it, isPreparing = false)
-        }
+        playbackConnection.currentBookId
+            .execute(retainValue = PlaybackState::currentBookId) {
+                copy(currentBookId = it)
+            }
     }
 
     val player: Player?
@@ -51,14 +53,14 @@ class PlaybackViewModel @AssistedInject constructor(
         }
 
     fun prepareMediaItems(bookProgressWithBookAndChapters: BookProgressWithBookAndChapters) {
-        val player = playbackConnection.player ?: return
+        val player = this.player ?: return
 
         val book = bookProgressWithBookAndChapters.book
         if (player.currentMediaItem?.mediaId == book.bookId.toString()) return
 
         // preparing items takes a while, possibly due to bundle stuff, so we disable playback
         // isPreparing flag is reset when state.currentBook is updated
-        setState { copy(isPreparing = true ) }
+        setState { copy(isPreparingBookId = book.bookId) }
 
         player.apply {
             setMediaItem(
@@ -72,7 +74,7 @@ class PlaybackViewModel @AssistedInject constructor(
                             .setIsPlayable(true)
                             .setArtworkUri(book.coverUri)
                             .setExtras(bundleOf(
-                                PlaybackConnection.BUNDLE_KEY_BOOK to book,
+                                PlaybackConnection.BUNDLE_KEY_BOOK_ID to book.bookId,
                             ))
                             .build()
                     )
