@@ -65,22 +65,14 @@ class PlaybackViewModel @AssistedInject constructor(
         player.apply {
             setMediaItem(
                 MediaItem.Builder()
-                    .setUri(book.uri)
                     .setMediaId(book.bookId.toString())
                     .setMediaMetadata(
                         MediaMetadata.Builder()
-                            .setTitle(book.title)
-                            .setArtist(book.author)
-                            .setIsPlayable(true)
-                            .setArtworkUri(book.coverUri)
-                            .setExtras(bundleOf(
-                                PlaybackConnection.BUNDLE_KEY_BOOK_ID to book.bookId,
-                            ))
-                            .build()
-                    )
-                    .setRequestMetadata(
-                        MediaItem.RequestMetadata.Builder()
-                            .setMediaUri(book.uri)
+                            .setExtras(
+                                bundleOf(
+                                    PlaybackConnection.BUNDLE_KEY_BOOK_ID to book.bookId,
+                                )
+                            )
                             .build()
                     )
                     .build()

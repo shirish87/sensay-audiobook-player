@@ -31,6 +31,8 @@ dependencies {
     implementation Libraries.Compose.materialIconsExtended
     implementation Libraries.Coil.coil
 
+    implementation Libraries.Coroutines.guava
+
     // Espresso dependencies
     androidTestImplementation TestLibraries.Espresso.espressoCore
 }

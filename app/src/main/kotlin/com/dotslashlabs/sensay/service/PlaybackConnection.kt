@@ -2,6 +2,7 @@ package com.dotslashlabs.sensay.service
 
 import android.content.ComponentName
 import android.content.Context
+import android.os.Bundle
 import androidx.media3.common.MediaMetadata
 import androidx.media3.common.Player
 import androidx.media3.common.util.Assertions
@@ -16,6 +17,13 @@ class PlaybackConnection constructor(private val context: Context) {
 
     companion object {
         const val BUNDLE_KEY_BOOK_ID = "bookId"
+
+        fun bookIdFromExtras(extras: Bundle?): Long? {
+            if (extras == null) return null
+
+            val bookId = extras.getLong(BUNDLE_KEY_BOOK_ID, Long.MIN_VALUE)
+            return if (bookId == Long.MIN_VALUE) null else bookId
+        }
     }
 
     private var _mediaController: MediaController? = null
@@ -72,9 +80,7 @@ class PlaybackConnection constructor(private val context: Context) {
         }
 
         private fun register(mediaMetadata: MediaMetadata) {
-            if (mediaMetadata.extras == null) return
-
-            val bookId = mediaMetadata.extras!!.getLong(BUNDLE_KEY_BOOK_ID)
+            val bookId = bookIdFromExtras(mediaMetadata.extras) ?: return
             if (bookId == _currentBookId.value) return
 
             _currentBookId.value = bookId

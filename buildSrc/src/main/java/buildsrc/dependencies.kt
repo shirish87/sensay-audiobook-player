@@ -30,9 +30,12 @@ object Libraries {
 
     object Coroutines {
         const val version = "1.6.4"
+        private const val guavaVersion = "1.6.4"
 
         const val core = "org.jetbrains.kotlinx:kotlinx-coroutines-core:$version"
         const val android = "org.jetbrains.kotlinx:kotlinx-coroutines-android:$version"
+
+        const val guava = "org.jetbrains.kotlinx:kotlinx-coroutines-guava:$guavaVersion"
     }
 
     object Hilt {

@@ -5,12 +5,14 @@ import androidx.media3.common.AudioAttributes
 import androidx.media3.common.C
 import androidx.media3.common.Player
 import androidx.media3.exoplayer.ExoPlayer
+import com.dotslashlabs.sensay.service.PlaybackUpdater
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.components.ServiceComponent
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.android.scopes.ServiceScoped
+import data.SensayStore
 
 @InstallIn(ServiceComponent::class)
 @Module
@@ -22,6 +24,10 @@ object PlaybackServiceModule {
         .setContentType(C.AUDIO_CONTENT_TYPE_MUSIC)
         .setUsage(C.USAGE_MEDIA)
         .build()
+
+    @Provides
+    @ServiceScoped
+    fun providePlaybackUpdater(store: SensayStore): PlaybackUpdater = PlaybackUpdater(store)
 
     @Provides
     @ServiceScoped

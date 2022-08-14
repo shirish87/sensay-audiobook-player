@@ -80,6 +80,9 @@ class SensayStore @Inject constructor(
     fun bookProgressWithBookAndChapters(bookId: Long) =
         bookProgressRepository.bookProgressWithBookAndChapters(bookId)
 
+    fun bookProgressWithBookAndChapters(bookIds: Collection<Long>) =
+        bookProgressRepository.bookProgressWithBookAndChapters(bookIds)
+
     fun booksCount() = bookRepository.booksCount()
 
     fun bookByUri(uri: Uri) = bookRepository.bookByUri(uri)

@@ -23,6 +23,9 @@ class BookProgressRepository @Inject constructor(
     fun bookProgressWithBookAndChapters(bookId: Long) =
         bookProgressDao.bookProgressWithBookAndChapters(bookId)
 
+    fun bookProgressWithBookAndChapters(bookIds: Collection<Long>) =
+        bookProgressDao.bookProgressWithBookAndChapters(bookIds)
+
     suspend fun insertBookProgress(bookProgress: BookProgress) =
         bookProgressDao.insert(bookProgress)
 
