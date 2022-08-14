@@ -10,6 +10,9 @@ data class ContentDuration(val value: Duration) {
         val ZERO = ContentDuration(value = 0.milliseconds)
     }
 
+    val ms: Long
+        get() = value.inWholeMilliseconds
+
     fun format() = if (value > ZERO.value) {
         value.toComponents { hh, mm, ss, _ ->
             listOf(hh, mm, ss).joinToString(":") { part ->
@@ -25,7 +28,7 @@ object ContentDurationParceler : Parceler<ContentDuration> {
     override fun create(parcel: Parcel) = ContentDuration(parcel.readLong().milliseconds)
 
     override fun ContentDuration.write(parcel: Parcel, flags: Int) {
-        parcel.writeLong(value.inWholeMilliseconds)
+        parcel.writeLong(ms)
     }
 }
 
@@ -36,7 +39,7 @@ object ContentDurationOptParceler : Parceler<ContentDuration?> {
         if (this == null) {
             parcel.writeLong(0L)
         } else {
-            parcel.writeLong(value.inWholeMilliseconds)
+            parcel.writeLong(ms)
         }
     }
 }

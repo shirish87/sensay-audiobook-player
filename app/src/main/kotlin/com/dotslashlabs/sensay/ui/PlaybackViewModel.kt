@@ -8,6 +8,7 @@ import com.airbnb.mvrx.*
 import com.airbnb.mvrx.hilt.AssistedViewModelFactory
 import com.airbnb.mvrx.hilt.hiltMavericksViewModelFactory
 import com.dotslashlabs.sensay.service.PlaybackConnection
+import com.dotslashlabs.sensay.service.PlaybackConnectionState
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
@@ -15,17 +16,17 @@ import data.entity.Book
 import data.entity.BookProgressWithBookAndChapters
 
 data class PlaybackState(
-    private val _isConnected: Async<Boolean> = Uninitialized,
-    private val _isPlaying: Async<Boolean> = Uninitialized,
+    val playbackConnectionState: Async<PlaybackConnectionState> = Uninitialized,
     val isPreparingBookId: Long? = null,
-    val currentBookId: Async<Long?> = Uninitialized,
 ) : MavericksState {
 
-    val isConnected = (_isConnected() == true)
-    val isPlaying = (_isPlaying() == true)
-    val isPreparing = (isPreparingBookId != null && isPreparingBookId != currentBookId())
+    val isConnected = (playbackConnectionState()?.isConnected == true)
+    val isPlaying = (playbackConnectionState()?.isPlaying == true)
 
-    fun isCurrentBook(book: Book): Boolean = (book.bookId == currentBookId())
+    private val currentBookId = playbackConnectionState()?.currentBookId
+    val isPreparing = (isPreparingBookId != null && isPreparingBookId != currentBookId)
+
+    fun isCurrentBook(book: Book): Boolean = (book.bookId == currentBookId)
 }
 
 class PlaybackViewModel @AssistedInject constructor(
@@ -34,13 +35,16 @@ class PlaybackViewModel @AssistedInject constructor(
 ) : MavericksViewModel<PlaybackState>(state) {
 
     init {
-        playbackConnection.isConnected.execute { copy(_isConnected = it) }
-        playbackConnection.isPlaying.execute { copy(_isPlaying = it) }
-
-        playbackConnection.currentBookId
-            .execute(retainValue = PlaybackState::currentBookId) {
-                copy(currentBookId = it)
+        playbackConnection.state
+            .execute(retainValue = PlaybackState::playbackConnectionState) {
+                copy(playbackConnectionState = it)
             }
+    }
+
+    override fun onCleared() {
+
+
+        super.onCleared()
     }
 
     val player: Player?
@@ -62,25 +66,16 @@ class PlaybackViewModel @AssistedInject constructor(
         // isPreparing flag is reset when state.currentBook is updated
         setState { copy(isPreparingBookId = book.bookId) }
 
+        val startMediaIndex =
+            bookProgressWithBookAndChapters.chapters.indexOf(bookProgressWithBookAndChapters.chapter)
         val startPositionMs = bookProgressWithBookAndChapters.startPositionMs
 
         player.apply {
-            setMediaItem(
-                MediaItem.Builder()
-                    .setMediaId(book.bookId.toString())
-                    .setMediaMetadata(
-                        MediaMetadata.Builder()
-                            .setExtras(
-                                bundleOf(
-                                    PlaybackConnection.BUNDLE_KEY_BOOK_ID to book.bookId,
-                                )
-                            )
-                            .build()
-                    )
-                    .build(),
+            setMediaItems(
+                bookProgressWithBookAndChapters.toMediaItems(),
+                startMediaIndex,
                 startPositionMs,
             )
-
             prepare()
         }
     }
@@ -97,4 +92,41 @@ class PlaybackViewModel @AssistedInject constructor(
 
     companion object : MavericksViewModelFactory<PlaybackViewModel, PlaybackState>
     by hiltMavericksViewModelFactory()
+}
+
+fun BookProgressWithBookAndChapters.toMediaItems(): List<MediaItem> {
+    if (chapters.isEmpty()) {
+        return listOf(
+            MediaItem.Builder()
+                .setMediaId(book.bookId.toString())
+                .setMediaMetadata(
+                    MediaMetadata.Builder()
+                        .setExtras(
+                            bundleOf(
+                                PlaybackConnection.BUNDLE_KEY_BOOK_ID to book.bookId,
+                            )
+                        )
+                        .build()
+                )
+                .build()
+        )
+    }
+
+    return chapters.mapNotNull {
+        if (it.start == null || it.end == null) return@mapNotNull null
+
+        MediaItem.Builder()
+            .setMediaId(it.chapterId.toString())
+            .setMediaMetadata(
+                MediaMetadata.Builder()
+                    .setExtras(
+                        bundleOf(
+                            PlaybackConnection.BUNDLE_KEY_BOOK_ID to book.bookId,
+                            PlaybackConnection.BUNDLE_KEY_CHAPTER_ID to it.chapterId,
+                        )
+                    )
+                    .build()
+            )
+            .build()
+    }
 }

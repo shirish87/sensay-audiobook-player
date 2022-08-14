@@ -119,25 +119,41 @@ class PlaybackUpdater constructor(private val store: SensayStore) : Player.Liste
         playerRef?.clearMediaItems()
         mediaItemsCache.clear()
 
-        val bookMediaMap = mediaItems.mapNotNull {
-            val bookId = PlaybackConnection.bookIdFromExtras(it.mediaMetadata.extras)
-                ?: return@mapNotNull null
+        // mediaItem.mediaId => (bookId, chapterId)
+        val mediaBookChapterMap = mediaItems.mapNotNull {
+            val bookId = PlaybackConnection.fromExtras(
+                it.mediaMetadata.extras,
+                PlaybackConnection.BUNDLE_KEY_BOOK_ID,
+            ) ?: return@mapNotNull null
 
-            bookId to it.mediaId
+            val chapterId = PlaybackConnection.fromExtras(
+                it.mediaMetadata.extras,
+                PlaybackConnection.BUNDLE_KEY_CHAPTER_ID,
+            )
+
+            it.mediaId to (bookId to chapterId)
         }.toMap()
 
-        val result = mutableListOf<MediaItem>()
+        // bookId => BookProgressWithBookAndChapters
+        val bookProgressMap: Map<Long, BookProgressWithBookAndChapters> =
+            store.bookProgressWithBookAndChapters(mediaBookChapterMap.values.map { it.first })
+                .first()
+                .fold(mutableMapOf()) { acc, it ->
+                    acc[it.book.bookId] = it
+                    acc
+                }
 
-        store.bookProgressWithBookAndChapters(bookMediaMap.keys)
-            .firstOrNull()
-            ?.fold(result) { list, it ->
-                val book = it.book
-                val mediaId = bookMediaMap[book.bookId] ?: return@fold list
-                mediaItemsCache[mediaId] = it
+        mediaItems.fold(mutableListOf()) { acc, it ->
+            mediaBookChapterMap[it.mediaId]?.let { (bookId, chapterId) ->
 
-                list.add(it.toMediaItem(mediaId))
-                list
-            } ?: result
+                bookProgressMap[bookId]?.let { b ->
+                    mediaItemsCache[it.mediaId] = b
+                    acc.add(b.toMediaItem(it.mediaId, chapterId))
+                }
+            }
+
+            acc
+        }
     }
 
     fun release() {
@@ -150,22 +166,37 @@ class PlaybackUpdater constructor(private val store: SensayStore) : Player.Liste
 }
 
 
-fun BookProgressWithBookAndChapters.toMediaItem(mediaId: String) =
-    MediaItem.Builder()
+fun BookProgressWithBookAndChapters.toMediaItem(mediaId: String, chapterId: Long?): MediaItem {
+    val requestedChapter = when (chapterId) {
+        null -> null
+        chapter.chapterId -> chapter
+        else -> chapters.find { c -> chapterId == c.chapterId }
+    }
+
+    val extras = if (requestedChapter != null) {
+        bundleOf(
+            PlaybackConnection.BUNDLE_KEY_BOOK_ID to book.bookId,
+            PlaybackConnection.BUNDLE_KEY_CHAPTER_ID to requestedChapter.chapterId,
+        )
+    } else {
+        bundleOf(
+            PlaybackConnection.BUNDLE_KEY_BOOK_ID to book.bookId,
+        )
+    }
+
+    return MediaItem.Builder()
         .setUri(book.uri)
         .setMediaId(mediaId)
         .setMediaMetadata(
             MediaMetadata.Builder()
-                .setTitle(book.title)
+                .setTitle(requestedChapter?.title ?: book.title)
+                .setAlbumTitle(if (requestedChapter != null) book.title else null)
                 .setArtist(book.author)
                 .setIsPlayable(true)
                 .setTrackNumber(chapters.indexOf(chapter) + 1)
                 .setTotalTrackCount(chapters.size)
-                .setExtras(
-                    bundleOf(
-                        PlaybackConnection.BUNDLE_KEY_BOOK_ID to book.bookId,
-                    )
-                )
+                .setExtras(extras)
                 .build()
         )
         .build()
+}

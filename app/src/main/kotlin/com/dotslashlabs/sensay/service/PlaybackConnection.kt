@@ -13,16 +13,23 @@ import com.google.common.util.concurrent.Futures
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 
+data class PlaybackConnectionState(
+    val isConnected: Boolean = false,
+    val isPlaying: Boolean = false,
+    val currentBookId: Long? = null,
+)
+
 class PlaybackConnection constructor(private val context: Context) {
 
     companion object {
         const val BUNDLE_KEY_BOOK_ID = "bookId"
+        const val BUNDLE_KEY_CHAPTER_ID = "chapterId"
 
-        fun bookIdFromExtras(extras: Bundle?): Long? {
+        fun fromExtras(extras: Bundle?, key: String): Long? {
             if (extras == null) return null
 
-            val bookId = extras.getLong(BUNDLE_KEY_BOOK_ID, Long.MIN_VALUE)
-            return if (bookId == Long.MIN_VALUE) null else bookId
+            val value = extras.getLong(key, Long.MIN_VALUE)
+            return if (value == Long.MIN_VALUE) null else value
         }
     }
 
@@ -36,14 +43,8 @@ class PlaybackConnection constructor(private val context: Context) {
             else null
         }
 
-    private val _isConnected = MutableStateFlow(_mediaController?.isConnected == true)
-    val isConnected: StateFlow<Boolean> = _isConnected
-
-    private val _isPlaying = MutableStateFlow(_mediaController?.isPlaying == true)
-    val isPlaying: StateFlow<Boolean> = _isPlaying
-
-    private val _currentBookId = MutableStateFlow<Long?>(null)
-    val currentBookId: StateFlow<Long?> = _currentBookId
+    private val _state = MutableStateFlow(PlaybackConnectionState())
+    val state: StateFlow<PlaybackConnectionState> = _state
 
     fun start() {
         val controllerFuture = MediaController.Builder(
@@ -55,7 +56,7 @@ class PlaybackConnection constructor(private val context: Context) {
             override fun onSuccess(result: MediaController?) {
                 _mediaController = result
                 _mediaController?.addListener(playerListener)
-                _isConnected.value = (result?.isConnected == true)
+                _state.value = _state.value.copy(isConnected = (result?.isConnected == true))
             }
 
             override fun onFailure(t: Throwable) {
@@ -67,23 +68,22 @@ class PlaybackConnection constructor(private val context: Context) {
     fun stop() = release()
 
     private fun release() {
-        _isConnected.value = false
+        _state.value = _state.value.copy(isConnected = false)
         _mediaController?.removeListener(playerListener)
         _mediaController = null
     }
 
     private val playerListener = object : Player.Listener {
-
         override fun onIsPlayingChanged(isPlaying: Boolean) {
-            _isPlaying.value = isPlaying
+            _state.value = _state.value.copy(isPlaying = isPlaying)
             player?.mediaMetadata?.let { register(it) }
         }
 
         private fun register(mediaMetadata: MediaMetadata) {
-            val bookId = bookIdFromExtras(mediaMetadata.extras) ?: return
-            if (bookId == _currentBookId.value) return
+            val bookId = fromExtras(mediaMetadata.extras, BUNDLE_KEY_BOOK_ID) ?: return
+            if (bookId == _state.value.currentBookId) return
 
-            _currentBookId.value = bookId
+            _state.value = _state.value.copy(currentBookId = bookId)
         }
     }
 }
