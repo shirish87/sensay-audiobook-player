@@ -34,4 +34,6 @@ class BookProgressRepository @Inject constructor(
             bookProgressDao.deleteAll(it)
         }
     }
+
+    suspend fun update(bookProgress: BookProgress) = bookProgressDao.update(bookProgress)
 }

@@ -112,6 +112,9 @@ class SensayStore @Inject constructor(
             return false
         }
     }
+
+    suspend fun updateBookProgress(bookProgress: BookProgress) =
+        bookProgressRepository.update(bookProgress)
 }
 
 @Transaction

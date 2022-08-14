@@ -62,6 +62,8 @@ class PlaybackViewModel @AssistedInject constructor(
         // isPreparing flag is reset when state.currentBook is updated
         setState { copy(isPreparingBookId = book.bookId) }
 
+        val startPositionMs = bookProgressWithBookAndChapters.startPositionMs
+
         player.apply {
             setMediaItem(
                 MediaItem.Builder()
@@ -75,7 +77,8 @@ class PlaybackViewModel @AssistedInject constructor(
                             )
                             .build()
                     )
-                    .build()
+                    .build(),
+                startPositionMs,
             )
 
             prepare()

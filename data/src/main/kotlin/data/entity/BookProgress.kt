@@ -5,6 +5,7 @@ import androidx.room.*
 import data.BookCategory
 import data.util.ContentDuration
 import data.util.ContentDurationParceler
+import kotlinx.parcelize.IgnoredOnParcel
 import kotlinx.parcelize.Parcelize
 import kotlinx.parcelize.TypeParceler
 import java.time.Instant
@@ -98,6 +99,14 @@ data class BookProgressWithBookAndChapters(
     )
     val chapters: List<Chapter>,
 ) : Parcelable {
+
+    @IgnoredOnParcel
+    @Ignore
+    val startPositionMs = bookProgress.bookProgress.value.inWholeMilliseconds
+
+    @IgnoredOnParcel
+    @Ignore
+    val bookDurationMs = book.duration.value.inWholeMilliseconds
 
     companion object {
         fun empty() = BookProgressWithBookAndChapters(
