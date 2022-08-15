@@ -20,7 +20,7 @@ data class PlayerViewState(
     @PersistState val bookId: Long,
     val bookProgressWithChapters: Async<BookProgressWithBookAndChapters> = Uninitialized,
     val playbackConnectionState: Async<PlaybackConnectionState> = Uninitialized,
-    ) : MavericksState {
+) : MavericksState {
     constructor(arguments: Bundle) : this(bookId = arguments.getString("bookId")!!.toLong())
 
     val bookProgress = (bookProgressWithChapters as? Success)?.invoke()
