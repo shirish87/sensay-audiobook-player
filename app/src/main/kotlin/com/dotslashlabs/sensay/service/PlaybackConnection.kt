@@ -80,7 +80,10 @@ class PlaybackConnection constructor(private val context: Context) {
             override fun onSuccess(result: MediaController?) {
                 _mediaController = result
                 _mediaController?.addListener(playerListener)
-                _state.value = _state.value.copy(isConnected = (result?.isConnected == true))
+
+                _state.value = restoreStateFromPlayer(
+                    isConnected = (result?.isConnected == true)
+                )
             }
 
             override fun onFailure(t: Throwable) {
@@ -97,9 +100,24 @@ class PlaybackConnection constructor(private val context: Context) {
 
     private fun release() {
         stateRecorder.release()
-        _state.value = _state.value.copy(isConnected = false)
+        _state.value = PlaybackConnectionState()
         _mediaController?.removeListener(playerListener)
         _mediaController = null
+    }
+
+    private fun restoreStateFromPlayer(isConnected: Boolean): PlaybackConnectionState {
+        val bookId = fromExtras(player?.mediaMetadata?.extras, BUNDLE_KEY_BOOK_ID)
+
+        return PlaybackConnectionState(
+            isConnected = isConnected,
+            isPlaying = (player?.isPlaying == true),
+            currentBookId = bookId,
+            currentPosition = player?.currentPosition,
+            duration = player?.duration,
+            preparingBookId = if (bookId != state.value.preparingBookId)
+                state.value.preparingBookId
+            else null,
+        )
     }
 
     private val playerListener = object : Player.Listener {
@@ -107,7 +125,7 @@ class PlaybackConnection constructor(private val context: Context) {
             stateRecorder.recordState()
 
         override fun onIsPlayingChanged(isPlaying: Boolean) {
-            val bookId = fromExtras(player?.mediaMetadata?.extras, BUNDLE_KEY_BOOK_ID) ?: return
+            val bookId = fromExtras(player?.mediaMetadata?.extras, BUNDLE_KEY_BOOK_ID)
 
             _state.value = _state.value.copy(
                 currentBookId = bookId,

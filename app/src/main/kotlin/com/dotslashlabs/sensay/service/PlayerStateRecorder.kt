@@ -11,7 +11,7 @@ import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 
 class PlayerStateRecorder<T>(
-    private val interval: Duration = 10.seconds,
+    interval: Duration = 10.seconds,
     private val playerProvider: () -> Player?,
     private val stateFlow: MutableStateFlow<T>,
     private val newStateFromPlayer: (Player) -> T,
@@ -21,6 +21,7 @@ class PlayerStateRecorder<T>(
     private val playerRef: Player?
         get() = playerProvider()
 
+    private val delayInMillis = interval.inWholeMilliseconds
 
     fun recordState(player: Player? = playerRef) {
         if (player == null || player.currentPosition == C.TIME_UNSET) return
@@ -32,8 +33,6 @@ class PlayerStateRecorder<T>(
         stopStateRecorder()
 
         stateRecorderJob = scope.launch {
-            val delayInMillis = interval.inWholeMilliseconds
-
             while (true) {
                 recordState()
                 delay(delayInMillis)
@@ -46,7 +45,5 @@ class PlayerStateRecorder<T>(
         stateRecorderJob = null
     }
 
-    fun release() {
-        stopStateRecorder()
-    }
+    fun release() = stopStateRecorder()
 }

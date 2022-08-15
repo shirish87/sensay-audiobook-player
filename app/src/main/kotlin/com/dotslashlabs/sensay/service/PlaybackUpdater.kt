@@ -59,7 +59,7 @@ class PlaybackUpdater constructor(private val store: SensayStore) : Player.Liste
         serviceScope.launch {
             _playerEvents.filterNotNull().debounce(5.seconds).collectLatest {
                 val bookProgress = it.bookProgress
-                logcat { "PlayerEvent: ${bookProgress.book.title} ${it.currentPositionMs}" }
+                logcat { "PlayerEvent.updateBookProgress: ${bookProgress.book.title} ${it.currentPositionMs}" }
 
                 store.updateBookProgress(
                     bookProgress.bookProgress.copy(
