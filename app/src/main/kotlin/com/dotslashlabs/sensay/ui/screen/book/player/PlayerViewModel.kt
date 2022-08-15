@@ -11,6 +11,7 @@ import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import data.SensayStore
+import data.entity.Book
 import data.entity.BookProgressWithBookAndChapters
 import data.util.ContentDuration
 import kotlin.time.Duration.Companion.milliseconds
@@ -19,10 +20,12 @@ data class PlayerViewState(
     @PersistState val bookId: Long,
     val bookProgressWithChapters: Async<BookProgressWithBookAndChapters> = Uninitialized,
     val playbackConnectionState: Async<PlaybackConnectionState> = Uninitialized,
-) : MavericksState {
+    ) : MavericksState {
     constructor(arguments: Bundle) : this(bookId = arguments.getString("bookId")!!.toLong())
 
-    val coverUri: Uri? = (bookProgressWithChapters as? Success)?.invoke()?.book?.coverUri
+    val bookProgress = (bookProgressWithChapters as? Success)?.invoke()
+    val book: Book? = bookProgress?.book
+    val coverUri: Uri? = book?.coverUri
 
     private val connState = playbackConnectionState()
 

@@ -1,6 +1,7 @@
 package com.dotslashlabs.sensay.ui
 
 import android.content.Context
+import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.documentfile.provider.DocumentFile
 import com.airbnb.mvrx.*
 import com.airbnb.mvrx.hilt.AssistedViewModelFactory
@@ -37,6 +38,8 @@ data class SensayAppState(
 ) : MavericksState {
 
     val shouldScan = ((audiobookFoldersUpdateTime() ?: 0L) > lastScanTime.toEpochMilli())
+
+    val useLandscapeLayout = (windowSize.widthSizeClass == WindowWidthSizeClass.Expanded)
 }
 
 class SensayAppViewModel @AssistedInject constructor(

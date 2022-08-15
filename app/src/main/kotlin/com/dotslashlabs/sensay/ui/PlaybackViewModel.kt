@@ -23,10 +23,20 @@ data class PlaybackState(
     val isConnected = (connState?.isConnected == true)
 }
 
+interface PlaybackActions {
+    var playWhenReady: Boolean
+
+    fun prepareMediaItems(bookProgressWithBookAndChapters: BookProgressWithBookAndChapters)
+    fun seekBack(): Unit?
+    fun seekForward(): Unit?
+    fun pause(): Unit?
+    fun play(): Unit?
+}
+
 class PlaybackViewModel @AssistedInject constructor(
     @Assisted private val state: PlaybackState,
     private val playbackConnection: PlaybackConnection,
-) : MavericksViewModel<PlaybackState>(state) {
+) : MavericksViewModel<PlaybackState>(state), PlaybackActions {
 
     init {
         playbackConnection.state
@@ -38,13 +48,13 @@ class PlaybackViewModel @AssistedInject constructor(
     val player: Player?
         get() = playbackConnection.player
 
-    var playWhenReady: Boolean
+    override var playWhenReady: Boolean
         get() = player?.playWhenReady == true
         set(value) {
             player?.playWhenReady = value
         }
 
-    fun prepareMediaItems(bookProgressWithBookAndChapters: BookProgressWithBookAndChapters) {
+    override fun prepareMediaItems(bookProgressWithBookAndChapters: BookProgressWithBookAndChapters) {
         val player = this.player ?: return
 
         val book = bookProgressWithBookAndChapters.book
@@ -68,10 +78,10 @@ class PlaybackViewModel @AssistedInject constructor(
         }
     }
 
-    fun seekBack() = player?.seekBack()
-    fun seekForward() = player?.seekForward()
-    fun pause() = player?.pause()
-    fun play() = player?.play()
+    override fun seekBack() = player?.seekBack()
+    override fun seekForward() = player?.seekForward()
+    override fun pause() = player?.pause()
+    override fun play() = player?.play()
 
     @AssistedFactory
     interface Factory : AssistedViewModelFactory<PlaybackViewModel, PlaybackState> {

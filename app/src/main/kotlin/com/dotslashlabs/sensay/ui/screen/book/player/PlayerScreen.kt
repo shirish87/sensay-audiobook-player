@@ -2,12 +2,16 @@ package com.dotslashlabs.sensay.ui.screen.book.player
 
 import android.annotation.SuppressLint
 import android.net.Uri
+import android.os.Bundle
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.filled.Forward10
+import androidx.compose.material.icons.filled.PauseCircleFilled
+import androidx.compose.material.icons.filled.PlayCircleFilled
+import androidx.compose.material.icons.filled.Replay10
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -17,15 +21,21 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavHostController
+import com.airbnb.mvrx.Success
 import com.airbnb.mvrx.compose.collectAsState
 import com.airbnb.mvrx.compose.mavericksActivityViewModel
 import com.airbnb.mvrx.compose.mavericksViewModel
 import com.dotslashlabs.sensay.R
+import com.dotslashlabs.sensay.service.PlaybackConnectionState
+import com.dotslashlabs.sensay.ui.PlaybackActions
 import com.dotslashlabs.sensay.ui.PlaybackViewModel
+import com.dotslashlabs.sensay.ui.SensayAppState
+import com.dotslashlabs.sensay.ui.SensayAppViewModel
 import com.dotslashlabs.sensay.ui.screen.Destination
 import com.dotslashlabs.sensay.ui.screen.SensayScreen
 import com.dotslashlabs.sensay.ui.screen.common.CoverImage
@@ -35,6 +45,10 @@ import com.dotslashlabs.sensay.ui.theme.MinContrastOfPrimaryVsSurface
 import com.dotslashlabs.sensay.ui.theme.contrastAgainst
 import com.dotslashlabs.sensay.ui.theme.rememberDominantColorState
 import com.dotslashlabs.sensay.util.verticalGradientScrim
+import data.entity.Book
+import data.entity.BookProgress
+import data.entity.BookProgressWithBookAndChapters
+import data.entity.Chapter
 
 object PlayerScreen : SensayScreen {
     @Composable
@@ -42,25 +56,37 @@ object PlayerScreen : SensayScreen {
         destination: Destination,
         navHostController: NavHostController,
         backStackEntry: NavBackStackEntry,
-    ) = PlayerContent(
-        backStackEntry,
-        onBackPress = { navHostController.popBackStack() })
+    ) = backStackEntry.arguments?.let { args ->
+        PlayerContent(args, onBackPress = { navHostController.popBackStack() })
+    } ?: Unit
 }
 
-@SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PlayerContent(
-    backStackEntry: NavBackStackEntry,
+    argsBundle: Bundle,
     onBackPress: () -> Unit,
 ) {
-    val argsBundle = backStackEntry.arguments ?: return
+
+    val appViewModel: SensayAppViewModel = mavericksActivityViewModel()
+    val useLandscapeLayout by appViewModel.collectAsState(SensayAppState::useLandscapeLayout)
 
     val playbackViewModel: PlaybackViewModel = mavericksActivityViewModel()
 
     val viewModel: PlayerViewModel = mavericksViewModel(argsFactory = { argsBundle })
     val state by viewModel.collectAsState()
 
+    PlayerContentView(playbackViewModel, state, useLandscapeLayout, onBackPress)
+}
+
+@SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun PlayerContentView(
+    playbackActions: PlaybackActions,
+    state: PlayerViewState,
+    useLandscapeLayout: Boolean,
+    onBackPress: () -> Unit,
+) {
     PlayerDynamicTheme(state) {
         SensayFrame(
             modifier = Modifier
@@ -72,40 +98,108 @@ fun PlayerContent(
         ) {
             Scaffold(
                 containerColor = Color.Transparent,
-                floatingActionButtonPosition = FabPosition.End,
-                floatingActionButton = {
-                    ExtendedFloatingActionButton(
-                        icon = { Icon(Icons.Filled.PlayArrow, "Play") },
-                        text = { Text("Play") },
-                        onClick = {}
-                    )
-                },
                 topBar = {
                     PlayerAppBar(onBackPress = onBackPress)
                 },
                 content = { contentPadding ->
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(contentPadding)
-                            .padding(36.dp),
-                    ) {
-                        Column(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .verticalScroll(rememberScrollState()),
-                            verticalArrangement = Arrangement.Top,
-                        ) {
-
-                            PlayerImage(
-                                coverUri = state.coverUri,
-                                modifier = Modifier.clickable { onBackPress() },
-                            )
-
-                            PlayerButtons(playbackViewModel, state)
-                        }
+                    if (useLandscapeLayout) {
+                        PlayerContentViewLandscape(
+                            playbackActions,
+                            state,
+                            modifier = Modifier.padding(contentPadding),
+                            onBackPress = onBackPress,
+                        )
+                    } else {
+                        PlayerContentViewNormal(
+                            playbackActions,
+                            state,
+                            modifier = Modifier.padding(contentPadding),
+                            onBackPress = onBackPress,
+                        )
                     }
                 }
+            )
+        }
+    }
+}
+
+@Composable
+fun PlayerContentViewNormal(
+    playbackActions: PlaybackActions,
+    state: PlayerViewState,
+    modifier: Modifier = Modifier,
+    onBackPress: () -> Unit,
+) {
+    Column(
+        modifier = modifier
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState()),
+        verticalArrangement = Arrangement.SpaceEvenly,
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        Row(
+            verticalAlignment = Alignment.Top,
+            horizontalArrangement = Arrangement.Center,
+        ) {
+            PlayerImage(
+                coverUri = state.coverUri,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = 40.dp, vertical = 20.dp)
+                    .clickable { onBackPress() },
+            )
+        }
+
+        Row(
+            verticalAlignment = Alignment.Top,
+            horizontalArrangement = Arrangement.Center,
+        ) {
+            PlayerInfo(state = state)
+        }
+
+        PlayerButtons(
+            playbackActions,
+            state,
+            modifier = Modifier.padding(vertical = 40.dp, horizontal = 20.dp),
+        )
+    }
+}
+
+@Composable
+fun PlayerContentViewLandscape(
+    playbackActions: PlaybackActions,
+    state: PlayerViewState,
+    modifier: Modifier = Modifier,
+    onBackPress: () -> Unit,
+) {
+    Row(
+        modifier = modifier
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState()),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceEvenly,
+    ) {
+        Column(
+            modifier = Modifier.weight(0.3F),
+        ) {
+            PlayerImage(
+                coverUri = state.coverUri,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(20.dp)
+                    .clickable { onBackPress() },
+            )
+        }
+
+        Column(
+            modifier = Modifier.weight(0.7F),
+        ) {
+            PlayerInfo(state = state)
+
+            PlayerButtons(
+                playbackActions,
+                state,
+                modifier = Modifier.padding(20.dp),
             )
         }
     }
@@ -128,28 +222,36 @@ private fun PlayerImage(
 }
 
 @Composable
-private fun PlayerButtons(
-    playbackViewModel: PlaybackViewModel,
+private fun PlayerInfo(
     state: PlayerViewState,
     modifier: Modifier = Modifier,
-    playerButtonSize: Dp = 96.dp,
-    sideButtonSize: Dp = 64.dp,
 ) {
 
-    val bookProgressWithChapters = state.bookProgressWithChapters() ?: return
-
-    Text(
-        text = bookProgressWithChapters.book.title,
-        textAlign = TextAlign.Center,
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(top = 40.dp),
-        style = MaterialTheme.typography.headlineMedium,
-    )
-
-    bookProgressWithChapters.book.author?.let { author ->
+    Column(modifier = modifier) {
         Text(
-            text = author,
+            text = state.book?.title ?: "",
+            textAlign = TextAlign.Center,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 20.dp),
+            style = MaterialTheme.typography.headlineMedium,
+        )
+
+        Text(
+            text = state.book?.author ?: "",
+            textAlign = TextAlign.Center,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 20.dp),
+            style = MaterialTheme.typography.bodySmall,
+        )
+
+        Text(
+            text = if (state.isCurrentBook) {
+                "${state.currentPosition} / ${state.duration}"
+            } else {
+                "${state.bookProgress?.currentPosition ?: ""} / ${state.bookProgress?.duration ?: ""}"
+            },
             textAlign = TextAlign.Center,
             modifier = Modifier
                 .fillMaxWidth()
@@ -157,24 +259,21 @@ private fun PlayerButtons(
             style = MaterialTheme.typography.bodySmall,
         )
     }
+}
 
-    Text(
-        text = if (state.isCurrentBook) {
-            "${state.currentPosition} / ${state.duration}"
-        } else {
-            "${bookProgressWithChapters.currentPosition} / ${bookProgressWithChapters.duration}"
-        },
-        textAlign = TextAlign.Center,
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(top = 20.dp),
-        style = MaterialTheme.typography.bodySmall,
-    )
+@Composable
+private fun PlayerButtons(
+    playbackActions: PlaybackActions,
+    state: PlayerViewState,
+    modifier: Modifier = Modifier,
+    playerButtonSize: Dp = 96.dp,
+    sideButtonSize: Dp = 64.dp,
+) {
+
+    val bookProgressWithChapters = state.bookProgress ?: return
 
     Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(vertical = 40.dp, horizontal = 20.dp),
+        modifier = modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceEvenly,
     ) {
@@ -183,7 +282,7 @@ private fun PlayerButtons(
 
         OutlinedIconButton(
             enabled = !state.isPreparingCurrentBook,
-            onClick = { playbackViewModel.seekBack() },
+            onClick = { playbackActions.seekBack() },
             modifier = buttonsModifier,
         ) {
             Icon(
@@ -197,7 +296,7 @@ private fun PlayerButtons(
             onClick = {
                 if (state.isCurrentBook) {
                     // current book
-                    playbackViewModel.apply {
+                    playbackActions.apply {
                         if (state.isPlaying) {
                             pause()
                         } else {
@@ -208,7 +307,7 @@ private fun PlayerButtons(
                     }
                 } else {
                     // other book, only play action is possible
-                    playbackViewModel.apply {
+                    playbackActions.apply {
                         prepareMediaItems(bookProgressWithChapters)
                         playWhenReady = true
                         play()
@@ -230,7 +329,7 @@ private fun PlayerButtons(
 
         OutlinedIconButton(
             enabled = !state.isPreparingCurrentBook,
-            onClick = { playbackViewModel.seekForward() },
+            onClick = { playbackActions.seekForward() },
             modifier = buttonsModifier,
         ) {
             Icon(
@@ -267,4 +366,61 @@ private fun PlayerDynamicTheme(
 
         content()
     }
+}
+
+@Preview
+@Composable
+fun PlayerContentPreview() {
+    val bookId = 2L
+
+    val state = PlayerViewState(
+        bookId = bookId,
+        bookProgressWithChapters = Success(
+            BookProgressWithBookAndChapters(
+                book = Book.empty().copy(
+                    bookId = bookId,
+                ),
+                bookProgress = BookProgress.empty(),
+                chapter = Chapter.empty(),
+                chapters = listOf(Chapter.empty()),
+            )
+        ),
+        playbackConnectionState = Success(
+            PlaybackConnectionState(
+                isConnected = true,
+                isPlaying = false,
+            )
+        )
+    )
+
+    val playbackActions = object : PlaybackActions {
+        override var playWhenReady: Boolean = false
+
+        override fun prepareMediaItems(bookProgressWithBookAndChapters: BookProgressWithBookAndChapters) {
+            TODO("Not yet implemented")
+        }
+
+        override fun seekBack(): Unit? {
+            TODO("Not yet implemented")
+        }
+
+        override fun seekForward(): Unit? {
+            TODO("Not yet implemented")
+        }
+
+        override fun pause(): Unit? {
+            TODO("Not yet implemented")
+        }
+
+        override fun play(): Unit? {
+            TODO("Not yet implemented")
+        }
+    }
+
+    PlayerContentView(
+        playbackActions,
+        state,
+        useLandscapeLayout = false,
+        onBackPress = {},
+    )
 }
