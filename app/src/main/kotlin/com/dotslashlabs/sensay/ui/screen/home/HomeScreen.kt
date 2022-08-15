@@ -28,7 +28,7 @@ import kotlinx.coroutines.launch
 
 object HomeScreen : SensayScreen {
     @Composable
-    override fun content(
+    override fun Content(
         destination: Destination,
         navHostController: NavHostController,
         backStackEntry: NavBackStackEntry,

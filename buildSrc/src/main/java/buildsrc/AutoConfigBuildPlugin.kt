@@ -180,6 +180,10 @@ fun BaseExtension.configure(
         }
     }
 
+    lintOptions {
+        disable += "ObsoleteLintCustomCheck"
+    }
+
     when (this) {
         is AppExtension -> {
             buildTypes {

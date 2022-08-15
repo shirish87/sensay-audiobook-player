@@ -31,7 +31,7 @@ import com.dotslashlabs.sensay.ui.screen.common.SensayFrame
 
 object SourcesScreen : SensayScreen {
     @Composable
-    override fun content(
+    override fun Content(
         destination: Destination,
         navHostController: NavHostController,
         backStackEntry: NavBackStackEntry

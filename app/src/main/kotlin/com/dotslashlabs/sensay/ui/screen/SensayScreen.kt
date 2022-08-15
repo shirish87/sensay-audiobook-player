@@ -18,7 +18,7 @@ interface SensayScreen {
         route = destination.route,
         arguments = destination.arguments,
     ) {
-        content(
+        Content(
             destination,
             navHostController,
             it,
@@ -26,7 +26,7 @@ interface SensayScreen {
     }
 
     @Composable
-    fun content(
+    fun Content(
         destination: Destination,
         navHostController: NavHostController,
         backStackEntry: NavBackStackEntry,

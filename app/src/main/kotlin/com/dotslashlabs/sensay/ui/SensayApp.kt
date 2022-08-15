@@ -15,8 +15,8 @@ import com.google.accompanist.navigation.animation.rememberAnimatedNavController
 @OptIn(ExperimentalAnimationApi::class)
 @Composable
 fun SensayApp(
-    @Suppress("UNUSED_PARAMETER") windowSize: WindowSizeClass,
-    @Suppress("UNUSED_PARAMETER") devicePosture: DevicePosture,
+    windowSize: WindowSizeClass,
+    devicePosture: DevicePosture,
 ) {
 
     val viewModel: SensayAppViewModel = mavericksActivityViewModel()

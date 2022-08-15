@@ -18,7 +18,7 @@ import config.HomeLayout
 
 object LibraryScreen : SensayScreen {
     @Composable
-    override fun content(
+    override fun Content(
         destination: Destination,
         navHostController: NavHostController,
         backStackEntry: NavBackStackEntry,

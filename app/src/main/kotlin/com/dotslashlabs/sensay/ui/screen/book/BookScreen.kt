@@ -32,7 +32,7 @@ object BookScreen : SensayScreen {
     }
 
     @Composable
-    override fun content(
+    override fun Content(
         destination: Destination,
         navHostController: NavHostController,
         backStackEntry: NavBackStackEntry,

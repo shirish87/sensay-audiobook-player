@@ -52,7 +52,7 @@ import data.entity.Chapter
 
 object PlayerScreen : SensayScreen {
     @Composable
-    override fun content(
+    override fun Content(
         destination: Destination,
         navHostController: NavHostController,
         backStackEntry: NavBackStackEntry,
