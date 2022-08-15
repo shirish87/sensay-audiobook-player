@@ -1,7 +1,6 @@
 package com.dotslashlabs.sensay.service
 
 import androidx.core.os.bundleOf
-import androidx.media3.common.C
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MediaMetadata
 import androidx.media3.common.Player
@@ -35,7 +34,22 @@ class PlaybackUpdater constructor(private val store: SensayStore) : Player.Liste
     private val _playerEvents: MutableStateFlow<PlayerEventUpdates?> = MutableStateFlow(null)
 
     private var playerRef: Player? = null
-    private var stateRecorderJob: Job? = null
+
+    private val stateRecorder = PlayerStateRecorder(
+        10.seconds,
+        { playerRef },
+        _playerEvents,
+        { player ->
+            val mediaId = player.currentMediaItem?.mediaId ?: return@PlayerStateRecorder null
+            if (!mediaItemsCache.containsKey(mediaId)) return@PlayerStateRecorder null
+
+            PlayerEventUpdates(
+                player.currentMediaItem!!,
+                mediaItemsCache[mediaId]!!,
+                player.currentPosition,
+            )
+        },
+    )
 
     // mediaItem.mediaId => BookProgressWithBookAndChapters
     private val mediaItemsCache: MutableMap<String, BookProgressWithBookAndChapters> =
@@ -68,45 +82,16 @@ class PlaybackUpdater constructor(private val store: SensayStore) : Player.Liste
         }
     }
 
-    override fun onEvents(player: Player, events: Player.Events) = recordState(player)
+    override fun onEvents(player: Player, events: Player.Events) = stateRecorder.recordState(player)
 
-    override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
-        playerRef?.let { recordState(it) }
-    }
-
-    private fun recordState(player: Player) {
-        if (player.currentPosition == C.TIME_UNSET) return
-        val currentMediaItem = player.currentMediaItem ?: return
-        if (!mediaItemsCache.containsKey(currentMediaItem.mediaId)) return
-
-        _playerEvents.value = PlayerEventUpdates(
-            player.currentMediaItem!!,
-            mediaItemsCache[currentMediaItem.mediaId]!!,
-            player.currentPosition,
-        )
-    }
-
-    private fun startStateRecorder() {
-        stateRecorderJob?.cancel()
-
-        stateRecorderJob = serviceScope.launch {
-            while (playerRef != null) {
-                recordState(playerRef!!)
-                delay(10.seconds.inWholeMilliseconds)
-            }
-        }
-    }
-
-    private fun stopStateRecorder() {
-        stateRecorderJob?.cancel()
-        stateRecorderJob = null
-    }
+    override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) =
+        stateRecorder.recordState()
 
     override fun onIsPlayingChanged(isPlaying: Boolean) {
         if (isPlaying) {
-            startStateRecorder()
+            stateRecorder.startStateRecorder(serviceScope)
         } else {
-            stopStateRecorder()
+            stateRecorder.stopStateRecorder()
         }
     }
 
@@ -157,11 +142,14 @@ class PlaybackUpdater constructor(private val store: SensayStore) : Player.Liste
     }
 
     fun release() {
-        stopStateRecorder()
+        stateRecorder.stopStateRecorder()
         mediaItemsCache.clear()
         playerRef?.removeListener(this)
         playerRef = null
-        serviceScope.cancel()
+
+        if (serviceScope.isActive) {
+            serviceScope.cancel()
+        }
     }
 }
 

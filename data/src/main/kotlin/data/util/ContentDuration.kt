@@ -8,20 +8,22 @@ import kotlin.time.Duration.Companion.milliseconds
 data class ContentDuration(val value: Duration) {
     companion object {
         val ZERO = ContentDuration(value = 0.milliseconds)
+
+        fun format(value: Duration?) = if (value != null && value > ZERO.value) {
+            value.toComponents { hh, mm, ss, _ ->
+                listOf(hh, mm, ss).joinToString(":") { part ->
+                    "$part".padStart(2, '0')
+                }
+            }
+        } else {
+            ""
+        }
     }
 
     val ms: Long
         get() = value.inWholeMilliseconds
 
-    fun format() = if (value > ZERO.value) {
-        value.toComponents { hh, mm, ss, _ ->
-            listOf(hh, mm, ss).joinToString(":") { part ->
-                "$part".padStart(2, '0')
-            }
-        }
-    } else {
-        ""
-    }
+    fun format() = format(value)
 }
 
 object ContentDurationParceler : Parceler<ContentDuration> {

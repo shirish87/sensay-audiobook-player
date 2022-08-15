@@ -12,21 +12,15 @@ import com.dotslashlabs.sensay.service.PlaybackConnectionState
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
-import data.entity.Book
 import data.entity.BookProgressWithBookAndChapters
 
 data class PlaybackState(
     val playbackConnectionState: Async<PlaybackConnectionState> = Uninitialized,
-    val isPreparingBookId: Long? = null,
 ) : MavericksState {
 
-    val isConnected = (playbackConnectionState()?.isConnected == true)
-    val isPlaying = (playbackConnectionState()?.isPlaying == true)
+    private val connState = playbackConnectionState()
 
-    private val currentBookId = playbackConnectionState()?.currentBookId
-    val isPreparing = (isPreparingBookId != null && isPreparingBookId != currentBookId)
-
-    fun isCurrentBook(book: Book): Boolean = (book.bookId == currentBookId)
+    val isConnected = (connState?.isConnected == true)
 }
 
 class PlaybackViewModel @AssistedInject constructor(
@@ -39,12 +33,6 @@ class PlaybackViewModel @AssistedInject constructor(
             .execute(retainValue = PlaybackState::playbackConnectionState) {
                 copy(playbackConnectionState = it)
             }
-    }
-
-    override fun onCleared() {
-
-
-        super.onCleared()
     }
 
     val player: Player?
@@ -64,7 +52,7 @@ class PlaybackViewModel @AssistedInject constructor(
 
         // preparing items takes a while, possibly due to bundle stuff, so we disable playback
         // isPreparing flag is reset when state.currentBook is updated
-        setState { copy(isPreparingBookId = book.bookId) }
+        playbackConnection.setPreparingBookId(book.bookId)
 
         val startMediaIndex =
             bookProgressWithBookAndChapters.chapters.indexOf(bookProgressWithBookAndChapters.chapter)

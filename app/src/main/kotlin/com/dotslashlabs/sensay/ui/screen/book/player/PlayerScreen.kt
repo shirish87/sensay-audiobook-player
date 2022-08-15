@@ -4,6 +4,8 @@ import android.annotation.SuppressLint
 import android.net.Uri
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
@@ -23,7 +25,6 @@ import com.airbnb.mvrx.compose.collectAsState
 import com.airbnb.mvrx.compose.mavericksActivityViewModel
 import com.airbnb.mvrx.compose.mavericksViewModel
 import com.dotslashlabs.sensay.R
-import com.dotslashlabs.sensay.ui.PlaybackState
 import com.dotslashlabs.sensay.ui.PlaybackViewModel
 import com.dotslashlabs.sensay.ui.screen.Destination
 import com.dotslashlabs.sensay.ui.screen.SensayScreen
@@ -90,11 +91,11 @@ fun PlayerContent(
                             .padding(36.dp),
                     ) {
                         Column(
-                            modifier = Modifier.fillMaxSize(),
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .verticalScroll(rememberScrollState()),
                             verticalArrangement = Arrangement.Top,
                         ) {
-                            val isConnected by playbackViewModel.collectAsState(PlaybackState::isConnected)
-                            if (!isConnected) return@Box
 
                             PlayerImage(
                                 coverUri = state.coverUri,
@@ -136,12 +137,6 @@ private fun PlayerButtons(
 ) {
 
     val bookProgressWithChapters = state.bookProgressWithChapters() ?: return
-    val playbackState by playbackViewModel.collectAsState()
-
-    val isPreparing = playbackState.isPreparing
-    val isCurrentBook = playbackState.isCurrentBook(bookProgressWithChapters.book)
-    val isPlaying = playbackState.isPlaying
-    val isCurrentBookPlaying = (isCurrentBook && isPlaying)
 
     Text(
         text = bookProgressWithChapters.book.title,
@@ -163,6 +158,19 @@ private fun PlayerButtons(
         )
     }
 
+    Text(
+        text = if (state.isCurrentBook) {
+            "${state.currentPosition} / ${state.duration}"
+        } else {
+            "${bookProgressWithChapters.currentPosition} / ${bookProgressWithChapters.duration}"
+        },
+        textAlign = TextAlign.Center,
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = 20.dp),
+        style = MaterialTheme.typography.bodySmall,
+    )
+
     Row(
         modifier = modifier
             .fillMaxWidth()
@@ -174,7 +182,7 @@ private fun PlayerButtons(
         val buttonsModifier = Modifier.size(sideButtonSize)
 
         OutlinedIconButton(
-            enabled = (!isPreparing && isCurrentBook),
+            enabled = !state.isPreparingCurrentBook,
             onClick = { playbackViewModel.seekBack() },
             modifier = buttonsModifier,
         ) {
@@ -185,12 +193,12 @@ private fun PlayerButtons(
         }
 
         OutlinedIconButton(
-            enabled = !isPreparing,
+            enabled = !state.isPreparingCurrentBook,
             onClick = {
-                if (isCurrentBook) {
+                if (state.isCurrentBook) {
                     // current book
                     playbackViewModel.apply {
-                        if (isPlaying) {
+                        if (state.isPlaying) {
                             pause()
                         } else {
                             // play
@@ -210,7 +218,7 @@ private fun PlayerButtons(
             modifier = Modifier.size(playerButtonSize),
         ) {
             Icon(
-                imageVector = if (isCurrentBookPlaying) {
+                imageVector = if (state.isCurrentBookPlaying) {
                     Icons.Filled.PauseCircleFilled
                 } else {
                     Icons.Filled.PlayCircleFilled
@@ -221,7 +229,7 @@ private fun PlayerButtons(
         }
 
         OutlinedIconButton(
-            enabled = (!isPreparing && isCurrentBook),
+            enabled = !state.isPreparingCurrentBook,
             onClick = { playbackViewModel.seekForward() },
             modifier = buttonsModifier,
         ) {
