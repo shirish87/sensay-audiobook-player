@@ -26,6 +26,7 @@ fun Project.applyCommonDependencies(@Suppress("UNUSED_PARAMETER") plugin: Plugin
 
     dependencies {
         if (plugin is AppPlugin) {
+            add("implementation", Libraries.AndroidX.window)
             add("implementation", Libraries.Compose.activityCompose)
             add("implementation", Libraries.Compose.navigationCompose)
 
@@ -46,6 +47,7 @@ fun Project.applyCommonDependencies(@Suppress("UNUSED_PARAMETER") plugin: Plugin
             // Material3
             add("implementation", Libraries.Material.material)
             add("implementation", Libraries.Compose.material3)
+            add("implementation", Libraries.Compose.material3WindowSizeClass)
 
             // Test Hilt
             val kaptAndroidTest by configurations.creating

@@ -1,16 +1,27 @@
 package com.dotslashlabs.sensay.ui
 
 import androidx.compose.animation.ExperimentalAnimationApi
+import androidx.compose.material3.windowsizeclass.WindowSizeClass
 import androidx.compose.runtime.Composable
+import com.airbnb.mvrx.compose.mavericksActivityViewModel
 import com.dotslashlabs.sensay.ui.screen.Destination
 import com.dotslashlabs.sensay.ui.theme.SensayTheme
+import com.dotslashlabs.sensay.util.DevicePosture
+import com.dotslashlabs.sensay.util.toWindowSizeClass
 import com.google.accompanist.navigation.animation.AnimatedNavHost
 import com.google.accompanist.navigation.animation.rememberAnimatedNavController
 
 
 @OptIn(ExperimentalAnimationApi::class)
 @Composable
-fun SensayApp() {
+fun SensayApp(
+    @Suppress("UNUSED_PARAMETER") windowSize: WindowSizeClass,
+    @Suppress("UNUSED_PARAMETER") devicePosture: DevicePosture,
+) {
+
+    val viewModel: SensayAppViewModel = mavericksActivityViewModel()
+    viewModel.configure(windowSize.toWindowSizeClass(), devicePosture)
+
     val navController = rememberAnimatedNavController()
     val destination = Destination.Root
 

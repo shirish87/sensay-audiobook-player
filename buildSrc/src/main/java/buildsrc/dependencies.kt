@@ -52,9 +52,11 @@ object Libraries {
     object AndroidX {
         private const val version = "1.8.0"
         private const val dataStoreVersion = "1.0.0"
+        private const val windowVersion = "1.0.0-alpha09"
 
         const val core = "androidx.core:core-ktx:$version"
         const val dataStore = "androidx.datastore:datastore-preferences:$dataStoreVersion"
+        const val window = "androidx.window:window:$windowVersion"
     }
 
     object Material {
@@ -73,6 +75,7 @@ object Libraries {
         const val foundation = "androidx.compose.foundation:foundation:$version"
 
         const val material3 = "androidx.compose.material3:material3:$materialComposeVersion"
+        const val material3WindowSizeClass = "androidx.compose.material3:material3-window-size-class:$materialComposeVersion"
         const val materialIconsExtended = "androidx.compose.material:material-icons-extended:$version"
 
         const val composeTooling = "androidx.compose.ui:ui-tooling:$version"

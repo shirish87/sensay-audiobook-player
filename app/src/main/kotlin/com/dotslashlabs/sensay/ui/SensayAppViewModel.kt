@@ -5,6 +5,8 @@ import androidx.documentfile.provider.DocumentFile
 import com.airbnb.mvrx.*
 import com.airbnb.mvrx.hilt.AssistedViewModelFactory
 import com.airbnb.mvrx.hilt.hiltMavericksViewModelFactory
+import com.dotslashlabs.sensay.util.DevicePosture
+import com.dotslashlabs.sensay.util.WindowSizeClass
 import config.ConfigStore
 import config.HomeLayout
 import dagger.assisted.Assisted
@@ -30,6 +32,8 @@ data class SensayAppState(
     val isScanningFolders: Boolean = false,
     val audiobookFoldersUpdateTime: Async<Long?> = Uninitialized,
     val lastScanTime: Instant = Instant.EPOCH,
+    val windowSize: WindowSizeClass = WindowSizeClass.default(),
+    val devicePosture: DevicePosture = DevicePosture.default(),
 ) : MavericksState {
 
     val shouldScan = ((audiobookFoldersUpdateTime() ?: 0L) > lastScanTime.toEpochMilli())
@@ -60,6 +64,10 @@ class SensayAppViewModel @AssistedInject constructor(
             .execute(retainValue = SensayAppState::audiobookFoldersUpdateTime) {
                 copy(audiobookFoldersUpdateTime = it)
             }
+    }
+
+    fun configure(windowSize: WindowSizeClass, devicePosture: DevicePosture) = setState {
+        copy(windowSize = windowSize, devicePosture = devicePosture)
     }
 
     fun setHomeLayout(layout: HomeLayout) = viewModelScope.launch {
