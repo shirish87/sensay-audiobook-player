@@ -4,7 +4,6 @@ import android.net.Uri
 import androidx.core.net.toUri
 import androidx.room.TypeConverter
 import java.time.Instant
-import kotlin.time.Duration.Companion.milliseconds
 
 /**
  * Room [TypeConverter] functions for various classes.
@@ -14,13 +13,13 @@ object DataTypeConverters {
     @TypeConverter
     @JvmStatic
     fun fromContentDuration(contentDuration: ContentDuration?): Long? {
-        return contentDuration?.value?.inWholeMilliseconds
+        return contentDuration?.ms
     }
 
     @TypeConverter
     @JvmStatic
     fun toContentDuration(value: Long?): ContentDuration? {
-        return value?.let { ContentDuration(value = it.milliseconds) }
+        return value?.let { ContentDuration.ms(value) }
     }
 
     @TypeConverter

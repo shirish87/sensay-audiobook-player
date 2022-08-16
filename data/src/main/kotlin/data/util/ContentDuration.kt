@@ -3,31 +3,58 @@ package data.util
 import android.os.Parcel
 import kotlinx.parcelize.Parceler
 import kotlin.time.Duration
-import kotlin.time.Duration.Companion.milliseconds
 
-data class ContentDuration(val value: Duration) {
-    companion object {
-        val ZERO = ContentDuration(value = 0.milliseconds)
 
-        fun format(value: Duration?) = if (value != null && value > ZERO.value) {
-            value.toComponents { hh, mm, ss, _ ->
-                listOf(hh, mm, ss).joinToString(":") { part ->
-                    "$part".padStart(2, '0')
-                }
-            }
-        } else {
-            null
+val Duration.ms: Long
+    get() = this.inWholeMilliseconds
+
+val Duration?.ms: Long?
+    get() = this?.inWholeMilliseconds
+
+fun Duration.Companion.ms(valueInMillis: Long) = valueInMillis.milliseconds
+
+fun Duration.Companion.isEmpty(value: Duration?) = (value == null || value == ZERO)
+
+fun Duration.Companion.format(value: Duration?) = if (value != null && value.ms > 0) {
+    value.toComponents { hh, mm, ss, _ ->
+        listOf(hh, mm, ss).joinToString(":") { part ->
+            "$part".padStart(2, '0')
         }
     }
+} else {
+    null
+}
 
-    val ms: Long
-        get() = value.inWholeMilliseconds
+fun Duration?.isEmpty() = Duration.isEmpty(this)
+fun Duration?.format() = Duration.format(this)
 
-    fun format() = format(value)
+data class ContentDuration(val value: Duration) : Comparable<ContentDuration> {
+    companion object {
+        val ZERO = ContentDuration(Duration.ZERO)
+
+        fun ms(valueInMillis: Long) = ContentDuration(Duration.ms(valueInMillis))
+        fun format(contentDuration: ContentDuration?) = Duration.format(contentDuration?.value)
+        fun format(duration: Duration?) = Duration.format(duration)
+    }
+
+    val ms = value.ms
+    fun format() = value.format()
+    fun isEmpty() = value.isEmpty()
+
+    override fun compareTo(other: ContentDuration): Int = value.compareTo(other.value)
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+
+        return value == (other as? ContentDuration?)?.value
+    }
+
+    override fun hashCode(): Int = value.hashCode()
 }
 
 object ContentDurationParceler : Parceler<ContentDuration> {
-    override fun create(parcel: Parcel) = ContentDuration(parcel.readLong().milliseconds)
+    override fun create(parcel: Parcel) = ContentDuration.ms(parcel.readLong())
 
     override fun ContentDuration.write(parcel: Parcel, flags: Int) {
         parcel.writeLong(ms)
@@ -35,11 +62,11 @@ object ContentDurationParceler : Parceler<ContentDuration> {
 }
 
 object ContentDurationOptParceler : Parceler<ContentDuration?> {
-    override fun create(parcel: Parcel) = ContentDuration(parcel.readLong().milliseconds)
+    override fun create(parcel: Parcel) = ContentDuration.ms(parcel.readLong())
 
     override fun ContentDuration?.write(parcel: Parcel, flags: Int) {
         if (this == null) {
-            parcel.writeLong(0L)
+            parcel.writeLong(ContentDuration.ZERO.ms)
         } else {
             parcel.writeLong(ms)
         }
