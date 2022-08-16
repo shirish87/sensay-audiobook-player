@@ -29,8 +29,8 @@ data class Chapter(
     val coverUri: Uri? = null,
 
     val duration: ContentDuration,
-    val start: ContentDuration? = null,
-    val end: ContentDuration? = null,
+    val start: ContentDuration,
+    val end: ContentDuration,
 
     val createdAt: Instant = Instant.now(),
 ) : Parcelable {
@@ -42,8 +42,12 @@ data class Chapter(
             trackId = 0,
             title = "",
             duration = ContentDuration.ZERO,
+            start = ContentDuration.ZERO,
+            end = ContentDuration.ZERO,
         )
     }
+
+    fun isInvalid() = (start == ContentDuration.ZERO || end == ContentDuration.ZERO)
 }
 
 @Entity(

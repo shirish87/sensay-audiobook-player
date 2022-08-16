@@ -4,6 +4,7 @@ import android.net.Uri
 import androidx.room.Transaction
 import data.entity.*
 import data.repository.*
+import data.util.ContentDuration
 import kotlinx.coroutines.flow.firstOrNull
 import logcat.logcat
 import javax.inject.Inject
@@ -23,7 +24,7 @@ class SensayStore @Inject constructor(
     ): List<Long> {
 
         return booksWithChapters.mapNotNull {
-            if (it.chapters.isEmpty()) {
+            if (it.chapters.isEmpty() || it.chapters.any { c -> c.isInvalid() }) {
                 return@mapNotNull null
             }
 
