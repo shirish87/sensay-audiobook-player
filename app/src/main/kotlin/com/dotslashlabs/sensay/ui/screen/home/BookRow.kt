@@ -81,7 +81,7 @@ private fun ListBookView(
                     .fillMaxWidth(),
             ) {
                 Text(
-                    text = book.duration.format(),
+                    text = book.duration.format() ?: "",
                     style = MaterialTheme.typography.labelSmall,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,

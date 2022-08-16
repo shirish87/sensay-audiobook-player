@@ -16,7 +16,7 @@ data class ContentDuration(val value: Duration) {
                 }
             }
         } else {
-            ""
+            null
         }
     }
 

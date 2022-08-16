@@ -66,7 +66,7 @@ class PlaybackViewModel @AssistedInject constructor(
 
         val startMediaIndex =
             bookProgressWithBookAndChapters.chapters.indexOf(bookProgressWithBookAndChapters.chapter)
-        val startPositionMs = bookProgressWithBookAndChapters.startPositionMs
+        val startPositionMs = bookProgressWithBookAndChapters.positionMs
 
         player.apply {
             setMediaItems(

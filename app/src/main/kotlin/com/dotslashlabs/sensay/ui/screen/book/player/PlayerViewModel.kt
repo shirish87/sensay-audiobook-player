@@ -23,6 +23,10 @@ data class PlayerViewState(
 ) : MavericksState {
     constructor(arguments: Bundle) : this(bookId = arguments.getString("bookId")!!.toLong())
 
+    companion object {
+        private const val DURATION_ZERO: String = "00:00:00"
+    }
+
     val bookProgress = (bookProgressWithChapters as? Success)?.invoke()
     val book: Book? = bookProgress?.book
     val coverUri: Uri? = book?.coverUri
@@ -33,15 +37,23 @@ data class PlayerViewState(
 
     val isPreparingCurrentBook = (bookId == connState?.preparingBookId)
 
+    val isConnected = (connState?.isConnected == true)
+
     val isPlaying = (connState?.isPlaying == true)
 
     val isCurrentBookPlaying = (isCurrentBook && isPlaying)
 
     val duration: String
-        get() = ContentDuration.format(connState?.duration?.milliseconds)
+        get() = bookProgress?.chapterDuration ?: DURATION_ZERO
 
-    val currentPosition: String
-        get() = ContentDuration.format(connState?.currentPosition?.milliseconds)
+    val position: String
+        get() = bookProgress?.chapterPosition ?: DURATION_ZERO
+
+    val playbackDuration: String
+        get() = ContentDuration.format(connState?.duration?.milliseconds) ?: DURATION_ZERO
+
+    val playbackPosition: String
+        get() = ContentDuration.format(connState?.currentPosition?.milliseconds) ?: DURATION_ZERO
 }
 
 class PlayerViewModel @AssistedInject constructor(

@@ -248,9 +248,9 @@ private fun PlayerInfo(
 
         Text(
             text = if (state.isCurrentBook) {
-                "${state.currentPosition} / ${state.duration}"
+                "${state.playbackPosition} / ${state.playbackDuration}"
             } else {
-                "${state.bookProgress?.currentPosition ?: ""} / ${state.bookProgress?.duration ?: ""}"
+                "${state.position} / ${state.duration}"
             },
             textAlign = TextAlign.Center,
             modifier = Modifier
@@ -270,6 +270,7 @@ private fun PlayerButtons(
     sideButtonSize: Dp = 64.dp,
 ) {
 
+    if (!state.isConnected) return
     val bookProgressWithChapters = state.bookProgress ?: return
 
     Row(

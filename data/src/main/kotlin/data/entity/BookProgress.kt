@@ -102,19 +102,35 @@ data class BookProgressWithBookAndChapters(
 
     @IgnoredOnParcel
     @Ignore
-    val startPositionMs = bookProgress.bookProgress.ms
+    val positionMs = bookProgress.bookProgress.ms
 
     @IgnoredOnParcel
     @Ignore
-    val bookDurationMs = book.duration.ms
+    val durationMs = book.duration.ms
 
     @IgnoredOnParcel
     @Ignore
-    val currentPosition = bookProgress.bookProgress.format()
+    val position = bookProgress.bookProgress.format()
 
     @IgnoredOnParcel
     @Ignore
     val duration = book.duration.format()
+
+    @IgnoredOnParcel
+    @Ignore
+    val chapterPositionMs = bookProgress.chapterProgress.ms
+
+    @IgnoredOnParcel
+    @Ignore
+    val chapterDurationMs = chapter.duration.ms
+
+    @IgnoredOnParcel
+    @Ignore
+    val chapterPosition = bookProgress.chapterProgress.format()
+
+    @IgnoredOnParcel
+    @Ignore
+    val chapterDuration = chapter.duration.format()
 
     companion object {
         fun empty() = BookProgressWithBookAndChapters(

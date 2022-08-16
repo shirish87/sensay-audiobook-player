@@ -64,7 +64,7 @@ class PlaybackUpdater constructor(private val store: SensayStore) : Player.Liste
                 store.updateBookProgress(
                     bookProgress.bookProgress.copy(
                         bookProgress = ContentDuration(it.currentPositionMs.milliseconds),
-                        bookCategory = if (it.currentPositionMs < it.bookProgress.bookDurationMs)
+                        bookCategory = if (it.currentPositionMs < it.bookProgress.durationMs)
                             BookCategory.CURRENT
                         else BookCategory.FINISHED,
                         lastUpdatedAt = Instant.now(),
@@ -129,14 +129,12 @@ class PlaybackUpdater constructor(private val store: SensayStore) : Player.Liste
                 }
 
         mediaItems.fold(mutableListOf()) { acc, it ->
-            mediaBookChapterMap[it.mediaId]?.let { (bookId, chapterId) ->
+            val (bookId, chapterId) = mediaBookChapterMap[it.mediaId] ?: return@fold acc
+            val bookProgress = bookProgressMap[bookId] ?: return@fold acc
+            val mediaItem = bookProgress.toMediaItem(it.mediaId, chapterId) ?: return@fold acc
 
-                bookProgressMap[bookId]?.let { b ->
-                    mediaItemsCache[it.mediaId] = b
-                    acc.add(b.toMediaItem(it.mediaId, chapterId))
-                }
-            }
-
+            acc.add(mediaItem)
+            mediaItemsCache[it.mediaId] = bookProgress
             acc
         }
     }
@@ -154,11 +152,17 @@ class PlaybackUpdater constructor(private val store: SensayStore) : Player.Liste
 }
 
 
-fun BookProgressWithBookAndChapters.toMediaItem(mediaId: String, chapterId: Long?): MediaItem {
+fun BookProgressWithBookAndChapters.toMediaItem(mediaId: String, chapterId: Long?): MediaItem? {
     val requestedChapter = when (chapterId) {
         null -> null
         chapter.chapterId -> chapter
         else -> chapters.find { c -> chapterId == c.chapterId }
+    }
+
+    if (chapterId != null && (requestedChapter?.start == null || requestedChapter.end == null)) {
+        // if a chapter is explicitly requested, that chapter must exist
+        // and must have clear start and end bounds
+        return null
     }
 
     val extras = if (requestedChapter != null) {
@@ -175,6 +179,16 @@ fun BookProgressWithBookAndChapters.toMediaItem(mediaId: String, chapterId: Long
     return MediaItem.Builder()
         .setUri(book.uri)
         .setMediaId(mediaId)
+        .apply {
+            if (requestedChapter != null) {
+                setClippingConfiguration(
+                    MediaItem.ClippingConfiguration.Builder()
+                        .setStartPositionMs(requestedChapter.start!!.ms)
+                        .setEndPositionMs(requestedChapter.end!!.ms)
+                        .build()
+                )
+            }
+        }
         .setMediaMetadata(
             MediaMetadata.Builder()
                 .setTitle(requestedChapter?.title ?: book.title)
