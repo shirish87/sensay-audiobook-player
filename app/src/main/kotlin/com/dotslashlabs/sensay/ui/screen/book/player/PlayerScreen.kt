@@ -8,18 +8,15 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Forward10
-import androidx.compose.material.icons.filled.PauseCircleFilled
-import androidx.compose.material.icons.filled.PlayCircleFilled
-import androidx.compose.material.icons.filled.Replay10
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
@@ -75,7 +72,7 @@ fun PlayerContent(
     val viewModel: PlayerViewModel = mavericksViewModel(argsFactory = { argsBundle })
     val state by viewModel.collectAsState()
 
-    PlayerContentView(playbackViewModel, state, useLandscapeLayout, onBackPress)
+    PlayerContentView(playbackViewModel, viewModel, state, useLandscapeLayout, onBackPress)
 }
 
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
@@ -83,6 +80,7 @@ fun PlayerContent(
 @Composable
 fun PlayerContentView(
     playbackActions: PlaybackActions,
+    playerActions: PlayerActions,
     state: PlayerViewState,
     useLandscapeLayout: Boolean,
     onBackPress: () -> Unit,
@@ -105,6 +103,7 @@ fun PlayerContentView(
                     if (useLandscapeLayout) {
                         PlayerContentViewLandscape(
                             playbackActions,
+                            playerActions,
                             state,
                             modifier = Modifier.padding(contentPadding),
                             onBackPress = onBackPress,
@@ -112,6 +111,7 @@ fun PlayerContentView(
                     } else {
                         PlayerContentViewNormal(
                             playbackActions,
+                            playerActions,
                             state,
                             modifier = Modifier.padding(contentPadding),
                             onBackPress = onBackPress,
@@ -126,6 +126,7 @@ fun PlayerContentView(
 @Composable
 fun PlayerContentViewNormal(
     playbackActions: PlaybackActions,
+    playerActions: PlayerActions,
     state: PlayerViewState,
     modifier: Modifier = Modifier,
     onBackPress: () -> Unit,
@@ -157,10 +158,29 @@ fun PlayerContentViewNormal(
             PlayerInfo(state = state)
         }
 
+        Row(
+            verticalAlignment = Alignment.Top,
+            horizontalArrangement = Arrangement.Center,
+        ) {
+            SelectChapter(playbackActions, playerActions, state)
+        }
+
+        Row(
+            verticalAlignment = Alignment.Top,
+            horizontalArrangement = Arrangement.Center,
+        ) {
+            PlayerProgress(
+                playbackActions = playbackActions,
+                playerActions = playerActions,
+                state = state,
+                modifier = Modifier.padding(top = 16.dp, start = 20.dp, end = 20.dp),
+            )
+        }
+
         PlayerButtons(
             playbackActions,
             state,
-            modifier = Modifier.padding(vertical = 40.dp, horizontal = 20.dp),
+            modifier = Modifier.padding(20.dp),
         )
     }
 }
@@ -168,6 +188,7 @@ fun PlayerContentViewNormal(
 @Composable
 fun PlayerContentViewLandscape(
     playbackActions: PlaybackActions,
+    playerActions: PlayerActions,
     state: PlayerViewState,
     modifier: Modifier = Modifier,
     onBackPress: () -> Unit,
@@ -195,6 +216,15 @@ fun PlayerContentViewLandscape(
             modifier = Modifier.weight(0.7F),
         ) {
             PlayerInfo(state = state)
+
+            SelectChapter(playbackActions, playerActions, state)
+
+            PlayerProgress(
+                playbackActions = playbackActions,
+                playerActions = playerActions,
+                state = state,
+                modifier = Modifier.padding(top = 16.dp, start = 20.dp, end = 20.dp),
+            )
 
             PlayerButtons(
                 playbackActions,
@@ -227,37 +257,75 @@ private fun PlayerInfo(
     modifier: Modifier = Modifier,
 ) {
 
+    val book = state.book ?: return
+
     Column(modifier = modifier) {
         Text(
-            text = state.book?.title ?: "",
+            text = book.author ?: "",
             textAlign = TextAlign.Center,
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(top = 20.dp),
+                .padding(top = 16.dp),
+            style = MaterialTheme.typography.bodySmall,
+        )
+
+        Text(
+            text = book.title,
+            textAlign = TextAlign.Center,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 16.dp),
             style = MaterialTheme.typography.headlineMedium,
         )
+    }
+}
 
-        Text(
-            text = state.book?.author ?: "",
-            textAlign = TextAlign.Center,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 20.dp),
-            style = MaterialTheme.typography.bodySmall,
-        )
+@Composable
+private fun PlayerProgress(
+    playbackActions: PlaybackActions,
+    playerActions: PlayerActions,
+    state: PlayerViewState,
+    modifier: Modifier = Modifier,
+) {
+    val (position, duration) = state.progressPair
 
-        Text(
-            text = if (state.isCurrentBook) {
-                "${state.playbackPosition} / ${state.playbackDuration}"
-            } else {
-                "${state.position} / ${state.duration}"
-            },
-            textAlign = TextAlign.Center,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 20.dp),
-            style = MaterialTheme.typography.bodySmall,
-        )
+    Column(modifier = modifier) {
+        if (duration != null) {
+            Row {
+                Column(
+                    modifier = Modifier.weight(0.5F),
+                    horizontalAlignment = Alignment.Start,
+                ) {
+                    Text(
+                        text = state.formatTime(position),
+                        style = MaterialTheme.typography.bodySmall,
+                    )
+                }
+                Column(
+                    modifier = Modifier.weight(0.5F),
+                    horizontalAlignment = Alignment.End,
+                ) {
+                    Text(
+                        text = state.formatTime(duration),
+                        style = MaterialTheme.typography.bodySmall,
+                    )
+                }
+            }
+
+            Slider(
+                modifier = Modifier.semantics { contentDescription = "Localized Description" },
+                value = state.sliderPosition,
+                valueRange = 0f..99f,
+                onValueChange = {
+                    playerActions.setSliderPosition(it)
+                    playbackActions.seekTo((it * duration).toLong())
+                },
+            )
+        } else if (state.isCurrentBookPlaying) {
+            Row {
+                LinearProgressIndicator()
+            }
+        }
     }
 }
 
@@ -266,12 +334,13 @@ private fun PlayerButtons(
     playbackActions: PlaybackActions,
     state: PlayerViewState,
     modifier: Modifier = Modifier,
-    playerButtonSize: Dp = 96.dp,
-    sideButtonSize: Dp = 64.dp,
+    playerButtonSize: Dp = 72.dp,
+    sideButtonSize: Dp = 40.dp,
 ) {
 
     if (!state.isConnected) return
     val bookProgressWithChapters = state.bookProgress ?: return
+    val selectedChapter = state.selectedChapter ?: return
 
     Row(
         modifier = modifier.fillMaxWidth(),
@@ -298,19 +367,20 @@ private fun PlayerButtons(
                 if (state.isCurrentBook) {
                     // current book
                     playbackActions.apply {
+                        if (!state.isSelectedChapterCurrent) {
+                            setChapter(selectedChapter.chapterId)
+                        }
+
                         if (state.isPlaying) {
                             pause()
                         } else {
-                            // play
-                            playWhenReady = true
                             play()
                         }
                     }
                 } else {
                     // other book, only play action is possible
                     playbackActions.apply {
-                        prepareMediaItems(bookProgressWithChapters)
-                        playWhenReady = true
+                        prepareMediaItems(bookProgressWithChapters, selectedChapter.chapterId)
                         play()
                     }
                 }
@@ -337,6 +407,80 @@ private fun PlayerButtons(
                 imageVector = Icons.Filled.Forward10,
                 contentDescription = null,
             )
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun SelectChapter(
+    playbackActions: PlaybackActions,
+    playerActions: PlayerActions,
+    state: PlayerViewState,
+) {
+    val selectedChapter = state.selectedChapter ?: return
+
+    // If there are no chapters, its an exception since all books must have at least one
+    // We skip displaying chapter selections for books with just 1 chapter
+    // since it may be a book chapter that we have "synthetically" added
+    if (state.chapters.size <= 1) return
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .wrapContentSize(Alignment.Center)
+            .padding(top = 10.dp),
+    ) {
+        var expanded by remember { mutableStateOf(false) }
+
+        ExposedDropdownMenuBox(
+            expanded = expanded,
+            onExpandedChange = { expanded = !expanded }
+        ) {
+            val containerColor = ExposedDropdownMenuDefaults.textFieldColors()
+                .containerColor(enabled = true).value.copy(alpha = 0.35F)
+
+            TextField(
+                readOnly = true,
+                value = selectedChapter.title,
+                onValueChange = {},
+                label = { Text(text = "Chapter") },
+                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+                colors = ExposedDropdownMenuDefaults
+                    .textFieldColors(containerColor = containerColor),
+            )
+            ExposedDropdownMenu(
+                expanded = expanded,
+                onDismissRequest = { expanded = false },
+            ) {
+                val lastIdx = state.chapters.lastIndex
+
+                state.chapters.mapIndexed { idx, c ->
+                    DropdownMenuItem(
+                        text = { Text(c.title) },
+                        leadingIcon = {
+                            if (c.chapterId == selectedChapter.chapterId) {
+                                Icon(
+                                    imageVector = Icons.Filled.Check,
+                                    contentDescription = null,
+                                )
+                            }
+                        },
+                        onClick = {
+                            playerActions.setSelectedChapterId(c.chapterId)
+                            expanded = false
+
+                            if (state.isPlaying) {
+                                playbackActions.pause()
+                            }
+                        },
+                    )
+
+                    if (idx != lastIdx) {
+                        Divider()
+                    }
+                }
+            }
         }
     }
 }
@@ -380,10 +524,24 @@ fun PlayerContentPreview() {
             BookProgressWithBookAndChapters(
                 book = Book.empty().copy(
                     bookId = bookId,
+                    title = "Book Title",
+                    author = "Author",
                 ),
                 bookProgress = BookProgress.empty(),
-                chapter = Chapter.empty(),
-                chapters = listOf(Chapter.empty()),
+                chapter = Chapter.empty().copy (
+                    chapterId = 1,
+                    title = "Chapter Title",
+                ),
+                chapters = listOf(
+                    Chapter.empty().copy (
+                        chapterId = 1,
+                        title = "Chapter 1 Title",
+                    ),
+                    Chapter.empty().copy (
+                        chapterId = 2,
+                        title = "Chapter 2 Title",
+                    ),
+                ),
             )
         ),
         playbackConnectionState = Success(
@@ -397,7 +555,10 @@ fun PlayerContentPreview() {
     val playbackActions = object : PlaybackActions {
         override var playWhenReady: Boolean = false
 
-        override fun prepareMediaItems(bookProgressWithBookAndChapters: BookProgressWithBookAndChapters) {
+        override fun prepareMediaItems(
+            bookProgressWithBookAndChapters: BookProgressWithBookAndChapters,
+            selectedChapterId: Long?,
+        ) {
             TODO("Not yet implemented")
         }
 
@@ -409,6 +570,10 @@ fun PlayerContentPreview() {
             TODO("Not yet implemented")
         }
 
+        override fun seekTo(positionMs: Long): Unit? {
+            TODO("Not yet implemented")
+        }
+
         override fun pause(): Unit? {
             TODO("Not yet implemented")
         }
@@ -416,10 +581,25 @@ fun PlayerContentPreview() {
         override fun play(): Unit? {
             TODO("Not yet implemented")
         }
+
+        override fun setChapter(chapterId: Long) {
+            TODO("Not yet implemented")
+        }
+    }
+
+    val playerActions = object : PlayerActions {
+        override fun setSelectedChapterId(chapterId: Long) {
+            TODO("Not yet implemented")
+        }
+
+        override fun setSliderPosition(position: Float) {
+            TODO("Not yet implemented")
+        }
     }
 
     PlayerContentView(
         playbackActions,
+        playerActions,
         state,
         useLandscapeLayout = false,
         onBackPress = {},

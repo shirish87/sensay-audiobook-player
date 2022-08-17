@@ -4,7 +4,9 @@ import android.content.ComponentName
 import android.content.Context
 import android.os.Bundle
 import androidx.media3.common.MediaItem
+import androidx.media3.common.MediaMetadata
 import androidx.media3.common.Player
+import androidx.media3.common.Timeline
 import androidx.media3.common.util.Assertions
 import androidx.media3.session.MediaController
 import androidx.media3.session.SessionToken
@@ -18,7 +20,9 @@ import kotlin.time.Duration.Companion.seconds
 data class PlaybackConnectionState(
     val isConnected: Boolean = false,
     val isPlaying: Boolean = false,
+    val isLoading: Boolean = false,
     val currentBookId: Long? = null,
+    val currentChapterId: Long? = null,
     val currentPosition: Long? = null,
     val duration: Long? = null,
     val preparingBookId: Long? = null,
@@ -81,8 +85,8 @@ class PlaybackConnection constructor(private val context: Context) {
                 _mediaController = result
                 _mediaController?.addListener(playerListener)
 
-                _state.value = restoreStateFromPlayer(
-                    isConnected = (result?.isConnected == true)
+                _state.value = stateFromPlayer(
+                    isConnected = (result?.isConnected == true),
                 )
             }
 
@@ -105,13 +109,18 @@ class PlaybackConnection constructor(private val context: Context) {
         _mediaController = null
     }
 
-    private fun restoreStateFromPlayer(isConnected: Boolean): PlaybackConnectionState {
+    private fun stateFromPlayer(
+        isConnected: Boolean = _state.value.isConnected,
+    ): PlaybackConnectionState {
         val bookId = fromExtras(player?.mediaMetadata?.extras, BUNDLE_KEY_BOOK_ID)
+        val chapterId = fromExtras(player?.mediaMetadata?.extras, BUNDLE_KEY_CHAPTER_ID)
 
         return PlaybackConnectionState(
             isConnected = isConnected,
             isPlaying = (player?.isPlaying == true),
+            isLoading = (player?.isLoading == true),
             currentBookId = bookId,
+            currentChapterId = chapterId,
             currentPosition = player?.currentPosition,
             duration = player?.duration,
             preparingBookId = if (bookId != state.value.preparingBookId)
@@ -121,21 +130,29 @@ class PlaybackConnection constructor(private val context: Context) {
     }
 
     private val playerListener = object : Player.Listener {
-        override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) =
-            stateRecorder.recordState()
+//        override fun onEvents(player: Player, events: Player.Events) {
+//            logcat { "onEvents: ${(0 until events.size()).joinToString { events.get(it).toString() }}" }
+//            _state.value = stateFromPlayer()
+//        }
+
+        override fun onTimelineChanged(timeline: Timeline, reason: Int) {
+            _state.value = stateFromPlayer()
+        }
+
+        override fun onMediaMetadataChanged(mediaMetadata: MediaMetadata) {
+            _state.value = stateFromPlayer()
+        }
+
+        override fun onIsLoadingChanged(isLoading: Boolean) {
+            _state.value = stateFromPlayer()
+        }
+
+        override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
+            _state.value = stateFromPlayer()
+        }
 
         override fun onIsPlayingChanged(isPlaying: Boolean) {
-            val bookId = fromExtras(player?.mediaMetadata?.extras, BUNDLE_KEY_BOOK_ID)
-
-            _state.value = _state.value.copy(
-                currentBookId = bookId,
-                isPlaying = isPlaying,
-                currentPosition = player?.currentPosition,
-                duration = player?.duration,
-                preparingBookId = if (bookId != state.value.preparingBookId)
-                    state.value.preparingBookId
-                else null,
-            )
+            _state.value = stateFromPlayer()
         }
     }
 }

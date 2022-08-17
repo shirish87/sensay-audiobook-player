@@ -47,7 +47,7 @@ data class Chapter(
         )
     }
 
-    fun isInvalid() = (start == ContentDuration.ZERO || end == ContentDuration.ZERO)
+    fun isInvalid() = (end == ContentDuration.ZERO || start > end)
 }
 
 @Entity(
