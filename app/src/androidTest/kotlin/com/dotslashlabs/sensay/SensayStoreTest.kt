@@ -38,6 +38,8 @@ class SensayStoreTest : BaseTest() {
                         duration = ContentDuration(value = 1.hours),
                         uri = "$c".toUri(),
                         hash = "$c",
+                        start = ContentDuration.ZERO,
+                        end = ContentDuration(value = 1.hours),
                     )
                 }
             )
