@@ -1,16 +1,16 @@
 package com.dotslashlabs.sensay.ui
 
-import androidx.core.os.bundleOf
 import androidx.media3.common.MediaItem
-import androidx.media3.common.MediaMetadata
 import androidx.media3.common.Player
 import com.airbnb.mvrx.*
 import com.airbnb.mvrx.hilt.AssistedViewModelFactory
 import com.airbnb.mvrx.hilt.hiltMavericksViewModelFactory
 import com.dotslashlabs.sensay.service.PlaybackConnection
-import com.dotslashlabs.sensay.service.PlaybackConnection.Companion.BUNDLE_KEY_BOOK_ID
-import com.dotslashlabs.sensay.service.PlaybackConnection.Companion.BUNDLE_KEY_CHAPTER_ID
 import com.dotslashlabs.sensay.service.PlaybackConnectionState
+import com.dotslashlabs.sensay.ui.screen.player.PlayerViewState.Companion.getMediaId
+import com.dotslashlabs.sensay.util.bookId
+import com.dotslashlabs.sensay.util.mediaId
+import com.dotslashlabs.sensay.util.toMediaItem
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
@@ -69,19 +69,25 @@ class PlaybackViewModel @AssistedInject constructor(
     ) {
         val player = this.player ?: return
 
-        val book = bookProgressWithBookAndChapters.book
-
+        val bookId = bookProgressWithBookAndChapters.book.bookId
         val chapterId = selectedChapterId ?: bookProgressWithBookAndChapters.chapter.chapterId
+
+        val mediaId = getMediaId(bookId, chapterId)
+        if (mediaId == player.mediaId) return // already active
+
+        val chapterCount = bookProgressWithBookAndChapters.chapters.size
+        if (chapterCount == 0) return
+
         val chapterIndex = bookProgressWithBookAndChapters.chapters
             .indexOfFirst { c -> c.chapterId == chapterId }
 
         // chapterId not found
-        // logcat { "prepareMediaItems: chapterId=$chapterId chapterIndex=$chapterIndex" }
+        logcat { "prepareMediaItems: chapterId=$chapterId chapterIndex=$chapterIndex" }
         if (chapterIndex == -1) return
 
         // preparing items takes a while, possibly due to bundle stuff, so we disable playback
         // isPreparing flag is reset when state.currentBook is updated
-        playbackConnection.setPreparingBookId(book.bookId)
+        playbackConnection.setPreparingMediaId(mediaId)
 
         val progress = bookProgressWithBookAndChapters.bookProgress
         val (startMediaIndex, startPositionMs) =
@@ -93,12 +99,20 @@ class PlaybackViewModel @AssistedInject constructor(
             }
 
         player.apply {
-            setMediaItems(
-                bookProgressWithBookAndChapters.toMediaItems(),
-                startMediaIndex,
-                startPositionMs,
-            )
-            prepare()
+            if (bookId == player.bookId && player.mediaItemCount == chapterCount) {
+                // required book is already loaded
+                // but since mediaId doesn't match,
+                // we need to switch the chapter
+                seekTo(startMediaIndex, startPositionMs)
+            } else {
+                setMediaItems(
+                    bookProgressWithBookAndChapters.toMediaItems(),
+                    startMediaIndex,
+                    startPositionMs,
+                )
+
+                prepare()
+            }
         }
     }
 
@@ -117,15 +131,19 @@ class PlaybackViewModel @AssistedInject constructor(
     }
 
     override fun setChapter(chapterId: Long) {
-        val mediaItemIndex = findMediaItemIndexForChapter(chapterId)
-        logcat { "setChapter: mediaItemIndex=$mediaItemIndex" }
+        val bookId = player?.bookId ?: return
+        val mediaId = getMediaId(bookId, chapterId)
+
+        val mediaItemIndex = findMediaItemIndex { it.mediaId == mediaId }
+        logcat { "setChapter: chapterId=$chapterId mediaItemIndex=$mediaItemIndex" }
         if (mediaItemIndex == -1) return
 
         player?.apply {
-            val connState = state.playbackConnectionState()
-            if (connState?.currentChapterId == chapterId && connState.currentPosition != null) {
-                 logcat { "seekTo: mediaItemIndex=$mediaItemIndex currentPosition=${connState.currentPosition}" }
-                seekTo(mediaItemIndex, connState.currentPosition)
+            val playerState = state.playbackConnectionState()?.playerState
+
+            if (mediaId == playerState?.mediaId && playerState.position != null) {
+                 logcat { "seekTo: mediaItemIndex=$mediaItemIndex position=${playerState.position}" }
+                seekTo(mediaItemIndex, playerState.position)
             } else {
                  logcat { "seekToDefaultPosition: mediaItemIndex=$mediaItemIndex" }
                 seekToDefaultPosition(mediaItemIndex)
@@ -133,15 +151,14 @@ class PlaybackViewModel @AssistedInject constructor(
         }
     }
 
-    private fun findMediaItemIndexForChapter(chapterId: Long): Int {
+    private fun findMediaItemIndex(condition: (mediaItem: MediaItem) -> Boolean): Int {
         val mediaItemCount = player?.mediaItemCount ?: return -1
 
         return (0 until mediaItemCount).fold(-1) { acc, idx ->
             if (acc != -1) return acc
 
             player?.getMediaItemAt(idx)?.let {
-                val mediaItemChapterId = PlaybackConnection.fromExtras(it.mediaMetadata.extras, BUNDLE_KEY_CHAPTER_ID)
-                if (mediaItemChapterId == chapterId) idx else null
+                if (condition(it)) idx else null
             } ?: acc
         }
     }
@@ -161,18 +178,6 @@ fun BookProgressWithBookAndChapters.toMediaItems(): List<MediaItem> {
     return chapters.map {
         require(!it.isInvalid()) { "Each chapter should be valid" }
 
-        MediaItem.Builder()
-            .setMediaId(it.chapterId.toString())
-            .setMediaMetadata(
-                MediaMetadata.Builder()
-                    .setExtras(
-                        bundleOf(
-                            BUNDLE_KEY_BOOK_ID to book.bookId,
-                            BUNDLE_KEY_CHAPTER_ID to it.chapterId,
-                        )
-                    )
-                    .build()
-            )
-            .build()
+        toMediaItem(it.chapterId)
     }
 }

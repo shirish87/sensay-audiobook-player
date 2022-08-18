@@ -1,7 +1,9 @@
-package com.dotslashlabs.sensay.ui.screen.book.player
+package com.dotslashlabs.sensay.ui.screen.player
 
 import android.net.Uri
 import android.os.Bundle
+import android.os.Parcel
+import android.os.Parcelable
 import com.airbnb.mvrx.*
 import com.airbnb.mvrx.hilt.AssistedViewModelFactory
 import com.airbnb.mvrx.hilt.hiltMavericksViewModelFactory
@@ -24,14 +26,18 @@ data class PlayerViewState(
     val selectedChapterId: Async<Long> = Uninitialized,
     val sliderPosition: Float = 0F,
 ) : MavericksState {
-    constructor(arguments: Bundle) : this(bookId = arguments.getString("bookId")!!.toLong())
+
+    constructor(args: PlayerViewArgs) : this(bookId = args.bookId)
 
     companion object {
         const val DURATION_ZERO: String = "00:00:00"
+
+        fun getMediaId(bookId: Long, chapterId: Long) = "books/${bookId}/chapters/${chapterId}"
     }
 
     val bookProgress = (bookProgressWithChapters as? Success)?.invoke()
     val book: Book? = bookProgress?.book
+    private val chapter: Chapter? = bookProgress?.chapter
     val chapters: List<Chapter> = bookProgress?.chapters ?: emptyList()
     val coverUri: Uri? = book?.coverUri
 
@@ -39,30 +45,38 @@ data class PlayerViewState(
         chapters.find { c -> c.chapterId == it }
     }
 
+    private val currentMediaId: String? = if (book != null && chapter != null) {
+        getMediaId(book.bookId, chapter.chapterId)
+    } else null
+
+    private val selectedMediaId: String? = if (book != null && selectedChapter != null) {
+        getMediaId(book.bookId, selectedChapter.chapterId)
+    } else null
+
     private val connState = playbackConnectionState()
 
     val isConnected = (connState?.isConnected == true)
 
-    val isPlaying = (connState?.isPlaying == true)
+    val isPlaying = (connState?.playerState?.isPlaying == true)
 
-    val isCurrentBook = (bookId == connState?.currentBookId)
+    val isPreparingCurrentMediaId =
+        (currentMediaId != null && currentMediaId == connState?.preparingMediaId)
 
-    val isPreparingCurrentBook = (bookId == connState?.preparingBookId)
+    val isCurrentMediaId =
+        (currentMediaId != null && currentMediaId == connState?.playerState?.mediaId)
 
-    val isCurrentBookPlaying = (isCurrentBook && isPlaying)
+    val isPlayingCurrentMediaId = (isCurrentMediaId && isPlaying)
 
-    val isSelectedChapterCurrent =
-        (bookProgress != null && bookProgress.chapter.chapterId == selectedChapterId())
+    private val isSelectedCurrentMediaId =
+        (currentMediaId != null && currentMediaId == selectedMediaId)
 
-    val progressPair: Pair<Long?, Long?> = if (isCurrentBook) {
-        if (isSelectedChapterCurrent) {
-            (connState?.currentPosition ?: 0L) to (connState?.duration ?: 0L)
-        } else (null as Long? to null as Long?)
-    } else if (isSelectedChapterCurrent) {
+    val progressPair: Pair<Long?, Long?> = if (isSelectedCurrentMediaId && isPlayingCurrentMediaId) {
+        (connState?.playerState?.position ?: 0L) to (connState?.playerState?.duration ?: 0L)
+    } else if (isSelectedCurrentMediaId) {
         (bookProgress?.chapterPositionMs ?: 0L) to (bookProgress?.chapterDurationMs ?: 0L)
     } else if (selectedChapter != null) {
         (0L to selectedChapter.duration.ms)
-    } else (null as Long? to null as Long?)
+    } else (null to null)
 
 
     fun formatTime(value: Long?): String = when (value) {
@@ -100,7 +114,7 @@ class PlayerViewModel @AssistedInject constructor(
                 copy(playbackConnectionState = it)
             }
 
-        onEach(PlayerViewState::isCurrentBookPlaying) { isCurrentBookPlaying ->
+        onEach(PlayerViewState::isPlayingCurrentMediaId) { isCurrentBookPlaying ->
             if (isCurrentBookPlaying) {
                 playbackConnection.startLiveUpdates(viewModelScope)
             } else {
@@ -134,4 +148,34 @@ class PlayerViewModel @AssistedInject constructor(
 
     companion object : MavericksViewModelFactory<PlayerViewModel, PlayerViewState>
     by hiltMavericksViewModelFactory()
+}
+
+
+data class PlayerViewArgs(
+    val bookId: Long,
+) : Parcelable {
+
+    constructor(parcel: Parcel) : this(
+        parcel.readLong(),
+    )
+
+    constructor(bundle: Bundle) : this(bundle.getLong("bookId"))
+
+    override fun writeToParcel(parcel: Parcel, flags: Int) {
+        parcel.writeLong(bookId)
+    }
+
+    override fun describeContents(): Int {
+        return 0
+    }
+
+    companion object CREATOR : Parcelable.Creator<PlayerViewArgs> {
+        override fun createFromParcel(parcel: Parcel): PlayerViewArgs {
+            return PlayerViewArgs(parcel)
+        }
+
+        override fun newArray(size: Int): Array<PlayerViewArgs?> {
+            return arrayOfNulls(size)
+        }
+    }
 }

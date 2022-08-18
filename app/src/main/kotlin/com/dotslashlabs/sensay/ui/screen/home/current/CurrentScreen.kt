@@ -14,6 +14,7 @@ import com.dotslashlabs.sensay.ui.screen.SensayScreen
 import com.dotslashlabs.sensay.ui.screen.common.SensayFrame
 import com.dotslashlabs.sensay.ui.screen.home.BooksGrid
 import com.dotslashlabs.sensay.ui.screen.home.BooksList
+import com.dotslashlabs.sensay.ui.screen.home.library.OnNavToBook
 import config.HomeLayout
 
 object CurrentScreen : SensayScreen {
@@ -30,8 +31,8 @@ object CurrentScreen : SensayScreen {
         val viewModel: CurrentViewModel = mavericksViewModel(backStackEntry)
         val state by viewModel.collectAsState()
 
-        val onNavToBook = { bookId: Long ->
-            navHostController.navigate(Destination.Book.Player.useRoute(bookId))
+        val onNavToBook: OnNavToBook = { bookId, _ ->
+            navHostController.navigate(Destination.Player.useRoute(bookId))
         }
 
         SensayFrame {

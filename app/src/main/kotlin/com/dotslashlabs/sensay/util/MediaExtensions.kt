@@ -1,0 +1,100 @@
+package com.dotslashlabs.sensay.util
+
+import androidx.core.os.bundleOf
+import androidx.media3.common.MediaItem
+import androidx.media3.common.MediaMetadata
+import androidx.media3.common.Player
+import com.dotslashlabs.sensay.ui.screen.player.PlayerViewState
+import data.entity.BookProgressWithBookAndChapters
+
+const val BUNDLE_KEY_BOOK_ID = "bookId"
+const val BUNDLE_KEY_CHAPTER_ID = "chapterId"
+
+val Player?.mediaId: String?
+    get() = this?.currentMediaItem?.mediaId
+
+val Player?.bookId: Long?
+    get() = this?.currentMediaItem?.bookId
+
+val Player?.chapterId: Long?
+    get() = this?.currentMediaItem?.chapterId
+
+val MediaItem?.bookId: Long?
+    get() = this?.mediaMetadata?.bookId
+
+val MediaItem?.chapterId: Long?
+    get() = this?.mediaMetadata?.chapterId
+
+val MediaMetadata?.bookId: Long?
+    get() = this?.extras?.getLong(BUNDLE_KEY_BOOK_ID)
+
+val MediaMetadata?.chapterId: Long?
+    get() = this?.extras?.getLong(BUNDLE_KEY_CHAPTER_ID)
+
+fun BookProgressWithBookAndChapters.toExtras(chapterId: Long? = null) = bundleOf(
+    BUNDLE_KEY_BOOK_ID to book.bookId,
+    BUNDLE_KEY_CHAPTER_ID to (chapterId ?: chapter.chapterId),
+)
+
+fun BookProgressWithBookAndChapters.toMediaItem(chapterId: Long) = MediaItem.Builder()
+    .setMediaId(PlayerViewState.getMediaId(book.bookId, chapterId))
+    .setMediaMetadata(
+        MediaMetadata.Builder()
+            .setExtras(toExtras(chapterId))
+            .build()
+    )
+    .build()
+
+fun BookProgressWithBookAndChapters.toMediaItem(mediaItem: MediaItem, chapterId: Long): MediaItem? {
+    val resolvedChapter = when (chapterId) {
+        chapter.chapterId -> chapter
+        else -> chapters.find { c -> chapterId == c.chapterId }
+    } ?: chapter
+
+    if (resolvedChapter.isInvalid()) {
+        return null
+    }
+
+    return mediaItem.buildUpon()
+        .setUri(chapter.uri)
+        .setClippingConfiguration(
+            MediaItem.ClippingConfiguration.Builder()
+                .setStartPositionMs(resolvedChapter.start.ms)
+                .setEndPositionMs(resolvedChapter.end.ms)
+                .build()
+        )
+        .setMediaMetadata(
+            MediaMetadata.Builder()
+                .setTitle("${book.title}: ${resolvedChapter.title}")
+                .setArtist(book.author)
+                .setIsPlayable(true)
+                .setTrackNumber(chapters.indexOf(chapter) + 1)
+                .setTotalTrackCount(chapters.size)
+                .setExtras(toExtras(resolvedChapter.chapterId))
+                .build()
+        )
+        .build()
+}
+
+data class PlayerState(
+    val isPlaying: Boolean = false,
+    val isLoading: Boolean = false,
+
+    val mediaId: String? = null,
+    val position: Long? = null,
+    val duration: Long? = null,
+
+    val currentMediaItemIndex: Int? = null,
+    val mediaItemCount: Int? = null,
+)
+
+val Player?.state: PlayerState
+    get() = PlayerState(
+        isPlaying = (this?.isPlaying == true),
+        isLoading = (this?.isLoading == true),
+        mediaId = this?.mediaId,
+        position = this?.currentPosition,
+        duration = this?.duration,
+        currentMediaItemIndex = this?.currentMediaItemIndex,
+        mediaItemCount = this?.mediaItemCount,
+    )

@@ -16,6 +16,8 @@ import com.dotslashlabs.sensay.ui.screen.home.BooksGrid
 import com.dotslashlabs.sensay.ui.screen.home.BooksList
 import config.HomeLayout
 
+typealias OnNavToBook = (bookId: Long, chapterId: Long) -> Unit
+
 object LibraryScreen : SensayScreen {
     @Composable
     override fun Content(
@@ -30,8 +32,8 @@ object LibraryScreen : SensayScreen {
         val viewModel: LibraryViewModel = mavericksViewModel(backStackEntry)
         val state by viewModel.collectAsState()
 
-        val onNavToBook = { bookId: Long ->
-            navHostController.navigate(Destination.Book.Player.useRoute(bookId))
+        val onNavToBook: OnNavToBook = { bookId, _ ->
+            navHostController.navigate(Destination.Player.useRoute(bookId))
         }
 
         SensayFrame {

@@ -5,7 +5,7 @@ import com.airbnb.mvrx.hilt.MavericksViewModelComponent
 import com.airbnb.mvrx.hilt.ViewModelKey
 import com.dotslashlabs.sensay.ui.PlaybackViewModel
 import com.dotslashlabs.sensay.ui.SensayAppViewModel
-import com.dotslashlabs.sensay.ui.screen.book.player.PlayerViewModel
+import com.dotslashlabs.sensay.ui.screen.player.PlayerViewModel
 import com.dotslashlabs.sensay.ui.screen.home.current.CurrentViewModel
 import com.dotslashlabs.sensay.ui.screen.home.library.LibraryViewModel
 import com.dotslashlabs.sensay.ui.screen.sources.SourcesViewModel

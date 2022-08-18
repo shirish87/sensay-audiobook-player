@@ -1,4 +1,4 @@
-package com.dotslashlabs.sensay.ui.screen.book.player
+package com.dotslashlabs.sensay.ui.screen.player
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack

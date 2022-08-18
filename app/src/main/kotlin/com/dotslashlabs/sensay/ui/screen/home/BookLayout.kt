@@ -16,6 +16,7 @@ import androidx.compose.ui.unit.dp
 import com.airbnb.mvrx.Async
 import com.airbnb.mvrx.Loading
 import com.airbnb.mvrx.Success
+import com.dotslashlabs.sensay.ui.screen.home.library.OnNavToBook
 import data.entity.BookProgressWithBookAndChapters
 import kotlin.math.roundToInt
 
@@ -38,7 +39,7 @@ fun resolveAsyncState(
 @Composable
 fun BooksList(
     items: Async<List<BookProgressWithBookAndChapters>>,
-    onNavToBook: (bookId: Long) -> Unit,
+    onNavToBook: OnNavToBook,
 ) {
     val state: LazyListState = rememberLazyListState()
     val books = resolveAsyncState(items)
@@ -65,7 +66,7 @@ fun BooksList(
 @Composable
 fun BooksGrid(
     items: Async<List<BookProgressWithBookAndChapters>>,
-    onNavToBook: (bookId: Long) -> Unit,
+    onNavToBook: OnNavToBook,
 ) {
     val state: LazyGridState = rememberLazyGridState()
     val cellCount = gridColumnCount()

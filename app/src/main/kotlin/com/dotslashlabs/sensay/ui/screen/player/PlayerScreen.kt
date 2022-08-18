@@ -1,4 +1,4 @@
-package com.dotslashlabs.sensay.ui.screen.book.player
+package com.dotslashlabs.sensay.ui.screen.player
 
 import android.annotation.SuppressLint
 import android.net.Uri
@@ -69,7 +69,8 @@ fun PlayerContent(
 
     val playbackViewModel: PlaybackViewModel = mavericksActivityViewModel()
 
-    val viewModel: PlayerViewModel = mavericksViewModel(argsFactory = { argsBundle })
+    val viewModel: PlayerViewModel =
+        mavericksViewModel(argsFactory = { PlayerViewArgs(argsBundle) })
     val state by viewModel.collectAsState()
 
     PlayerContentView(playbackViewModel, viewModel, state, useLandscapeLayout, onBackPress)
@@ -321,7 +322,7 @@ private fun PlayerProgress(
                     playbackActions.seekTo((it * duration).toLong())
                 },
             )
-        } else if (state.isCurrentBookPlaying) {
+        } else if (state.isCurrentMediaId) {
             Row {
                 LinearProgressIndicator()
             }
@@ -351,7 +352,7 @@ private fun PlayerButtons(
         val buttonsModifier = Modifier.size(sideButtonSize)
 
         OutlinedIconButton(
-            enabled = !state.isPreparingCurrentBook,
+            enabled = !state.isPreparingCurrentMediaId,
             onClick = { playbackActions.seekBack() },
             modifier = buttonsModifier,
         ) {
@@ -362,15 +363,10 @@ private fun PlayerButtons(
         }
 
         OutlinedIconButton(
-            enabled = !state.isPreparingCurrentBook,
+            enabled = !state.isPreparingCurrentMediaId,
             onClick = {
-                if (state.isCurrentBook) {
-                    // current book
+                if (state.isCurrentMediaId) {
                     playbackActions.apply {
-                        if (!state.isSelectedChapterCurrent) {
-                            setChapter(selectedChapter.chapterId)
-                        }
-
                         if (state.isPlaying) {
                             pause()
                         } else {
@@ -378,7 +374,6 @@ private fun PlayerButtons(
                         }
                     }
                 } else {
-                    // other book, only play action is possible
                     playbackActions.apply {
                         prepareMediaItems(bookProgressWithChapters, selectedChapter.chapterId)
                         play()
@@ -388,7 +383,7 @@ private fun PlayerButtons(
             modifier = Modifier.size(playerButtonSize),
         ) {
             Icon(
-                imageVector = if (state.isCurrentBookPlaying) {
+                imageVector = if (state.isPlayingCurrentMediaId) {
                     Icons.Filled.PauseCircleFilled
                 } else {
                     Icons.Filled.PlayCircleFilled
@@ -399,7 +394,7 @@ private fun PlayerButtons(
         }
 
         OutlinedIconButton(
-            enabled = !state.isPreparingCurrentBook,
+            enabled = !state.isPreparingCurrentMediaId,
             onClick = { playbackActions.seekForward() },
             modifier = buttonsModifier,
         ) {
@@ -467,11 +462,14 @@ private fun SelectChapter(
                             }
                         },
                         onClick = {
-                            playerActions.setSelectedChapterId(c.chapterId)
                             expanded = false
 
-                            if (state.isPlaying) {
-                                playbackActions.pause()
+                            if (c.chapterId != selectedChapter.chapterId) {
+                                playerActions.setSelectedChapterId(c.chapterId)
+
+                                if (state.isPlaying) {
+                                    playbackActions.pause()
+                                }
                             }
                         },
                     )
@@ -517,6 +515,7 @@ private fun PlayerDynamicTheme(
 @Composable
 fun PlayerContentPreview() {
     val bookId = 2L
+    val chapterId = 1L
 
     val state = PlayerViewState(
         bookId = bookId,
@@ -528,16 +527,16 @@ fun PlayerContentPreview() {
                     author = "Author",
                 ),
                 bookProgress = BookProgress.empty(),
-                chapter = Chapter.empty().copy (
-                    chapterId = 1,
+                chapter = Chapter.empty().copy(
+                    chapterId = chapterId,
                     title = "Chapter Title",
                 ),
                 chapters = listOf(
-                    Chapter.empty().copy (
-                        chapterId = 1,
+                    Chapter.empty().copy(
+                        chapterId = chapterId,
                         title = "Chapter 1 Title",
                     ),
-                    Chapter.empty().copy (
+                    Chapter.empty().copy(
                         chapterId = 2,
                         title = "Chapter 2 Title",
                     ),
@@ -547,7 +546,6 @@ fun PlayerContentPreview() {
         playbackConnectionState = Success(
             PlaybackConnectionState(
                 isConnected = true,
-                isPlaying = false,
             )
         )
     )

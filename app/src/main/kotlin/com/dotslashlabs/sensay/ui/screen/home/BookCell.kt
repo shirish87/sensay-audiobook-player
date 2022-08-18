@@ -13,17 +13,23 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.em
 import com.dotslashlabs.sensay.ui.screen.common.CoverImage
+import com.dotslashlabs.sensay.ui.screen.home.library.OnNavToBook
 import data.entity.BookProgressWithBookAndChapters
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun BookCell(
     bookProgressWithChapters: BookProgressWithBookAndChapters,
-    onNavToBook: (bookId: Long) -> Unit,
+    onNavToBook: OnNavToBook,
     modifier: Modifier = Modifier,
 ) {
     ElevatedCard(
-        onClick = { onNavToBook(bookProgressWithChapters.book.bookId) },
+        onClick = {
+            onNavToBook(
+                bookProgressWithChapters.book.bookId,
+                bookProgressWithChapters.chapter.chapterId
+            )
+        },
         modifier = modifier.fillMaxWidth(),
     ) {
         GridBookView(bookProgressWithChapters)
