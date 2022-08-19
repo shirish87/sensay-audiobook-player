@@ -4,9 +4,9 @@ import android.annotation.SuppressLint
 import android.net.Uri
 import android.os.Bundle
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.text.selection.DisableSelection
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -25,10 +25,12 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavHostController
+import com.airbnb.mvrx.Success
 import com.airbnb.mvrx.compose.collectAsState
 import com.airbnb.mvrx.compose.mavericksActivityViewModel
 import com.airbnb.mvrx.compose.mavericksViewModel
 import com.dotslashlabs.sensay.R
+import com.dotslashlabs.sensay.service.PlaybackConnectionState
 import com.dotslashlabs.sensay.ui.SensayAppState
 import com.dotslashlabs.sensay.ui.SensayAppViewModel
 import com.dotslashlabs.sensay.ui.screen.Destination
@@ -39,7 +41,11 @@ import com.dotslashlabs.sensay.ui.theme.DynamicThemePrimaryColorsFromImage
 import com.dotslashlabs.sensay.ui.theme.MinContrastOfPrimaryVsSurface
 import com.dotslashlabs.sensay.ui.theme.contrastAgainst
 import com.dotslashlabs.sensay.ui.theme.rememberDominantColorState
+import com.dotslashlabs.sensay.util.PlayerState
 import com.dotslashlabs.sensay.util.verticalGradientScrim
+import data.entity.Book
+import data.entity.BookProgress
+import data.entity.Chapter
 
 object PlayerScreen : SensayScreen {
     @Composable
@@ -410,11 +416,10 @@ private fun SelectChapter(
             expanded = expanded,
             onExpandedChange = { expanded = !expanded }
         ) {
-            val containerColor = ExposedDropdownMenuDefaults.textFieldColors()
-                .containerColor(enabled = true).value.copy(alpha = 0.35F)
 
             TextField(
                 readOnly = true,
+                enabled = false,
                 value = selectedChapter.title,
                 onValueChange = {},
                 label = { Text(text = "Chapter") },
@@ -432,8 +437,7 @@ private fun SelectChapter(
                     }
                 },
                 trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
-                colors = ExposedDropdownMenuDefaults
-                    .textFieldColors(containerColor = containerColor),
+                colors = ExposedDropdownMenuDefaults.disabledTextFieldColors(),
             )
             ExposedDropdownMenu(
                 expanded = expanded,
@@ -500,54 +504,83 @@ private fun PlayerDynamicTheme(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun ExposedDropdownMenuDefaults.disabledTextFieldColors(
+    interactionSource: MutableInteractionSource = remember { MutableInteractionSource() },
+): TextFieldColors {
+    val defaultColors = textFieldColors()
+    val containerColor = defaultColors.containerColor(enabled = true).value.copy(alpha = 0.35F)
+
+    return textFieldColors(
+        containerColor = containerColor,
+        disabledTextColor = defaultColors.textColor(enabled = true).value,
+        disabledLabelColor = defaultColors.labelColor(
+            enabled = true,
+            isError = false,
+            interactionSource = interactionSource,
+        ).value,
+        disabledLeadingIconColor = defaultColors.leadingIconColor(
+            enabled = true,
+            isError = false,
+            interactionSource = interactionSource,
+        ).value,
+        disabledTrailingIconColor = defaultColors.trailingIconColor(
+            enabled = true,
+            isError = false,
+            interactionSource = interactionSource,
+        ).value,
+        disabledIndicatorColor = defaultColors.indicatorColor(
+            enabled = true,
+            isError = false,
+            interactionSource = interactionSource,
+        ).value,
+        disabledPlaceholderColor = defaultColors.placeholderColor(enabled = true).value,
+    )
+}
+
+
 @Preview
 @Composable
 fun PlayerContentPreview() {
-    /*val bookId = 2L
-    val chapterId = 1L
+    val bookId = 2L
+
+    val chapters = listOf(
+        Chapter.empty().copy(
+            chapterId = 1,
+            title = "Chapter 1 Title",
+        ),
+        Chapter.empty().copy(
+            chapterId = 2,
+            title = "Chapter 2 Title",
+        ),
+    )
+
+    val mediaIds = chapters.map { PlayerViewState.getMediaId(bookId, it.chapterId) }
 
     val state = PlayerViewState(
         bookId = bookId,
-        bookProgressWithChapters = Success(
-            BookProgressWithBookAndChapters(
-                book = Book.empty().copy(
-                    bookId = bookId,
-                    title = "Book Title",
-                    author = "Author",
-                ),
-                bookProgress = BookProgress.empty(),
-                chapter = Chapter.empty().copy(
-                    chapterId = chapterId,
-                    title = "Chapter Title",
-                ),
-                chapters = listOf(
-                    Chapter.empty().copy(
-                        chapterId = chapterId,
-                        title = "Chapter 1 Title",
-                    ),
-                    Chapter.empty().copy(
-                        chapterId = 2,
-                        title = "Chapter 2 Title",
-                    ),
-                ),
-            )
+        book = Book.empty().copy(
+            bookId = bookId,
+            title = "Book Title",
+            author = "Author",
         ),
+        bookProgress = BookProgress.empty(),
+        chapters = chapters,
+        mediaIds = mediaIds,
+        mediaId = mediaIds.first(),
         playbackConnectionState = Success(
             PlaybackConnectionState(
                 isConnected = true,
+                playerState = PlayerState(
+                    isPlaying = false,
+                ),
             )
         )
     )
 
-    val playbackActions = object : PlaybackActions {
-        override var playWhenReady: Boolean = false
-
-        override fun prepareMediaItems(
-            bookProgressWithBookAndChapters: BookProgressWithBookAndChapters,
-            selectedChapterId: Long?,
-        ) {
-            TODO("Not yet implemented")
-        }
+    val playerActions = object : PlayerActions {
+        override var playWhenReady: Boolean = true
 
         override fun seekBack(): Unit? {
             TODO("Not yet implemented")
@@ -557,7 +590,7 @@ fun PlayerContentPreview() {
             TODO("Not yet implemented")
         }
 
-        override fun seekTo(mediaItemIndex: Int, positionMs: Long): Unit? {
+        override fun seekTo(fraction: Float, ofDurationMs: Long): Unit? {
             TODO("Not yet implemented")
         }
 
@@ -569,26 +602,19 @@ fun PlayerContentPreview() {
             TODO("Not yet implemented")
         }
 
-        override fun setChapter(chapterId: Long) {
-            TODO("Not yet implemented")
-        }
-    }
-
-    val playerActions = object : PlayerActions {
-        override fun setSelectedChapterId(chapterId: Long) {
+        override fun setSelectedMediaId(mediaId: String) {
             TODO("Not yet implemented")
         }
 
-        override fun setSliderPosition(position: Float) {
+        override fun resetSelectedMediaId() {
             TODO("Not yet implemented")
         }
     }
 
     PlayerContentView(
-        playbackActions,
         playerActions,
         state,
         useLandscapeLayout = false,
         onBackPress = {},
-    )*/
+    )
 }
