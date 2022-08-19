@@ -1,6 +1,8 @@
 package com.dotslashlabs.sensay.ui
 
+import androidx.core.os.bundleOf
 import androidx.media3.common.MediaItem
+import androidx.media3.common.MediaMetadata
 import androidx.media3.common.Player
 import com.airbnb.mvrx.*
 import com.airbnb.mvrx.hilt.AssistedViewModelFactory
@@ -8,12 +10,11 @@ import com.airbnb.mvrx.hilt.hiltMavericksViewModelFactory
 import com.dotslashlabs.sensay.service.PlaybackConnection
 import com.dotslashlabs.sensay.service.PlaybackConnectionState
 import com.dotslashlabs.sensay.ui.screen.player.PlayerViewState.Companion.getMediaId
-import com.dotslashlabs.sensay.util.bookId
-import com.dotslashlabs.sensay.util.mediaId
-import com.dotslashlabs.sensay.util.toMediaItem
+import com.dotslashlabs.sensay.util.*
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
+import data.entity.BookProgress
 import data.entity.BookProgressWithBookAndChapters
 import logcat.logcat
 
@@ -30,13 +31,14 @@ interface PlaybackActions {
     var playWhenReady: Boolean
 
     fun prepareMediaItems(
-        bookProgressWithBookAndChapters: BookProgressWithBookAndChapters,
-        selectedChapterId: Long? = null,
+        bookProgress: BookProgress,
+        chapters: List<Long>,
+        selectedChapterId: Long?,
     )
 
     fun seekBack(): Unit?
     fun seekForward(): Unit?
-    fun seekTo(positionMs: Long): Unit?
+    fun seekTo(mediaItemIndex: Int, positionMs: Long): Unit?
     fun pause(): Unit?
     fun play(): Unit?
     fun setChapter(chapterId: Long): Unit?
@@ -46,13 +48,6 @@ class PlaybackViewModel @AssistedInject constructor(
     @Assisted private val state: PlaybackState,
     private val playbackConnection: PlaybackConnection,
 ) : MavericksViewModel<PlaybackState>(state), PlaybackActions {
-
-    init {
-        playbackConnection.state
-            .execute(retainValue = PlaybackState::playbackConnectionState) {
-                copy(playbackConnectionState = it)
-            }
-    }
 
     val player: Player?
         get() = playbackConnection.player
@@ -64,36 +59,30 @@ class PlaybackViewModel @AssistedInject constructor(
         }
 
     override fun prepareMediaItems(
-        bookProgressWithBookAndChapters: BookProgressWithBookAndChapters,
+        bookProgress: BookProgress,
+        chapters: List<Long>,
         selectedChapterId: Long?,
     ) {
         val player = this.player ?: return
 
-        val bookId = bookProgressWithBookAndChapters.book.bookId
-        val chapterId = selectedChapterId ?: bookProgressWithBookAndChapters.chapter.chapterId
+        val bookId = bookProgress.bookId
+        val chapterId = selectedChapterId ?: bookProgress.chapterId
+
+        val chapterCount = chapters.size
+        if (chapterCount == 0) return
 
         val mediaId = getMediaId(bookId, chapterId)
         if (mediaId == player.mediaId) return // already active
 
-        val chapterCount = bookProgressWithBookAndChapters.chapters.size
-        if (chapterCount == 0) return
-
-        val chapterIndex = bookProgressWithBookAndChapters.chapters
-            .indexOfFirst { c -> c.chapterId == chapterId }
-
+        val chapterIndex = chapters.indexOf(chapterId)
         // chapterId not found
         logcat { "prepareMediaItems: chapterId=$chapterId chapterIndex=$chapterIndex" }
         if (chapterIndex == -1) return
 
-        // preparing items takes a while, possibly due to bundle stuff, so we disable playback
-        // isPreparing flag is reset when state.currentBook is updated
-        playbackConnection.setPreparingMediaId(mediaId)
-
-        val progress = bookProgressWithBookAndChapters.bookProgress
         val (startMediaIndex, startPositionMs) =
-            if (progress.chapterId == chapterId) {
+            if (bookProgress.chapterId == chapterId) {
                 // selected chapter has existing progress recorded
-                progress.currentChapter to progress.chapterProgress.ms
+                bookProgress.currentChapter to bookProgress.chapterProgress.ms
             } else {
                 chapterIndex to 0L
             }
@@ -106,7 +95,21 @@ class PlaybackViewModel @AssistedInject constructor(
                 seekTo(startMediaIndex, startPositionMs)
             } else {
                 setMediaItems(
-                    bookProgressWithBookAndChapters.toMediaItems(),
+                    chapters.map {
+                        MediaItem.Builder()
+                            .setMediaId(getMediaId(bookId, chapterId))
+                            .setMediaMetadata(
+                                MediaMetadata.Builder()
+                                    .setExtras(
+                                        bundleOf(
+                                            BUNDLE_KEY_BOOK_ID to bookId,
+                                            BUNDLE_KEY_CHAPTER_ID to chapterId,
+                                        )
+                                    )
+                                    .build()
+                            )
+                            .build()
+                    },
                     startMediaIndex,
                     startPositionMs,
                 )
@@ -119,7 +122,8 @@ class PlaybackViewModel @AssistedInject constructor(
     override fun seekBack() = player?.seekBack()
     override fun seekForward() = player?.seekForward()
 
-    override fun seekTo(positionMs: Long): Unit? = player?.seekTo(positionMs)
+    override fun seekTo(mediaItemIndex: Int, positionMs: Long): Unit? =
+        player?.seekTo(mediaItemIndex,positionMs)
 
     override fun pause() = player?.pause()
 
@@ -139,11 +143,9 @@ class PlaybackViewModel @AssistedInject constructor(
         if (mediaItemIndex == -1) return
 
         player?.apply {
-            val playerState = state.playbackConnectionState()?.playerState
-
-            if (mediaId == playerState?.mediaId && playerState.position != null) {
-                 logcat { "seekTo: mediaItemIndex=$mediaItemIndex position=${playerState.position}" }
-                seekTo(mediaItemIndex, playerState.position)
+            if (mediaId == state.mediaId && state.position != null) {
+                 logcat { "seekTo: mediaItemIndex=$mediaItemIndex position=${state.position}" }
+                seekTo(mediaItemIndex, state.position!!)
             } else {
                  logcat { "seekToDefaultPosition: mediaItemIndex=$mediaItemIndex" }
                 seekToDefaultPosition(mediaItemIndex)

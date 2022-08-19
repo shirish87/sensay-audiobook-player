@@ -8,6 +8,7 @@ import androidx.media3.common.util.Assertions
 import androidx.media3.session.MediaController
 import androidx.media3.session.SessionToken
 import com.dotslashlabs.sensay.util.PlayerState
+import com.dotslashlabs.sensay.util.mediaIds
 import com.dotslashlabs.sensay.util.state
 import com.google.common.util.concurrent.FutureCallback
 import com.google.common.util.concurrent.Futures
@@ -18,8 +19,8 @@ import kotlin.time.Duration.Companion.seconds
 
 data class PlaybackConnectionState(
     val isConnected: Boolean = false,
-    val preparingMediaId: String? = null,
     val playerState: PlayerState = PlayerState(),
+    val playerMediaIds: List<String> = emptyList(),
 )
 
 class PlaybackConnection constructor(private val context: Context) {
@@ -51,12 +52,6 @@ class PlaybackConnection constructor(private val context: Context) {
             )
         },
     )
-
-    fun setPreparingMediaId(mediaId: String?) {
-        _state.value = _state.value.copy(
-            preparingMediaId = mediaId,
-        )
-    }
 
     fun start() {
         val controllerFuture = MediaController.Builder(
@@ -95,15 +90,14 @@ class PlaybackConnection constructor(private val context: Context) {
 
     private fun stateFromPlayer(
         isConnected: Boolean = _state.value.isConnected,
+        playerMediaIds: List<String> = _state.value.playerMediaIds,
     ): PlaybackConnectionState {
         val playerState = player?.state ?: PlayerState()
 
         return PlaybackConnectionState(
             isConnected = isConnected,
-            preparingMediaId = if (playerState.mediaId == _state.value.preparingMediaId)
-                null
-            else _state.value.preparingMediaId,
             playerState = playerState,
+            playerMediaIds = playerMediaIds,
         )
     }
 
@@ -114,9 +108,7 @@ class PlaybackConnection constructor(private val context: Context) {
 //        }
 
         override fun onPlaybackStateChanged(playbackState: Int) {
-            if (playbackState != Player.STATE_IDLE) {
-                _state.value = stateFromPlayer()
-            }
+            _state.value = stateFromPlayer(playerMediaIds = player.mediaIds)
         }
 
         override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
@@ -124,7 +116,7 @@ class PlaybackConnection constructor(private val context: Context) {
         }
 
         override fun onIsLoadingChanged(isLoading: Boolean) {
-            _state.value = stateFromPlayer()
+            _state.value = stateFromPlayer(playerMediaIds = player.mediaIds)
         }
 
         override fun onIsPlayingChanged(isPlaying: Boolean) {

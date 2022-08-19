@@ -83,18 +83,19 @@ data class PlayerState(
     val mediaId: String? = null,
     val position: Long? = null,
     val duration: Long? = null,
-
-    val currentMediaItemIndex: Int? = null,
-    val mediaItemCount: Int? = null,
 )
 
 val Player?.state: PlayerState
     get() = PlayerState(
         isPlaying = (this?.isPlaying == true),
         isLoading = (this?.isLoading == true),
+
         mediaId = this?.mediaId,
         position = this?.currentPosition,
         duration = this?.duration,
-        currentMediaItemIndex = this?.currentMediaItemIndex,
-        mediaItemCount = this?.mediaItemCount,
     )
+
+val Player?.mediaIds: List<String>
+    get() = this?.let { p ->
+        (0 until p.mediaItemCount).map { p.getMediaItemAt(it).mediaId }
+    } ?: emptyList()

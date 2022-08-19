@@ -45,8 +45,8 @@ fun HomeContent(
     @Suppress("UNUSED_PARAMETER") backStackEntry: NavBackStackEntry,
 ) {
 
-    val viewModel: SensayAppViewModel = mavericksActivityViewModel()
-    val state by viewModel.collectAsState()
+    val appViewModel: SensayAppViewModel = mavericksActivityViewModel()
+    val state by appViewModel.collectAsState()
 
     val homeNavController = rememberAnimatedNavController()
     val context: Context = LocalContext.current
@@ -58,15 +58,15 @@ fun HomeContent(
                     isBusy = state.isScanningFolders,
                     activeLayout = state.homeLayout,
                     onChangeLayout = {
-                        viewModel.setHomeLayout(it)
+                        appViewModel.setHomeLayout(it)
                     },
                     onSources = {
                         navHostController.navigate(Destination.Sources.route)
                     },
                     onScanCancel = {
-                        viewModel.cancelScanFolders()
+                        appViewModel.cancelScanFolders()
 
-                        viewModel.viewModelScope.launch {
+                        appViewModel.viewModelScope.launch {
                             Toast.makeText(context, "Cancelled scan", Toast.LENGTH_SHORT).show()
                         }
                     },

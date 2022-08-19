@@ -19,8 +19,8 @@ fun SensayApp(
     devicePosture: DevicePosture,
 ) {
 
-    val viewModel: SensayAppViewModel = mavericksActivityViewModel()
-    viewModel.configure(windowSize.toWindowSizeClass(), devicePosture)
+    val appViewModel: SensayAppViewModel = mavericksActivityViewModel()
+    appViewModel.configure(windowSize.toWindowSizeClass(), devicePosture)
 
     val navController = rememberAnimatedNavController()
     val destination = Destination.Root
