@@ -5,6 +5,7 @@ import androidx.media3.common.Player
 import androidx.media3.session.MediaSession
 import com.dotslashlabs.sensay.util.*
 import com.google.common.util.concurrent.ListenableFuture
+import config.ConfigStore
 import data.BookCategory
 import data.SensayStore
 import data.entity.BookProgress
@@ -18,7 +19,10 @@ import java.time.Instant
 import kotlin.time.Duration.Companion.seconds
 
 
-class PlaybackUpdater constructor(private val store: SensayStore) : Player.Listener,
+class PlaybackUpdater constructor(
+    private val store: SensayStore,
+    private val configStore: ConfigStore,
+) : Player.Listener,
     MediaSession.Callback {
 
     private val serviceJob = Job()
@@ -87,6 +91,10 @@ class PlaybackUpdater constructor(private val store: SensayStore) : Player.Liste
     override fun onPlaybackStateChanged(playbackState: Int) {
         if (playbackState != Player.STATE_IDLE) {
             stateRecorder.recordState()
+        }
+
+        serviceScope.launch {
+            configStore.setLastPlayedBookId(playerRef?.bookId)
         }
     }
 

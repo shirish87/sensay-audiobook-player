@@ -6,6 +6,7 @@ import androidx.media3.common.C
 import androidx.media3.common.Player
 import androidx.media3.exoplayer.ExoPlayer
 import com.dotslashlabs.sensay.service.PlaybackUpdater
+import config.ConfigStore
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -27,7 +28,10 @@ object PlaybackServiceModule {
 
     @Provides
     @ServiceScoped
-    fun providePlaybackUpdater(store: SensayStore): PlaybackUpdater = PlaybackUpdater(store)
+    fun providePlaybackUpdater(
+        store: SensayStore,
+        configStore: ConfigStore,
+    ): PlaybackUpdater = PlaybackUpdater(store, configStore)
 
     @Provides
     @ServiceScoped

@@ -18,6 +18,8 @@ import data.SensayStore
 import data.entity.*
 import data.util.ContentDuration
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
@@ -178,6 +180,8 @@ class SensayAppViewModel @AssistedInject constructor(
             totalBookCount + sourceBookCount
         }
     }
+
+    suspend fun getLastPlayedBookId() = configStore.getLastPlayedBookId().first()
 
     @AssistedFactory
     interface Factory : AssistedViewModelFactory<SensayAppViewModel, SensayAppState> {

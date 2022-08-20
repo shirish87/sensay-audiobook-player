@@ -278,6 +278,8 @@ private fun PlayerProgress(
     state: PlayerViewState,
     modifier: Modifier = Modifier,
 ) {
+    if (!state.isConnected) return
+
     val (position, duration) = state.progressPair
 
     Column(modifier = modifier) {

@@ -9,6 +9,7 @@ import androidx.media3.session.MediaSession
 import androidx.media3.session.MediaSession.ControllerInfo
 import androidx.media3.session.MediaSessionService
 import com.dotslashlabs.sensay.MainActivity
+import config.ConfigStore
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 
@@ -29,8 +30,12 @@ class PlaybackService : MediaSessionService() {
 
         playbackUpdater.configure(player)
 
+        val intent = Intent(this@PlaybackService, MainActivity::class.java).apply {
+            action = Intent.ACTION_VIEW
+        }
+
         val sessionActivityPendingIntent = TaskStackBuilder.create(this).run {
-            addNextIntent(Intent(this@PlaybackService, MainActivity::class.java))
+            addNextIntent(intent)
             getPendingIntent(0, FLAG_IMMUTABLE or FLAG_UPDATE_CURRENT)
         } ?: return
 
