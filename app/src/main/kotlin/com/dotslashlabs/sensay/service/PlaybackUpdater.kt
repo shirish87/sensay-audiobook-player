@@ -78,12 +78,14 @@ class PlaybackUpdater constructor(
         }
     }
 
-    fun configure(player: Player) {
+    fun configure(player: Player): PlaybackUpdater {
         mediaItemsCache.clear()
 
         playerRef = player.apply {
             addListener(this@PlaybackUpdater)
         }
+
+        return this
     }
 
 //    override fun onEvents(player: Player, events: Player.Events) = stateRecorder.recordState(player)
