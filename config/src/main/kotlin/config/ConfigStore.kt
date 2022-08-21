@@ -26,6 +26,8 @@ class ConfigStore @Inject constructor(
         private val KEY_AUDIOBOOKS_FOLDERS_LAST_UPDATE =
             longPreferencesKey("KEY_AUDIOBOOKS_FOLDERS_LAST_UPDATE")
 
+        private val KEY_LAST_PLAYED_BOOK_ID = longPreferencesKey("KEY_LAST_PLAYED_BOOK_ID")
+
         fun instance(appContext: Context) = ConfigStore(
             PreferenceDataStoreFactory.create(
                 scope = CoroutineScope(Dispatchers.IO + SupervisorJob()),
@@ -56,5 +58,13 @@ class ConfigStore @Inject constructor(
 
     fun getAudiobookFoldersUpdateTime(): Flow<Instant> = dataStore.data.map { preferences ->
         Instant.ofEpochMilli(preferences[KEY_AUDIOBOOKS_FOLDERS_LAST_UPDATE] ?: 0L)
+    }
+
+    suspend fun setLastPlayedBookId(bookId: Long?) = dataStore.edit { preferences ->
+        preferences[KEY_LAST_PLAYED_BOOK_ID] = bookId ?: -1L
+    }
+
+    fun getLastPlayedBookId(): Flow<Long?> = dataStore.data.map { preferences ->
+        preferences[KEY_LAST_PLAYED_BOOK_ID]
     }
 }
