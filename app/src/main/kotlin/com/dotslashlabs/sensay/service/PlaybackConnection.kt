@@ -15,6 +15,7 @@ import com.google.common.util.concurrent.Futures
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import logcat.logcat
 import kotlin.time.Duration.Companion.seconds
 
 data class PlaybackConnectionState(
@@ -23,7 +24,7 @@ data class PlaybackConnectionState(
     val playerMediaIds: List<String> = emptyList(),
 )
 
-class PlaybackConnection constructor(private val context: Context) {
+class PlaybackConnection {
 
     private var _mediaController: MediaController? = null
     val player: Player?
@@ -53,7 +54,13 @@ class PlaybackConnection constructor(private val context: Context) {
         },
     )
 
-    fun start() {
+    private var attachedContextId: String? = null
+
+    fun start(context: Context) {
+        logcat { "start" }
+        verifyOwner(context)
+        logcat { "start attachedContextId=$attachedContextId" }
+
         val controllerFuture = MediaController.Builder(
             context,
             SessionToken(context, ComponentName(context, PlaybackService::class.java))
@@ -75,16 +82,34 @@ class PlaybackConnection constructor(private val context: Context) {
         }, context.mainExecutor)
     }
 
-    fun stop() = release()
+    fun stop(context: Context) {
+        logcat { "stop" }
+        if (attachedContextId != context.id) return
+        logcat { "stop attachedContextId=$attachedContextId" }
+
+        release()
+    }
+
+    private fun verifyOwner(context: Context) {
+        val contextId = context.id
+        if (attachedContextId != null && contextId != attachedContextId) {
+            // release connection for previous activity
+            release()
+        }
+
+        attachedContextId = contextId
+    }
 
     fun startLiveUpdates(scope: CoroutineScope) = stateRecorder.startStateRecorder(scope)
 
     fun stopLiveUpdates() = stateRecorder.stopStateRecorder()
 
     private fun release() {
+        logcat { "release" }
         stateRecorder.release()
         _state.value = PlaybackConnectionState()
         _mediaController?.removeListener(playerListener)
+        _mediaController?.release()
         _mediaController = null
     }
 
@@ -124,3 +149,7 @@ class PlaybackConnection constructor(private val context: Context) {
         }
     }
 }
+
+private val Context.id: String
+    get() = Integer.toHexString(hashCode())
+

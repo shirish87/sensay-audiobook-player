@@ -40,12 +40,12 @@ class MainActivity : ComponentActivity() {
     override fun onStart() {
         super.onStart()
 
-        playbackConnection.start()
+        playbackConnection.start(this)
     }
 
     override fun onStop() {
         super.onStop()
 
-        playbackConnection.stop()
+        playbackConnection.stop(this)
     }
 }
