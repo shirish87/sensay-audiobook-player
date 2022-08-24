@@ -8,8 +8,8 @@ import androidx.compose.material3.windowsizeclass.calculateWindowSizeClass
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.core.view.WindowCompat
-import com.dotslashlabs.sensay.service.PlaybackConnection
 import com.dotslashlabs.sensay.ui.SensayApp
+import com.dotslashlabs.sensay.ui.ServiceConnection
 import com.dotslashlabs.sensay.util.createDevicePostureFlow
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
@@ -18,7 +18,8 @@ import javax.inject.Inject
 class MainActivity : ComponentActivity() {
 
     @Inject
-    lateinit var playbackConnection: PlaybackConnection
+    lateinit var serviceConnection: ServiceConnection
+
 
     @OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -37,15 +38,9 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    override fun onStart() {
-        super.onStart()
+    override fun onDestroy() {
+        super.onDestroy()
 
-        playbackConnection.start(this)
-    }
-
-    override fun onStop() {
-        super.onStop()
-
-        playbackConnection.stop(this)
+        serviceConnection.release()
     }
 }

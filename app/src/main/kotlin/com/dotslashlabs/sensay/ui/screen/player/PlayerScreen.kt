@@ -30,7 +30,7 @@ import com.airbnb.mvrx.compose.collectAsState
 import com.airbnb.mvrx.compose.mavericksActivityViewModel
 import com.airbnb.mvrx.compose.mavericksViewModel
 import com.dotslashlabs.sensay.R
-import com.dotslashlabs.sensay.service.PlaybackConnectionState
+import com.dotslashlabs.sensay.common.PlaybackConnectionState
 import com.dotslashlabs.sensay.ui.SensayAppState
 import com.dotslashlabs.sensay.ui.SensayAppViewModel
 import com.dotslashlabs.sensay.ui.screen.Destination
@@ -582,7 +582,6 @@ fun PlayerContentPreview() {
     )
 
     val playerActions = object : PlayerActions {
-        override var playWhenReady: Boolean = true
 
         override fun seekBack(): Unit? {
             TODO("Not yet implemented")
