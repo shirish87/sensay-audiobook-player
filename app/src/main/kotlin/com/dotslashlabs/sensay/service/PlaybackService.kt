@@ -60,8 +60,10 @@ class PlaybackService : MediaSessionService() {
         if (bookProgress.chapterProgress > mediaProgress.chapterDuration) return
         if (bookProgress.bookProgress > mediaProgress.bookDuration) return
 
-        store.updateBookProgress(bookProgress)
-        logcat { "updated mediaId=$mediaId" }
+        withContext(Dispatchers.IO) {
+            store.updateBookProgress(bookProgress)
+            logcat { "updated mediaId=$mediaId" }
+        }
     }
 
     override fun onDestroy() {
