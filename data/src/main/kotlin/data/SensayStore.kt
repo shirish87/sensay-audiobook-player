@@ -18,7 +18,7 @@ class SensayStore @Inject constructor(
 ) {
 
     suspend fun createBooksWithChapters(
-        sourceId: Long,
+        sourceId: SourceId,
         booksWithChapters: List<BookWithChapters>,
     ): List<Long> {
 
@@ -85,22 +85,26 @@ class SensayStore @Inject constructor(
     fun booksProgressWithBookAndChapters() =
         bookProgressRepository.booksProgressWithBookAndChapters()
 
-    fun bookProgressWithBookAndChapters(bookId: Long) =
+    fun bookProgressWithBookAndChapters(bookId: BookId) =
         bookProgressRepository.bookProgressWithBookAndChapters(bookId)
 
-    fun bookProgressWithBookAndChapters(bookIds: Collection<Long>) =
+    fun bookProgressWithBookAndChapters(bookIds: Collection<BookId>) =
         bookProgressRepository.bookProgressWithBookAndChapters(bookIds)
 
     fun booksCount() = bookRepository.booksCount()
 
     fun bookByUri(uri: Uri) = bookRepository.bookByUri(uri)
 
+    fun bookById(bookId: BookId) = bookRepository.bookById(bookId)
+    fun bookWithChapters(bookId: BookId) = chapterRepository.bookWithChapters(bookId)
+    fun bookProgress(bookId: BookId) = bookProgressRepository.bookProgress(bookId)
+
     fun sources() = sourceRepository.sources()
     fun sources(isActive: Boolean = true) = sourceRepository.sources(isActive)
 
     suspend fun addSources(sources: Collection<Source>) = sourceRepository.addSources(sources)
 
-    suspend fun deleteSource(sourceId: Long): Boolean {
+    suspend fun deleteSource(sourceId: SourceId): Boolean {
         try {
             runInTransaction {
                 val sourceWithBooks =

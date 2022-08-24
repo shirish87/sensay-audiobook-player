@@ -1,16 +1,13 @@
 package data.dao
 
 import androidx.room.*
-import data.entity.BookChapterCrossRef
-import data.entity.BookWithChapters
-import data.entity.Chapter
-import data.entity.ChapterWithBook
+import data.entity.*
 import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface ChapterDao : BaseDao<Chapter> {
     @Query("SELECT * FROM BookChapterCrossRef WHERE bookId IN (:bookIds)")
-    fun booksChapterCrossRefs(bookIds: Collection<Long>): Flow<List<BookChapterCrossRef>>
+    fun booksChapterCrossRefs(bookIds: Collection<BookId>): Flow<List<BookChapterCrossRef>>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertBookChapterCrossRefs(refs: Collection<BookChapterCrossRef>): Array<Long>
@@ -22,14 +19,14 @@ interface ChapterDao : BaseDao<Chapter> {
     fun chapters(): Flow<List<Chapter>>
 
     @Query("SELECT * FROM Chapter WHERE chapterId IN (:chapterIds)")
-    fun chapters(chapterIds: Collection<Long>): Flow<List<Chapter>>
+    fun chapters(chapterIds: Collection<ChapterId>): Flow<List<Chapter>>
 
     @Query("SELECT COUNT(*) FROM Chapter")
     fun chaptersCount(): Flow<Int>
 
     @Transaction
     @Query("SELECT * FROM Chapter WHERE chapterId = :chapterId")
-    fun chapterWithBook(chapterId: Long): Flow<ChapterWithBook>
+    fun chapterWithBook(chapterId: ChapterId): Flow<ChapterWithBook>
 
     @Transaction
     @Query("SELECT * FROM Book")
@@ -37,7 +34,7 @@ interface ChapterDao : BaseDao<Chapter> {
 
     @Transaction
     @Query("SELECT * FROM Book WHERE bookId = :bookId")
-    fun bookWithChapters(bookId: Long): Flow<BookWithChapters>
+    fun bookWithChapters(bookId: BookId): Flow<BookWithChapters>
 
     @Transaction
     @Query("SELECT * FROM Book WHERE uri = :uri")

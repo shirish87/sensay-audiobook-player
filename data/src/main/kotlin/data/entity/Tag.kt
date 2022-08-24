@@ -5,6 +5,8 @@ import androidx.room.*
 import kotlinx.parcelize.Parcelize
 import java.time.Instant
 
+typealias TagId = Long
+
 @Entity(
     indices = [
         Index(value = ["name"], unique = true),
@@ -12,7 +14,7 @@ import java.time.Instant
 )
 @Parcelize
 data class Tag(
-    @PrimaryKey(autoGenerate = true) val tagId: Long = 0,
+    @PrimaryKey(autoGenerate = true) val tagId: TagId = 0,
     val name: String,
     val sortOrder: Long = 0,
 
@@ -26,8 +28,8 @@ data class Tag(
     ],
 )
 data class BookTagCrossRef(
-    val bookId: Long,
-    val tagId: Long,
+    val bookId: BookId,
+    val tagId: TagId,
 
     val createdAt: Instant = Instant.now(),
 )

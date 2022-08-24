@@ -4,6 +4,7 @@ import android.net.Uri
 import androidx.room.Dao
 import androidx.room.Query
 import data.entity.Book
+import data.entity.BookId
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -12,7 +13,7 @@ interface BookDao : BaseDao<Book> {
     fun books(): Flow<List<Book>>
 
     @Query("SELECT * FROM Book WHERE bookId = :bookId")
-    fun bookById(bookId: Long): Flow<Book>
+    fun bookById(bookId: BookId): Flow<Book>
 
     @Query("SELECT * FROM Book WHERE uri = :uri")
     fun bookByUri(uri: Uri): Flow<Book>

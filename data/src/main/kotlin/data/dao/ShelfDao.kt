@@ -13,7 +13,7 @@ interface ShelfDao : BaseDao<Shelf> {
     suspend fun insertBookShelfCrossRef(ref: BookShelfCrossRef): Long
 
     @Query("SELECT * FROM BookShelfCrossRef WHERE bookId IN (:bookIds)")
-    fun booksShelvesCrossRefs(bookIds: Collection<Long>): Flow<List<BookShelfCrossRef>>
+    fun booksShelvesCrossRefs(bookIds: Collection<BookId>): Flow<List<BookShelfCrossRef>>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertBookShelfCrossRefs(refs: Collection<BookShelfCrossRef>): Array<Long>
@@ -25,15 +25,15 @@ interface ShelfDao : BaseDao<Shelf> {
     fun shelves(): Flow<List<Shelf>>
 
     @Query("SELECT * FROM Shelf WHERE shelfId IN (:shelfIds)")
-    fun shelves(shelfIds: Collection<Long>): Flow<List<Shelf>>
+    fun shelves(shelfIds: Collection<ShelfId>): Flow<List<Shelf>>
 
     @Transaction
     @Query("SELECT * FROM Shelf WHERE shelfId = :shelfId")
-    fun shelfWithBooks(shelfId: Long): Flow<ShelfWithBooks>
+    fun shelfWithBooks(shelfId: ShelfId): Flow<ShelfWithBooks>
 
     @Transaction
     @Query("SELECT * FROM Book WHERE bookId = :bookId")
-    fun bookWithShelves(bookId: Long): Flow<BooksWithShelves>
+    fun bookWithShelves(bookId: BookId): Flow<BooksWithShelves>
 
     @Transaction
     @Query("SELECT * FROM Book")

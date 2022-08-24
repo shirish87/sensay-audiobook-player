@@ -11,6 +11,8 @@ import kotlinx.parcelize.Parcelize
 import kotlinx.parcelize.TypeParceler
 import java.time.Instant
 
+typealias BookId = Long
+
 @Entity(
     indices = [
         Index(value = ["hash"], unique = true),
@@ -20,7 +22,7 @@ import java.time.Instant
 @Parcelize
 @TypeParceler<ContentDuration, ContentDurationParceler>()
 data class Book(
-    @PrimaryKey(autoGenerate = true) val bookId: Long = 0,
+    @PrimaryKey(autoGenerate = true) val bookId: BookId = 0,
     val hash: String,
     val uri: Uri,
     val title: String,

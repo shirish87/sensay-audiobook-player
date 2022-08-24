@@ -10,6 +10,8 @@ import kotlinx.parcelize.Parcelize
 import kotlinx.parcelize.TypeParceler
 import java.time.Instant
 
+typealias ChapterId = Long
+
 @Entity(
     indices = [
         Index(value = ["uri", "hash"], unique = true),
@@ -19,7 +21,7 @@ import java.time.Instant
 @TypeParceler<ContentDuration, ContentDurationParceler>()
 @TypeParceler<ContentDuration?, ContentDurationOptParceler>()
 data class Chapter(
-    @PrimaryKey(autoGenerate = true) val chapterId: Long = 0,
+    @PrimaryKey(autoGenerate = true) val chapterId: ChapterId = 0,
     val uri: Uri,
     val hash: String,
     val trackId: Int,
@@ -57,8 +59,8 @@ data class Chapter(
     ],
 )
 data class BookChapterCrossRef(
-    val bookId: Long,
-    val chapterId: Long,
+    val bookId: BookId,
+    val chapterId: ChapterId,
 
     val createdAt: Instant = Instant.now(),
 )

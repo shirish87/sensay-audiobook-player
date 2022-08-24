@@ -3,13 +3,14 @@ package data.repository
 import android.net.Uri
 import data.dao.BookDao
 import data.entity.Book
+import data.entity.BookId
 import javax.inject.Inject
 
 class BookRepository @Inject constructor(
     private val bookDao: BookDao,
 ) {
 
-    fun bookById(bookId: Long) = bookDao.bookById(bookId)
+    fun bookById(bookId: BookId) = bookDao.bookById(bookId)
 
     fun bookByUri(uri: Uri) = bookDao.bookByUri(uri)
 

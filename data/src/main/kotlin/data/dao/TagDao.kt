@@ -16,7 +16,7 @@ interface TagDao : BaseDao<Tag> {
     suspend fun insertBookTagCrossRefs(refs: Collection<BookTagCrossRef>): Array<Long>
 
     @Query("SELECT * FROM BookTagCrossRef WHERE bookId IN (:bookIds)")
-    fun booksTagsCrossRefs(bookIds: Collection<Long>): Flow<List<BookTagCrossRef>>
+    fun booksTagsCrossRefs(bookIds: Collection<BookId>): Flow<List<BookTagCrossRef>>
 
     @Delete
     suspend fun deleteBookTagCrossRefs(refs: Collection<BookTagCrossRef>): Int
@@ -29,11 +29,11 @@ interface TagDao : BaseDao<Tag> {
 
     @Transaction
     @Query("SELECT * FROM Tag WHERE tagId = :tagId")
-    fun tagWithBooks(tagId: Long): Flow<TagWithBooks>
+    fun tagWithBooks(tagId: TagId): Flow<TagWithBooks>
 
     @Transaction
     @Query("SELECT * FROM Book WHERE bookId = :bookId")
-    fun bookWithTags(bookId: Long): Flow<BookWithTags>
+    fun bookWithTags(bookId: BookId): Flow<BookWithTags>
 
     @Transaction
     @Query("SELECT * FROM Tag")

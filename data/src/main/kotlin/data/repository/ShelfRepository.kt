@@ -1,6 +1,7 @@
 package data.repository
 
 import data.dao.ShelfDao
+import data.entity.BookId
 import data.entity.BookShelfCrossRef
 import kotlinx.coroutines.flow.firstOrNull
 import javax.inject.Inject
@@ -17,7 +18,7 @@ class ShelfRepository @Inject constructor(
     suspend fun insertBookShelfCrossRefs(refs: Collection<BookShelfCrossRef>) =
         shelfDao.insertBookShelfCrossRefs(refs)
 
-    suspend fun deleteShelves(bookIds: Collection<Long>) {
+    suspend fun deleteShelves(bookIds: Collection<BookId>) {
         shelfDao.booksShelvesCrossRefs(bookIds).firstOrNull()?.let {
             shelfDao.deleteBookShelfCrossRefs(it)
 

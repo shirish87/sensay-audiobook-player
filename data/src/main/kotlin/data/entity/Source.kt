@@ -6,6 +6,8 @@ import androidx.room.*
 import kotlinx.parcelize.Parcelize
 import java.time.Instant
 
+typealias SourceId = Long
+
 @Entity(
     indices = [
         Index(value = ["uri"], unique = true),
@@ -13,7 +15,7 @@ import java.time.Instant
 )
 @Parcelize
 data class Source(
-    @PrimaryKey(autoGenerate = true) val sourceId: Long = 0,
+    @PrimaryKey(autoGenerate = true) val sourceId: SourceId = 0,
     val uri: Uri,
     val displayName: String,
 
@@ -30,8 +32,8 @@ data class Source(
     ],
 )
 data class SourceBookCrossRef(
-    val sourceId: Long,
-    val bookId: Long,
+    val sourceId: SourceId,
+    val bookId: BookId,
 
     val createdAt: Instant = Instant.now(),
 )

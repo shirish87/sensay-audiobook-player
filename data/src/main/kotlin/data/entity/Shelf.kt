@@ -5,6 +5,8 @@ import androidx.room.*
 import kotlinx.parcelize.Parcelize
 import java.time.Instant
 
+typealias ShelfId = Long
+
 @Entity(
     indices = [
         Index(value = ["name"], unique = true),
@@ -12,7 +14,7 @@ import java.time.Instant
 )
 @Parcelize
 data class Shelf(
-    @PrimaryKey(autoGenerate = true) val shelfId: Long = 0,
+    @PrimaryKey(autoGenerate = true) val shelfId: ShelfId = 0,
     val name: String,
     val sortOrder: Long = 0,
 
@@ -30,8 +32,8 @@ data class Shelf(
     ],
 )
 data class BookShelfCrossRef(
-    val bookId: Long,
-    val shelfId: Long,
+    val bookId: BookId,
+    val shelfId: ShelfId,
 
     val createdAt: Instant = Instant.now(),
 )

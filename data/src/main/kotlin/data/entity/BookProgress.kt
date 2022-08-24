@@ -10,6 +10,7 @@ import kotlinx.parcelize.Parcelize
 import kotlinx.parcelize.TypeParceler
 import java.time.Instant
 
+typealias BookProgressId = Long
 
 @Entity(
     indices = [
@@ -19,9 +20,9 @@ import java.time.Instant
 @Parcelize
 @TypeParceler<ContentDuration, ContentDurationParceler>()
 data class BookProgress(
-    @PrimaryKey(autoGenerate = true) val bookProgressId: Long = 0,
-    val bookId: Long,
-    val chapterId: Long,
+    @PrimaryKey(autoGenerate = true) val bookProgressId: BookProgressId = 0,
+    val bookId: BookId,
+    val chapterId: ChapterId,
     val totalChapters: Int,
     val currentChapter: Int = 0,
     val bookProgress: ContentDuration = ContentDuration.ZERO,

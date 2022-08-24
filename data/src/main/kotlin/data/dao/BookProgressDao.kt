@@ -5,6 +5,7 @@ import androidx.room.Dao
 import androidx.room.Query
 import androidx.room.Transaction
 import data.BookCategory
+import data.entity.BookId
 import data.entity.BookProgress
 import data.entity.BookProgressWithBookAndChapters
 import data.entity.BookProgressWithBookAndShelves
@@ -16,6 +17,9 @@ interface BookProgressDao : BaseDao<BookProgress> {
     @Query("SELECT COUNT(*) FROM BookProgress")
     fun bookProgressCount(): Flow<Int>
 
+    @Query("SELECT * FROM BookProgress WHERE bookId = :bookId")
+    fun bookProgress(bookId: BookId): Flow<BookProgress>
+
     @Transaction
     @Query("SELECT * FROM BookProgress WHERE bookCategory = :bookCategory")
     fun booksProgressWithBookAndShelves(
@@ -24,19 +28,19 @@ interface BookProgressDao : BaseDao<BookProgress> {
 
     @Transaction
     @Query("SELECT * FROM BookProgress WHERE bookId = :bookId")
-    fun bookProgressWithBookAndShelves(bookId: Long): Flow<BookProgressWithBookAndShelves>
+    fun bookProgressWithBookAndShelves(bookId: BookId): Flow<BookProgressWithBookAndShelves>
 
     @Transaction
     @Query("SELECT * FROM BookProgress WHERE bookId = :bookId")
-    fun bookProgressWithBookAndShelvesPaged(bookId: Long): PagingSource<Int, BookProgressWithBookAndShelves>
+    fun bookProgressWithBookAndShelvesPaged(bookId: BookId): PagingSource<Int, BookProgressWithBookAndShelves>
 
     @Transaction
     @Query("SELECT * FROM BookProgress WHERE bookId = :bookId")
-    fun bookProgressWithBookAndChapters(bookId: Long): Flow<BookProgressWithBookAndChapters>
+    fun bookProgressWithBookAndChapters(bookId: BookId): Flow<BookProgressWithBookAndChapters>
 
     @Transaction
     @Query("SELECT * FROM BookProgress WHERE bookId IN (:bookIds)")
-    fun bookProgressWithBookAndChapters(bookIds: Collection<Long>): Flow<List<BookProgressWithBookAndChapters>>
+    fun bookProgressWithBookAndChapters(bookIds: Collection<BookId>): Flow<List<BookProgressWithBookAndChapters>>
 
     @Transaction
     @Query("SELECT * FROM BookProgress")
@@ -48,5 +52,5 @@ interface BookProgressDao : BaseDao<BookProgress> {
 
     @Transaction
     @Query("SELECT * FROM BookProgress WHERE bookId IN (:bookIds)")
-    fun booksProgress(bookIds: Collection<Long>): Flow<List<BookProgress>>
+    fun booksProgress(bookIds: Collection<BookId>): Flow<List<BookProgress>>
 }
