@@ -6,6 +6,7 @@ import com.airbnb.mvrx.hilt.ViewModelKey
 import com.dotslashlabs.sensay.ui.SensayAppViewModel
 import com.dotslashlabs.sensay.ui.screen.home.current.CurrentViewModel
 import com.dotslashlabs.sensay.ui.screen.home.library.LibraryViewModel
+import com.dotslashlabs.sensay.ui.screen.home.nowplaying.NowPlayingViewModel
 import com.dotslashlabs.sensay.ui.screen.player.PlayerViewModel
 import com.dotslashlabs.sensay.ui.screen.sources.SourcesViewModel
 import dagger.Binds
@@ -41,4 +42,9 @@ interface ViewModelModule {
     @IntoMap
     @ViewModelKey(SourcesViewModel::class)
     fun sourcesViewModelFactory(factory: SourcesViewModel.Factory): AssistedViewModelFactory<*, *>
+
+    @Binds
+    @IntoMap
+    @ViewModelKey(NowPlayingViewModel::class)
+    fun nowPlayingViewModelFactory(factory: NowPlayingViewModel.Factory): AssistedViewModelFactory<*, *>
 }
