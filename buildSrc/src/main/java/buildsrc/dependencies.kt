@@ -67,7 +67,7 @@ object Libraries {
 
     object Compose {
         const val version = "1.2.1"
-        private const val materialComposeVersion = "1.0.0-alpha16"
+        private const val materialComposeVersion = "1.0.0-beta01"
 
         const val activityCompose = "androidx.activity:activity-compose:1.5.1"
         const val navigationCompose = "androidx.navigation:navigation-compose:2.5.1"
