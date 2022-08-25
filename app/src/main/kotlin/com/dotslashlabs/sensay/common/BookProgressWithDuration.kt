@@ -1,5 +1,6 @@
 package com.dotslashlabs.sensay.common
 
+import android.net.Uri
 import data.BookCategory
 import data.entity.BookId
 import data.entity.BookProgress
@@ -12,6 +13,11 @@ data class BookProgressWithDuration(
     val bookProgressId: BookProgressId,
     val bookId: BookId,
     val chapterId: ChapterId,
+    val bookTitle: String,
+    val chapterTitle: String,
+    val author: String?,
+    val series: String?,
+    val coverUri: Uri?,
     val totalChapters: Int,
     val currentChapter: Int = 0,
     val bookDuration: ContentDuration = ContentDuration.ZERO,

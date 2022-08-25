@@ -59,18 +59,24 @@ class MediaSessionQueue(private val store: SensayStore) {
                 val chapterIndex =
                     bookProgress.chapters.indexOfFirst { c -> c.chapterId == chapterId }
                 val chapter = bookProgress.chapters[chapterIndex]
+                val book = bookProgress.book
 
                 mediaItemsCache[it.mediaId] = BookProgressWithDuration(
                     bookProgressId = progress.bookProgressId,
                     bookId = bookId,
                     chapterId = chapter.chapterId,
+                    bookTitle = book.title,
+                    chapterTitle = chapter.title,
+                    author = chapter.author ?: book.author,
+                    series = book.series,
+                    coverUri = book.coverUri,
                     totalChapters = progress.totalChapters,
                     currentChapter = chapterIndex,
                     chapterStart = chapter.start,
                     chapterProgress = ContentDuration.ZERO,
                     chapterDuration = chapter.duration,
                     // bookProgress = chapterStart + chapterProgress
-                    bookDuration = bookProgress.book.duration,
+                    bookDuration = book.duration,
                 )
 
                 acc.add(mediaItem)

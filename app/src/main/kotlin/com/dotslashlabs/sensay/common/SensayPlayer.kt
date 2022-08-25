@@ -3,6 +3,7 @@ package com.dotslashlabs.sensay.common
 import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
 import com.dotslashlabs.sensay.util.PlayerState
+import com.dotslashlabs.sensay.util.mediaId
 import com.dotslashlabs.sensay.util.mediaIds
 import com.dotslashlabs.sensay.util.state
 import kotlinx.coroutines.*
@@ -85,6 +86,9 @@ class SensayPlayer(internal val player: Player) {
         set(value) {
             player.playWhenReady = value
         }
+
+    val mediaId: String?
+        get() = player.mediaId
 
     val isPlaying: Boolean
         get() = player.isPlaying
