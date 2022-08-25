@@ -41,6 +41,7 @@ fun Project.applyCommonDependencies(@Suppress("UNUSED_PARAMETER") plugin: Plugin
 
             // Compose
             add("implementation", Libraries.Compose.foundation)
+            add("implementation", Libraries.Compose.constraintLayout)
             add("implementation", Libraries.Compose.composeToolingPreview)
             add("debugImplementation", Libraries.Compose.composeTooling)
 

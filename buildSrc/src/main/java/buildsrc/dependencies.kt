@@ -73,6 +73,7 @@ object Libraries {
         const val navigationCompose = "androidx.navigation:navigation-compose:2.5.1"
 
         const val foundation = "androidx.compose.foundation:foundation:$version"
+        const val constraintLayout = "androidx.constraintlayout:constraintlayout-compose:1.0.1"
 
         const val material3 = "androidx.compose.material3:material3:$materialComposeVersion"
         const val material3WindowSizeClass = "androidx.compose.material3:material3-window-size-class:$materialComposeVersion"
