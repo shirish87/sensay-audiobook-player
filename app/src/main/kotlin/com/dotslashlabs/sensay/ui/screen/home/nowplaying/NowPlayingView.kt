@@ -27,11 +27,12 @@ import com.dotslashlabs.sensay.util.PlayerState
 fun NowPlayingView(
     navHostController: NavHostController,
     backStackEntry: NavBackStackEntry,
+    modifier: Modifier,
 ) {
     val viewModel: NowPlayingViewModel = mavericksViewModel(backStackEntry)
     val state by viewModel.collectAsState()
 
-    NowPlayingViewContent(viewModel, state, onClick = { bookId ->
+    NowPlayingViewContent(viewModel, state, modifier, onClick = { bookId ->
         val deepLink = SensayScreen.getUriString(
             Destination.Player.useRoute(bookId)
         ).toUri()
@@ -44,12 +45,13 @@ fun NowPlayingView(
 fun NowPlayingViewContent(
     actions: NowPlayingViewActions,
     state: NowPlayingViewState,
+    modifier: Modifier,
     onClick: (bookId: Long) -> Unit,
 ) {
     val nowPlayingBook = state.nowPlayingBook ?: return
 
     Surface(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = modifier.fillMaxWidth(),
         shadowElevation = 8.dp,
     ) {
         state.bookProgressFraction?.let { bookProgress ->
@@ -153,6 +155,7 @@ fun NowPlayingViewContentPreview() {
                 )
             )
         ),
+        modifier = Modifier,
         onClick = {},
     )
 }
