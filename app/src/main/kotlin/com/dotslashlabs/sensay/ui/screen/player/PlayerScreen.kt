@@ -4,7 +4,6 @@ import android.annotation.SuppressLint
 import android.net.Uri
 import android.os.Bundle
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -508,36 +507,17 @@ private fun PlayerDynamicTheme(
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ExposedDropdownMenuDefaults.disabledTextFieldColors(
-    interactionSource: MutableInteractionSource = remember { MutableInteractionSource() },
-): TextFieldColors {
-    val defaultColors = textFieldColors()
-    val containerColor = defaultColors.containerColor(enabled = true).value.copy(alpha = 0.35F)
+fun ExposedDropdownMenuDefaults.disabledTextFieldColors(): TextFieldColors {
+    val containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.35F)
 
     return textFieldColors(
         containerColor = containerColor,
-        disabledTextColor = defaultColors.textColor(enabled = true).value,
-        disabledLabelColor = defaultColors.labelColor(
-            enabled = true,
-            isError = false,
-            interactionSource = interactionSource,
-        ).value,
-        disabledLeadingIconColor = defaultColors.leadingIconColor(
-            enabled = true,
-            isError = false,
-            interactionSource = interactionSource,
-        ).value,
-        disabledTrailingIconColor = defaultColors.trailingIconColor(
-            enabled = true,
-            isError = false,
-            interactionSource = interactionSource,
-        ).value,
-        disabledIndicatorColor = defaultColors.indicatorColor(
-            enabled = true,
-            isError = false,
-            interactionSource = interactionSource,
-        ).value,
-        disabledPlaceholderColor = defaultColors.placeholderColor(enabled = true).value,
+        disabledTextColor = MaterialTheme.colorScheme.onSurface,
+        disabledLabelColor = MaterialTheme.colorScheme.onSurfaceVariant,
+        disabledLeadingIconColor = MaterialTheme.colorScheme.onSurface,
+        disabledTrailingIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+        disabledIndicatorColor = MaterialTheme.colorScheme.onSurfaceVariant,
+        disabledPlaceholderColor = MaterialTheme.colorScheme.onSurfaceVariant,
     )
 }
 
