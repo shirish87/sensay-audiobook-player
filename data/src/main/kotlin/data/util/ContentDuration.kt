@@ -25,8 +25,16 @@ fun Duration.Companion.format(value: Duration?) = if (value != null && value.ms 
     null
 }
 
+fun Duration.Companion.formatFull(value: Duration?) = if (value != null && value.ms > 0) {
+    value.toComponents { hh, mm, _, _ ->
+        "${if (hh > 0) "$hh hrs " else ""}${if (mm > 0) "$mm mins" else ""}"    }
+} else {
+    null
+}
+
 fun Duration?.isEmpty() = Duration.isEmpty(this)
 fun Duration?.format() = Duration.format(this)
+fun Duration?.formatFull() = Duration.formatFull(this)
 
 data class ContentDuration(val value: Duration) : Comparable<ContentDuration> {
     companion object {
@@ -39,6 +47,7 @@ data class ContentDuration(val value: Duration) : Comparable<ContentDuration> {
 
     val ms = value.ms
     fun format() = value.format()
+    fun formatFull() = value.formatFull()
     fun isEmpty() = value.isEmpty()
 
     override fun compareTo(other: ContentDuration): Int = value.compareTo(other.value)

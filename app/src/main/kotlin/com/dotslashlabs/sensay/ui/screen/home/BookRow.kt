@@ -8,12 +8,19 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.em
 import com.dotslashlabs.sensay.ui.screen.common.CoverImage
 import com.dotslashlabs.sensay.ui.screen.home.library.OnNavToBook
+import data.entity.Book
+import data.entity.BookProgress
 import data.entity.BookProgressWithBookAndChapters
+import data.entity.Chapter
+import data.util.ContentDuration
+import kotlin.time.Duration.Companion.hours
+import kotlin.time.Duration.Companion.minutes
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -40,31 +47,31 @@ fun BookRow(
 @Composable
 private fun ListBookView(
     bookProgressWithChapters: BookProgressWithBookAndChapters,
-    height: Dp = 120.dp,
+    height: Dp = 136.dp,
 ) {
 
-    Row(modifier = Modifier
-        .fillMaxSize()
-        .height(height)) {
-        CoverImage(
-            coverUri = bookProgressWithChapters.book.coverUri,
+    Row(
+        modifier = Modifier.fillMaxWidth()
+            .height(height)
+    ) {
+        Column(
             modifier = Modifier
-                .fillMaxHeight()
-                .weight(0.3F)
-                .sizeIn(height),
-        )
+                .weight(0.3F),
+        ) {
+            CoverImage(
+                coverUri = bookProgressWithChapters.book.coverUri,
+            )
+        }
 
         val book = bookProgressWithChapters.book
 
         Column(
             modifier = Modifier
                 .weight(0.7F)
-                .padding(horizontal = 20.dp, vertical = 12.dp)
-                .fillMaxHeight(),
+                .padding(horizontal = 20.dp, vertical = 12.dp),
         ) {
             Column(
-                modifier = Modifier
-                    .weight(0.8F),
+                modifier = Modifier.fillMaxWidth(),
             ) {
                 book.author?.let { author ->
                     Text(
@@ -84,28 +91,43 @@ private fun ListBookView(
                 )
             }
 
-            Row(
-                modifier = Modifier
-                    .weight(0.2F)
-                    .fillMaxWidth(),
-            ) {
-                Text(
-                    text = book.duration.format() ?: "",
-                    style = MaterialTheme.typography.labelSmall,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
-
-                if (bookProgressWithChapters.bookProgress.totalChapters > 0) {
-                    Text(
-                        text =  bookProgressWithChapters.bookProgress.chapterProgressDisplayFormat(),
-                        modifier = Modifier.padding(start = 16.dp),
-                        style = MaterialTheme.typography.labelSmall,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                    )
-                }
-            }
+            BookChaptersDurationInfoRow(
+                book,
+                bookProgressWithChapters.bookProgress,
+                modifier = Modifier.padding(top = 6.dp),
+            )
         }
     }
+}
+
+@Composable
+@Preview(showBackground = true)
+private fun ListBookViewPreview() {
+    ListBookView(
+        bookProgressWithChapters = BookProgressWithBookAndChapters(
+            book = Book.empty().copy(
+                title = "Book Title Book Title Book Title Book Title Book Title Book Title Book Title Book Title Book Title Book Title Book Title Book Title Book Title Book Title Book Title Book Title Book Title Book Title",
+                author = "Author Author Author Author Author Author Author Author Author Author Author Author Author Author Author Author Author Author Author Author Author Author Author Author Author Author Author",
+                duration = ContentDuration(120.hours + 55.minutes),
+            ),
+            chapter = Chapter.empty().copy(
+                title = "Chapter 1",
+                duration = ContentDuration(1.hours),
+            ),
+            chapters = listOf(
+                Chapter.empty().copy(
+                    title = "Chapter 1",
+                    duration = ContentDuration(1.hours),
+                ),
+                Chapter.empty().copy(
+                    title = "Chapter 2",
+                    duration = ContentDuration(1.hours),
+                ),
+            ),
+            bookProgress = BookProgress.empty().copy(
+                currentChapter = 1,
+                totalChapters = 2,
+            ),
+        ),
+    )
 }
