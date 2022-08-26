@@ -7,6 +7,7 @@ import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -31,6 +32,14 @@ fun NowPlayingView(
 ) {
     val viewModel: NowPlayingViewModel = mavericksViewModel(backStackEntry)
     val state by viewModel.collectAsState()
+
+    DisposableEffect(viewModel) {
+        viewModel.subscribe()
+
+        onDispose {
+            viewModel.unsubscribe()
+        }
+    }
 
     NowPlayingViewContent(viewModel, state, modifier, onClick = { bookId ->
         val deepLink = SensayScreen.getUriString(
@@ -135,6 +144,14 @@ fun NowPlayingViewContentPreview() {
             }
 
             override fun pause(): Unit? {
+                TODO("Not yet implemented")
+            }
+
+            override fun subscribe() {
+                TODO("Not yet implemented")
+            }
+
+            override fun unsubscribe() {
                 TODO("Not yet implemented")
             }
          },

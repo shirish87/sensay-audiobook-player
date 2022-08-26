@@ -13,6 +13,7 @@ import config.ConfigStore
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.mapNotNull
@@ -44,6 +45,8 @@ data class NowPlayingViewState(
 interface NowPlayingViewActions {
     fun play(): Unit?
     fun pause(): Unit?
+    fun subscribe()
+    fun unsubscribe()
 }
 
 class NowPlayingViewModel @AssistedInject constructor(
@@ -54,13 +57,15 @@ class NowPlayingViewModel @AssistedInject constructor(
 ) : MavericksViewModel<NowPlayingViewState>(state), NowPlayingViewActions {
 
     private var player: SensayPlayer? = null
+    private var job: Job? = null
 
-    init {
+    override fun subscribe() {
         viewModelScope.launch {
             playerHolder.connection.collectLatest { p ->
                 player = p ?: return@collectLatest
 
-                p.serviceEvents
+                unsubscribe()
+                job = p.serviceEvents
                     .mapNotNull {
                         it.mediaId?.let { mediaId ->
                             mediaSessionQueue.getMedia(mediaId)?.let { progress ->
@@ -74,6 +79,11 @@ class NowPlayingViewModel @AssistedInject constructor(
                     }
             }
         }
+    }
+
+    override fun unsubscribe() {
+        job?.cancel()
+        job = null
     }
 
     override fun play() = player?.play()
