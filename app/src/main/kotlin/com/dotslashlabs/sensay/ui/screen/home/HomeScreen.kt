@@ -56,6 +56,7 @@ fun HomeContent(
         Scaffold(
             topBar = {
                 HomeAppBar(
+                    homeNavController = homeNavController,
                     isBusy = state.isScanningFolders,
                     activeLayout = state.homeLayout,
                     onChangeLayout = {

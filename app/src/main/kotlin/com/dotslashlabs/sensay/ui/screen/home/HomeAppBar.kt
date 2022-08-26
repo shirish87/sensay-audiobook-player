@@ -7,19 +7,28 @@ import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material.icons.outlined.ViewList
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.navigation.NavHostController
+import androidx.navigation.compose.currentBackStackEntryAsState
+import com.dotslashlabs.sensay.ui.screen.Destination
 import config.HomeLayout
 
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeAppBar(
+    homeNavController: NavHostController,
     isBusy: Boolean,
     activeLayout: HomeLayout,
-    onSources: () -> Unit,
     onScanCancel: () -> Unit,
-    onChangeLayout: (layout: HomeLayout) -> Unit,
+    onSources: () -> Unit,
     onSettings: () -> Unit,
+    onChangeLayout: (layout: HomeLayout) -> Unit,
 ) {
+
+    val navBackStackEntry by homeNavController.currentBackStackEntryAsState()
+    val isLibraryRoute = (navBackStackEntry?.destination?.route == Destination.Home.Library.route)
+
     SmallTopAppBar(
         title = { Text("Sensay") },
         actions = {
@@ -44,11 +53,13 @@ fun HomeAppBar(
                     contentDescription = "",
                 )
             }
-            IconButton(onClick = onSources) {
-                Icon(
-                    imageVector = Icons.Outlined.Book,
-                    contentDescription = "",
-                )
+            if (isLibraryRoute) {
+                IconButton(onClick = onSources) {
+                    Icon(
+                        imageVector = Icons.Outlined.Book,
+                        contentDescription = "",
+                    )
+                }
             }
             IconButton(onClick = onSettings) {
                 Icon(

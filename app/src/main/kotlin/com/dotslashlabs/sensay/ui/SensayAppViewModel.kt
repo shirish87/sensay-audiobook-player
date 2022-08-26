@@ -17,11 +17,13 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import data.SensayStore
 import data.entity.*
 import data.util.ContentDuration
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import scanner.CoverScanner
 import scanner.MediaScanner
 import java.time.Instant
@@ -91,12 +93,15 @@ class SensayAppViewModel @AssistedInject constructor(
             try {
                 setScanningFolders(true)
 
-                val activeSources = (store.sources(isActive = true).firstOrNull() ?: emptyList())
-                    .sortedBy { -it.createdAt.toEpochMilli() }
+                withContext(Dispatchers.IO) {
+                    val activeSources = (store.sources(isActive = true).firstOrNull() ?: emptyList())
+                        .sortedBy { -it.createdAt.toEpochMilli() }
 
-                if (activeSources.isEmpty()) return@launch
+                    if (activeSources.isEmpty()) return@withContext 0
 
-                scanFolders(activeSources)
+                    return@withContext scanFolders(activeSources)
+                }
+
                 setState { copy(lastScanTime = Instant.now()) }
             } finally {
                 setScanningFolders(false)

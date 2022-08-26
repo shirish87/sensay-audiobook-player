@@ -13,6 +13,7 @@ import dagger.assisted.AssistedInject
 import dagger.hilt.android.qualifiers.ApplicationContext
 import data.SensayStore
 import data.entity.Source
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import java.time.Instant
@@ -36,7 +37,7 @@ class SourcesViewModel @AssistedInject constructor(
             }
     }
 
-    fun addAudiobookFolders(uris: Set<Uri>) = viewModelScope.launch {
+    fun addAudiobookFolders(uris: Set<Uri>) = viewModelScope.launch(Dispatchers.IO) {
         val sources = uris.mapNotNull { uri ->
             val f = DocumentFile.fromTreeUri(context, uri) ?: return@mapNotNull null
             val displayName = f.name ?: uri.toString().split("/").last()
@@ -58,7 +59,7 @@ class SourcesViewModel @AssistedInject constructor(
         }
     }
 
-    fun deleteSource(sourceId: Long) = viewModelScope.launch {
+    fun deleteSource(sourceId: Long) = viewModelScope.launch(Dispatchers.IO) {
         if (store.deleteSource(sourceId)) {
             configStore.setAudiobookFoldersUpdateTime(Instant.now())
         }
