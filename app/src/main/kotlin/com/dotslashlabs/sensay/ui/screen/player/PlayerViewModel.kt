@@ -25,11 +25,8 @@ import data.entity.Book
 import data.entity.BookProgress
 import data.entity.Chapter
 import data.util.ContentDuration
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
+import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import logcat.logcat
 import kotlin.time.Duration.Companion.milliseconds
 
@@ -121,6 +118,9 @@ data class PlayerViewState(
 }
 
 interface PlayerActions {
+    fun subscribe()
+    fun unsubscribe()
+
     fun seekBack(): Unit?
     fun seekForward(): Unit?
     fun seekTo(fraction: Float, ofDurationMs: Long): Unit?
@@ -139,22 +139,10 @@ class PlayerViewModel @AssistedInject constructor(
 ) : MavericksViewModel<PlayerViewState>(state), PlayerActions {
 
     private var player: SensayPlayer? = null
+    private var job: Job? = null
 
     init {
         val bookId = state.bookId
-
-        viewModelScope.launch {
-            playerHolder.connection.collectLatest { p ->
-                player = p
-                val state = p.toPlaybackConnectionState()
-                setState { copy(playbackConnectionState = Success(state)) }
-                logcat { "newPlayer: $player" }
-
-                p?.playerEvents?.execute(retainValue = PlayerViewState::playbackConnectionState) {
-                    copy(playbackConnectionState = it)
-                }
-            }
-        }
 
         store.bookWithChapters(bookId)
             .setOnEach {
@@ -215,6 +203,29 @@ class PlayerViewModel @AssistedInject constructor(
                 )
             }
         }
+    }
+
+    override fun subscribe() {
+        viewModelScope.launch {
+            playerHolder.connection.collectLatest { p ->
+                unsubscribe()
+                player = p
+
+                val state = p.toPlaybackConnectionState()
+                setState { copy(playbackConnectionState = Success(state)) }
+                logcat { "newPlayer: $player" }
+
+                job = p?.playerEvents
+                    ?.execute(retainValue = PlayerViewState::playbackConnectionState) {
+                        copy(playbackConnectionState = it)
+                    }
+            }
+        }
+    }
+
+    override fun unsubscribe() {
+        job?.cancel()
+        job = null
     }
 
     override fun seekBack() = player?.seekBack()

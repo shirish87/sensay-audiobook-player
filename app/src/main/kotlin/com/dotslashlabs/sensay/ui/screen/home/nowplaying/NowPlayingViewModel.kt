@@ -62,9 +62,9 @@ class NowPlayingViewModel @AssistedInject constructor(
     override fun subscribe() {
         viewModelScope.launch {
             playerHolder.connection.collectLatest { p ->
+                unsubscribe()
                 player = p ?: return@collectLatest
 
-                unsubscribe()
                 job = p.serviceEvents
                     .mapNotNull {
                         it.mediaId?.let { mediaId ->

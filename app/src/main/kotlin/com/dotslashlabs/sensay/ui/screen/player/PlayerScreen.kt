@@ -70,6 +70,14 @@ fun PlayerContent(
         mavericksViewModel(argsFactory = { PlayerViewArgs(argsBundle) })
     val state by viewModel.collectAsState()
 
+    DisposableEffect(viewModel) {
+        viewModel.subscribe()
+
+        onDispose {
+            viewModel.unsubscribe()
+        }
+    }
+
     PlayerContentView(viewModel, state, useLandscapeLayout, onBackPress)
 }
 
@@ -562,6 +570,13 @@ fun PlayerContentPreview() {
     )
 
     val playerActions = object : PlayerActions {
+        override fun subscribe() {
+            TODO("Not yet implemented")
+        }
+
+        override fun unsubscribe() {
+            TODO("Not yet implemented")
+        }
 
         override fun seekBack(): Unit? {
             TODO("Not yet implemented")
