@@ -1,6 +1,5 @@
 package scanner
 
-import android.net.Uri
 import androidx.documentfile.provider.DocumentFile
 import javax.inject.Inject
 
