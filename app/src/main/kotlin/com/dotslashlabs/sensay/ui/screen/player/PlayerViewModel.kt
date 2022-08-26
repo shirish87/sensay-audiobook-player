@@ -16,6 +16,7 @@ import com.dotslashlabs.sensay.common.SensayPlayer
 import com.dotslashlabs.sensay.common.toPlaybackConnectionState
 import com.dotslashlabs.sensay.util.BUNDLE_KEY_BOOK_ID
 import com.dotslashlabs.sensay.util.BUNDLE_KEY_CHAPTER_ID
+import config.ConfigStore
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
@@ -24,9 +25,11 @@ import data.entity.Book
 import data.entity.BookProgress
 import data.entity.Chapter
 import data.util.ContentDuration
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import logcat.logcat
 import kotlin.time.Duration.Companion.milliseconds
 
@@ -132,6 +135,7 @@ class PlayerViewModel @AssistedInject constructor(
     @Assisted private val state: PlayerViewState,
     private val playerHolder: PlayerHolder,
     store: SensayStore,
+    private val configStore: ConfigStore,
 ) : MavericksViewModel<PlayerViewState>(state), PlayerActions {
 
     private var player: SensayPlayer? = null
@@ -268,6 +272,10 @@ class PlayerViewModel @AssistedInject constructor(
 
         viewModelScope.launch {
             val player = this@PlayerViewModel.player ?: return@launch
+
+            withContext(Dispatchers.IO) {
+                configStore.setLastPlayedBookId(bookId)
+            }
 
             player.apply {
                 if (playerMediaIdx != -1) {

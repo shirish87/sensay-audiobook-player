@@ -6,6 +6,7 @@ import androidx.media3.session.MediaSessionService
 import com.dotslashlabs.sensay.common.MediaSessionQueue
 import com.dotslashlabs.sensay.common.SensayPlayer
 import com.dotslashlabs.sensay.util.PlayerState
+import config.ConfigStore
 import dagger.hilt.android.AndroidEntryPoint
 import data.SensayStore
 import kotlinx.coroutines.*
@@ -28,6 +29,9 @@ class PlaybackService : MediaSessionService() {
 
     @Inject
     lateinit var store: SensayStore
+
+    @Inject
+    lateinit var configStore: ConfigStore
 
     @Inject
     lateinit var mediaSessionQueue: MediaSessionQueue
@@ -62,6 +66,7 @@ class PlaybackService : MediaSessionService() {
 
         withContext(Dispatchers.IO) {
             store.updateBookProgress(bookProgress)
+            configStore.setLastPlayedBookId(bookProgress.bookId)
             logcat { "updated mediaId=$mediaId" }
         }
     }

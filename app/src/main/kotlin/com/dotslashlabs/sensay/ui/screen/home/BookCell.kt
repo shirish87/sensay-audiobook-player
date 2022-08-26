@@ -94,6 +94,7 @@ private fun GridBookView(
             BookChaptersDurationInfoRow(
                 book,
                 bookProgressWithChapters.bookProgress,
+                modifier = Modifier.padding(vertical = 6.dp),
             )
 
             Text(
