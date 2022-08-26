@@ -21,6 +21,7 @@ import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
 import com.dotslashlabs.sensay.ui.screen.common.CoverImage
 import com.dotslashlabs.sensay.ui.screen.home.library.OnNavToBook
+import data.BookCategory
 import data.entity.Book
 import data.entity.BookProgress
 import data.entity.BookProgressWithBookAndChapters
@@ -118,12 +119,13 @@ fun BookChaptersDurationInfoRow(
     ConstraintLayout(
         modifier = modifier.fillMaxWidth(),
     ) {
-        val (icon1, text1, icon2, text2) = createRefs()
+        val (icon1, text1, icon2, text2, progress) = createRefs()
 
         if (bookProgress.totalChapters > 0) {
             Icon(
                 Icons.Outlined.ListAlt,
-                modifier = Modifier.alpha(0.65F)
+                modifier = Modifier
+                    .alpha(0.65F)
                     .constrainAs(icon1) {
                         top.linkTo(text1.top)
                         bottom.linkTo(text1.bottom)
@@ -149,7 +151,8 @@ fun BookChaptersDurationInfoRow(
         book.duration.formatFull()?.let { duration ->
             Icon(
                 Icons.Outlined.Timer,
-                modifier = Modifier.alpha(0.65F)
+                modifier = Modifier
+                    .alpha(0.65F)
                     .constrainAs(icon2) {
                         top.linkTo(text2.top)
                         bottom.linkTo(text2.bottom)
@@ -170,6 +173,23 @@ fun BookChaptersDurationInfoRow(
                     end.linkTo(parent.end)
                 }
             )
+        }
+
+        if (bookProgress.bookCategory == BookCategory.CURRENT) {
+            val bookProgressFraction = bookProgress.bookProgress.ms
+                .toFloat()
+                .div(maxOf(1, book.duration.ms))
+
+            if (bookProgressFraction > 0) {
+                LinearProgressIndicator(
+                    progress = bookProgressFraction,
+                    modifier = Modifier
+                        .constrainAs(progress) {
+                            top.linkTo(text1.bottom, margin = 10.dp)
+                            linkTo(start = parent.start, end = parent.end)
+                        }
+                )
+            }
         }
     }
 }

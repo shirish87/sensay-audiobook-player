@@ -36,7 +36,7 @@ data class NowPlayingViewState(
     }
 
     val bookProgressFraction: Float? = nowPlayingBook?.let {
-        bookProgress?.let { progress -> progress.toFloat() / it.bookDuration.ms }
+        bookProgress?.toFloat()?.div(maxOf(1, it.bookDuration.ms))
     }
 
     val isPlaying = (playerState?.isPlaying == true)

@@ -43,7 +43,7 @@ data class BookProgress(
         listOf(
             currentChapter,
             totalChapters,
-        ).joinToString(separator = " / ")
+        ).joinToString(separator = "/")
     } else totalChapters} chapters"
 }
 

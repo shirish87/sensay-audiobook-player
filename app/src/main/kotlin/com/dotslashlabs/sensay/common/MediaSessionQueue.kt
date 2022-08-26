@@ -57,7 +57,9 @@ class MediaSessionQueue(private val store: SensayStore) {
 
                 val progress = bookProgress.bookProgress
                 val chapterIndex =
-                    bookProgress.chapters.indexOfFirst { c -> c.chapterId == chapterId }
+                    bookProgress.chapters
+                        .sortedBy { c -> c.trackId }
+                        .indexOfFirst { c -> c.chapterId == chapterId }
                 val chapter = bookProgress.chapters[chapterIndex]
                 val book = bookProgress.book
 
@@ -71,7 +73,7 @@ class MediaSessionQueue(private val store: SensayStore) {
                     series = book.series,
                     coverUri = book.coverUri,
                     totalChapters = progress.totalChapters,
-                    currentChapter = chapterIndex,
+                    currentChapter = chapterIndex + 1,
                     chapterStart = chapter.start,
                     chapterProgress = ContentDuration.ZERO,
                     chapterDuration = chapter.duration,
