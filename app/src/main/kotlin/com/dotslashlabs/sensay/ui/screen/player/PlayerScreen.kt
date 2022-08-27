@@ -358,6 +358,19 @@ private fun PlayerButtons(
         val buttonsModifier = Modifier.size(sideButtonSize)
 
         OutlinedIconButton(
+            enabled = state.isSelectedMediaIdCurrent &&
+                    !state.isMediaIdPreparing &&
+                    state.hasPreviousChapter,
+            onClick = { playerActions.previousChapter() },
+            modifier = buttonsModifier,
+        ) {
+            Icon(
+                imageVector = Icons.Filled.SkipPrevious,
+                contentDescription = null,
+            )
+        }
+
+        OutlinedIconButton(
             enabled = state.isSelectedMediaIdCurrent && !state.isMediaIdPreparing,
             onClick = { playerActions.seekBack() },
             modifier = buttonsModifier,
@@ -399,6 +412,19 @@ private fun PlayerButtons(
         ) {
             Icon(
                 imageVector = Icons.Filled.Forward10,
+                contentDescription = null,
+            )
+        }
+
+        OutlinedIconButton(
+            enabled = state.isSelectedMediaIdCurrent &&
+                    !state.isMediaIdPreparing &&
+                    state.hasNextChapter,
+            onClick = { playerActions.nextChapter() },
+            modifier = buttonsModifier,
+        ) {
+            Icon(
+                imageVector = Icons.Filled.SkipNext,
                 contentDescription = null,
             )
         }
@@ -584,6 +610,14 @@ fun PlayerContentPreview() {
         }
 
         override fun unsubscribe() {
+            TODO("Not yet implemented")
+        }
+
+        override fun previousChapter(): Unit? {
+            TODO("Not yet implemented")
+        }
+
+        override fun nextChapter(): Unit? {
             TODO("Not yet implemented")
         }
 

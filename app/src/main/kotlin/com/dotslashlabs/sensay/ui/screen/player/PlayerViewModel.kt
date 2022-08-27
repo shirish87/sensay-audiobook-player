@@ -88,7 +88,7 @@ data class PlayerViewState(
 //    val enableResetSelectedMediaId =
 //        (playerMediaId != null && isMediaIdCurrent && mediaId != selectedMediaId)
 
-    private val selectedChapterMediaIdx = selectedMediaId?.let { mediaIds.indexOf(it) } ?: -1
+    val selectedChapterMediaIdx = selectedMediaId?.let { mediaIds.indexOf(it) } ?: -1
 
     val enableResetSelectedMediaId =
         (selectedChapterMediaIdx != -1 && bookProgress?.chapterId != null &&
@@ -110,6 +110,9 @@ data class PlayerViewState(
         0L to selectedChapter.second.duration.ms
     } else (null to null)
 
+    val hasPreviousChapter = (isSelectedMediaIdCurrent && selectedChapterMediaIdx - 1 >= 0)
+    val hasNextChapter = (isSelectedMediaIdCurrent && selectedChapterMediaIdx + 1 < chapters.size)
+
     fun formatTime(value: Long?): String = when (value) {
         null -> ""
         0L -> DURATION_ZERO
@@ -121,6 +124,8 @@ interface PlayerActions {
     fun subscribe()
     fun unsubscribe()
 
+    fun previousChapter(): Unit?
+    fun nextChapter(): Unit?
     fun seekBack(): Unit?
     fun seekForward(): Unit?
     fun seekTo(fraction: Float, ofDurationMs: Long): Unit?
@@ -226,6 +231,31 @@ class PlayerViewModel @AssistedInject constructor(
     override fun unsubscribe() {
         job?.cancel()
         job = null
+    }
+
+    override fun previousChapter() = withState { state ->
+        if (!state.hasPreviousChapter) return@withState
+
+        setChapter(state.mediaIds[state.selectedChapterMediaIdx - 1])
+    }
+
+    override fun nextChapter() = withState { state ->
+        if (!state.hasNextChapter) return@withState
+
+        setChapter(state.mediaIds[state.selectedChapterMediaIdx + 1])
+    }
+
+    private fun setChapter(mediaId: String) {
+        setSelectedMediaId(mediaId)
+
+        viewModelScope.launch {
+            if (player?.isPlaying == true) {
+                play()
+            } else {
+                prepareMediaItems()
+                player?.pause()
+            }
+        }
     }
 
     override fun seekBack() = player?.seekBack()
