@@ -2,14 +2,13 @@ package com.dotslashlabs.sensay.ui.screen.home
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.ListAlt
-import androidx.compose.material.icons.outlined.Timer
-import androidx.compose.material3.*
+import androidx.compose.material3.ElevatedCard
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -17,8 +16,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.em
-import androidx.constraintlayout.compose.ConstraintLayout
-import androidx.constraintlayout.compose.Dimension
+import com.dotslashlabs.sensay.ui.screen.BookChaptersDurationInfoRow
 import com.dotslashlabs.sensay.ui.screen.common.CoverImage
 import com.dotslashlabs.sensay.ui.screen.home.library.OnNavToBook
 import data.BookCategory
@@ -76,7 +74,8 @@ private fun GridBookView(
                     modifier = Modifier
                         .fillMaxWidth()
                         .align(Alignment.BottomCenter)
-                        .background(authorBackgroundColor),
+                        .background(authorBackgroundColor)
+                        .padding(horizontal = 12.dp),
                     textAlign = TextAlign.Center,
                     style = MaterialTheme.typography.labelSmall,
                     maxLines = 2,
@@ -95,6 +94,7 @@ private fun GridBookView(
             BookChaptersDurationInfoRow(
                 book,
                 bookProgressWithChapters.bookProgress,
+                useShortDurationFormat = true,
                 modifier = Modifier.padding(vertical = 6.dp),
             )
 
@@ -110,89 +110,6 @@ private fun GridBookView(
     }
 }
 
-@Composable
-fun BookChaptersDurationInfoRow(
-    book: Book,
-    bookProgress: BookProgress,
-    modifier: Modifier = Modifier,
-) {
-    ConstraintLayout(
-        modifier = modifier.fillMaxWidth(),
-    ) {
-        val (icon1, text1, icon2, text2, progress) = createRefs()
-
-        if (bookProgress.totalChapters > 0) {
-            Icon(
-                Icons.Outlined.ListAlt,
-                modifier = Modifier
-                    .alpha(0.65F)
-                    .constrainAs(icon1) {
-                        top.linkTo(text1.top)
-                        bottom.linkTo(text1.bottom)
-
-                        start.linkTo(parent.start)
-                        height = Dimension.fillToConstraints
-                    },
-                contentDescription = null,
-            )
-
-            Text(
-                textAlign = TextAlign.Start,
-                text = bookProgress.chapterProgressDisplayFormat().replace(" chapters", ""),
-                style = MaterialTheme.typography.labelSmall,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.constrainAs(text1) {
-                    start.linkTo(icon1.end, margin = 4.dp)
-                }
-            )
-        }
-
-        book.duration.formatFull()?.let { duration ->
-            Icon(
-                Icons.Outlined.Timer,
-                modifier = Modifier
-                    .alpha(0.65F)
-                    .constrainAs(icon2) {
-                        top.linkTo(text2.top)
-                        bottom.linkTo(text2.bottom)
-
-                        end.linkTo(text2.start, margin = 4.dp)
-                        height = Dimension.fillToConstraints
-                    },
-                contentDescription = null,
-            )
-
-            Text(
-                textAlign = TextAlign.Start,
-                text = duration,
-                style = MaterialTheme.typography.labelSmall,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-                modifier = Modifier.constrainAs(text2) {
-                    end.linkTo(parent.end)
-                }
-            )
-        }
-
-        if (bookProgress.bookCategory == BookCategory.CURRENT) {
-            val bookProgressFraction = bookProgress.bookProgress.ms
-                .toFloat()
-                .div(maxOf(1, book.duration.ms))
-
-            if (bookProgressFraction > 0) {
-                LinearProgressIndicator(
-                    progress = bookProgressFraction,
-                    modifier = Modifier
-                        .constrainAs(progress) {
-                            top.linkTo(text1.bottom, margin = 10.dp)
-                            linkTo(start = parent.start, end = parent.end)
-                        }
-                )
-            }
-        }
-    }
-}
 
 @Composable
 @Preview(showBackground = true)
@@ -219,25 +136,11 @@ private fun GridBookViewPreview() {
                 ),
             ),
             bookProgress = BookProgress.empty().copy(
+                bookCategory = BookCategory.CURRENT,
                 currentChapter = 1,
                 totalChapters = 2,
+                bookProgress = ContentDuration(1.hours),
             ),
-        ),
-    )
-}
-
-@Composable
-@Preview(showBackground = true)
-private fun BookChaptersDurationInfoRowPreview() {
-    BookChaptersDurationInfoRow(
-        book = Book.empty().copy(
-            title = "Book Title Book Title Book Title Book Title Book Title Book Title Book Title Book Title Book Title Book Title Book Title Book Title Book Title Book Title Book Title Book Title Book Title Book Title",
-            author = "Author Author Author Author Author Author Author Author Author Author Author Author Author Author Author Author Author Author Author Author Author Author Author Author Author Author Author",
-            duration = ContentDuration(120.hours + 55.minutes),
-        ),
-        bookProgress = BookProgress.empty().copy(
-            currentChapter = 1,
-            totalChapters = 2,
         ),
     )
 }

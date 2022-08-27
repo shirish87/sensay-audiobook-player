@@ -34,6 +34,7 @@ import com.dotslashlabs.sensay.ui.SensayAppState
 import com.dotslashlabs.sensay.ui.SensayAppViewModel
 import com.dotslashlabs.sensay.ui.screen.Destination
 import com.dotslashlabs.sensay.ui.screen.SensayScreen
+import com.dotslashlabs.sensay.ui.screen.common.BookProgressIndicator
 import com.dotslashlabs.sensay.ui.screen.common.CoverImage
 import com.dotslashlabs.sensay.ui.screen.common.SensayFrame
 import com.dotslashlabs.sensay.ui.theme.DynamicThemePrimaryColorsFromImage
@@ -258,23 +259,31 @@ private fun PlayerInfo(
 
     val book = state.book ?: return
 
-    Column(modifier = modifier) {
+    Column(
+        modifier = modifier,
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(16.dp),
+    ) {
+        state.bookProgress?.let { bookProgress ->
+            BookProgressIndicator(
+                book = book,
+                bookProgress = bookProgress,
+                modifier = Modifier.sizeIn(maxWidth = 500.dp),
+            )
+        }
+
         Text(
             text = book.author ?: "",
             textAlign = TextAlign.Center,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 16.dp),
-            style = MaterialTheme.typography.bodySmall,
+            maxLines = 2,
+            style = MaterialTheme.typography.titleSmall,
         )
 
         Text(
             text = book.title,
             textAlign = TextAlign.Center,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 16.dp),
-            style = MaterialTheme.typography.headlineMedium,
+            maxLines = 3,
+            style = MaterialTheme.typography.titleMedium,
         )
     }
 }

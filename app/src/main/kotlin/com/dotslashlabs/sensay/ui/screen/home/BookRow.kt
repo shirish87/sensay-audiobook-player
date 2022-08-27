@@ -12,8 +12,10 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.em
+import com.dotslashlabs.sensay.ui.screen.BookChaptersDurationInfoRow
 import com.dotslashlabs.sensay.ui.screen.common.CoverImage
 import com.dotslashlabs.sensay.ui.screen.home.library.OnNavToBook
+import data.BookCategory
 import data.entity.Book
 import data.entity.BookProgress
 import data.entity.BookProgressWithBookAndChapters
@@ -47,7 +49,7 @@ fun BookRow(
 @Composable
 private fun ListBookView(
     bookProgressWithChapters: BookProgressWithBookAndChapters,
-    height: Dp = 136.dp,
+    height: Dp = 156.dp,
 ) {
 
     Row(
@@ -125,8 +127,10 @@ private fun ListBookViewPreview() {
                 ),
             ),
             bookProgress = BookProgress.empty().copy(
+                bookCategory = BookCategory.CURRENT,
                 currentChapter = 1,
                 totalChapters = 2,
+                bookProgress = ContentDuration(1.hours),
             ),
         ),
     )
