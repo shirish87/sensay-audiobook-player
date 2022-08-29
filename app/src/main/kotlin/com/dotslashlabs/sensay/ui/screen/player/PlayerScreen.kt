@@ -311,7 +311,7 @@ private fun PlayerProgress(
     state: PlayerViewState,
     modifier: Modifier = Modifier,
 ) {
-    if (!state.isConnected) return
+//    if (!state.isConnected) return
 
     val (position, duration) = state.progressPair
 
@@ -347,10 +347,6 @@ private fun PlayerProgress(
                     playerActions.seekTo(it, duration)
                 },
             )
-        } else if (state.isLoading) {
-            Row {
-                LinearProgressIndicator()
-            }
         }
     }
 }
@@ -364,7 +360,7 @@ private fun PlayerButtons(
     sideButtonSize: Dp = 40.dp,
 ) {
 
-    if (!state.isConnected) return
+//    if (!state.isConnected) return
 
     Row(
         modifier = modifier.fillMaxWidth(),
