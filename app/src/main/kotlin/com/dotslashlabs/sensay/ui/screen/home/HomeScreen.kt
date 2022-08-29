@@ -81,58 +81,59 @@ fun HomeContent(
                 HomeBottomBar(homeNavController, destination.children)
             },
         ) { contentPadding ->
+            val startDestination = destination.defaultChild?.route ?: return@Scaffold
 
-            Column(
+            val newPadding = PaddingValues(
+                top = contentPadding.calculateTopPadding(),
+                bottom = contentPadding.calculateBottomPadding(),
+            )
+
+            ConstraintLayout(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(contentPadding),
+                    .padding(newPadding),
             ) {
-                val startDestination = destination.defaultChild?.route ?: return@Column
+                val (listRef, nowPlayingRef) = createRefs()
 
-                ConstraintLayout(modifier = Modifier.fillMaxSize()) {
-                    val (listRef, nowPlayingRef) = createRefs()
+                AnimatedNavHost(
+                    homeNavController,
+                    startDestination = startDestination,
+                    modifier = Modifier.constrainAs(listRef) {
+                        linkTo(
+                            start = parent.start,
+                            end = parent.end,
+                        )
+                        linkTo(
+                            top = parent.top,
+                            bottom = nowPlayingRef.top,
+                        )
+                        height = Dimension.fillToConstraints
+                    },
+                ) {
+                    destination.children.map { dest ->
+                        dest.screen?.navGraph(dest, this, navHostController)
+                    }
+                }
 
-                    AnimatedNavHost(
-                        homeNavController,
-                        startDestination = startDestination,
-                        modifier = Modifier.constrainAs(listRef) {
+                NowPlayingView(
+                    navHostController,
+                    backStackEntry,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .wrapContentHeight()
+                        .constrainAs(nowPlayingRef) {
                             linkTo(
                                 start = parent.start,
                                 end = parent.end,
                             )
                             linkTo(
-                                top = parent.top,
-                                bottom = nowPlayingRef.top,
+                                top = listRef.bottom,
+                                bottom = parent.bottom,
                             )
                             width = Dimension.matchParent
-                            height = Dimension.fillToConstraints
+                            height = Dimension.wrapContent
                         },
-                    ) {
-                        destination.children.map { dest ->
-                            dest.screen?.navGraph(dest, this, navHostController)
-                        }
-                    }
-
-                    NowPlayingView(
-                        navHostController,
-                        backStackEntry,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .wrapContentHeight()
-                            .constrainAs(nowPlayingRef) {
-                                linkTo(
-                                    start = parent.start,
-                                    end = parent.end,
-                                )
-                                linkTo(
-                                    top = listRef.bottom,
-                                    bottom = parent.bottom,
-                                )
-                                width = Dimension.matchParent
-                                height = Dimension.wrapContent
-                            },
-                    )
-                }
+                )
             }
         }
     }
