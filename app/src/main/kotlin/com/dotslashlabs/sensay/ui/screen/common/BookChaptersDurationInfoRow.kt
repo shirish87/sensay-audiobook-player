@@ -1,4 +1,4 @@
-package com.dotslashlabs.sensay.ui.screen
+package com.dotslashlabs.sensay.ui.screen.common
 
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material.icons.Icons
@@ -16,7 +16,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.constraintlayout.compose.Dimension
-import com.dotslashlabs.sensay.ui.screen.common.BookProgressIndicator
 import data.BookCategory
 import data.entity.Book
 import data.entity.BookProgress

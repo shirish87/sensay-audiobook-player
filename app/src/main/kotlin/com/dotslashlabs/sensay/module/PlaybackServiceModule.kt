@@ -7,6 +7,7 @@ import androidx.core.app.TaskStackBuilder
 import androidx.media3.common.AudioAttributes
 import androidx.media3.common.C
 import androidx.media3.common.Player
+import androidx.media3.exoplayer.DefaultRenderersFactory
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.session.MediaSession
 import com.dotslashlabs.sensay.MainActivity
@@ -36,6 +37,7 @@ object PlaybackServiceModule {
         @ApplicationContext context: Context,
         audioAttributes: AudioAttributes,
     ): Player = ExoPlayer.Builder(context)
+        .setRenderersFactory(DefaultRenderersFactory(context).setEnableAudioOffload(true))
         .setAudioAttributes(audioAttributes, true)
         .setHandleAudioBecomingNoisy(true)
         .build()
@@ -54,12 +56,13 @@ object PlaybackServiceModule {
         mediaSessionQueue: MediaSessionQueue,
     ): MediaSession {
 
-        val sessionActivityPendingIntent = TaskStackBuilder.create(context).run {
-            addNextIntent(Intent(context, MainActivity::class.java).apply {
-                action = Intent.ACTION_VIEW
-            })
-            getPendingIntent(0, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
+        val resultIntent = Intent(context, MainActivity::class.java).apply {
+            action = Intent.ACTION_VIEW
         }
+
+        val sessionActivityPendingIntent = TaskStackBuilder.create(context)
+            .addNextIntent(resultIntent)
+            .getPendingIntent(0, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
 
         return MediaSession.Builder(context, sensayPlayer.player)
             .setCallback(mediaSessionQueue.mediaSessionCallback)

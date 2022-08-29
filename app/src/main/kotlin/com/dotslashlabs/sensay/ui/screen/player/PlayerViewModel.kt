@@ -1,5 +1,6 @@
 package com.dotslashlabs.sensay.ui.screen.player
 
+import android.content.Context
 import android.net.Uri
 import android.os.Bundle
 import android.os.Parcel
@@ -10,44 +11,36 @@ import androidx.media3.common.MediaMetadata
 import com.airbnb.mvrx.*
 import com.airbnb.mvrx.hilt.AssistedViewModelFactory
 import com.airbnb.mvrx.hilt.hiltMavericksViewModelFactory
+import com.dotslashlabs.sensay.common.BookProgressWithDuration
 import com.dotslashlabs.sensay.common.PlaybackConnectionState
-import com.dotslashlabs.sensay.common.PlayerHolder
-import com.dotslashlabs.sensay.common.SensayPlayer
-import com.dotslashlabs.sensay.common.toPlaybackConnectionState
+import com.dotslashlabs.sensay.ui.screen.common.BasePlayerViewModel
 import com.dotslashlabs.sensay.util.BUNDLE_KEY_BOOK_ID
 import com.dotslashlabs.sensay.util.BUNDLE_KEY_CHAPTER_ID
-import config.ConfigStore
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import data.SensayStore
-import data.entity.Book
-import data.entity.BookProgress
-import data.entity.Chapter
 import data.util.ContentDuration
-import kotlinx.coroutines.*
-import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 import logcat.logcat
 import kotlin.time.Duration.Companion.milliseconds
 
+typealias Media = BookProgressWithDuration
+
 data class PlayerViewState(
     @PersistState val bookId: Long,
-
-    val mediaId: String? = null,
-    val selectedMediaId: String? = null,
-    val preparingMediaId: String? = null,
 
     val isLoading: Boolean = false,
     val error: String? = null,
 
     val sliderPosition: Float = 0F,
-    val isSliderDisabled: Boolean = false,
 
-    val book: Book? = null,
-    val bookProgress: BookProgress? = null,
-
-    val chapters: List<Chapter> = emptyList(),
     val mediaIds: List<String> = emptyList(),
+    val mediaList: List<Media> = emptyList(),
+    val media: Media? = null,
 
     val playbackConnectionState: Async<PlaybackConnectionState> = Uninitialized,
 ) : MavericksState {
@@ -65,53 +58,38 @@ data class PlayerViewState(
             else 0F
     }
 
-    val coverUri: Uri? = book?.coverUri
+    val coverUri: Uri? = media?.coverUri
 
-    private val connState = playbackConnectionState()
+    val connState = playbackConnectionState()
 
     val isConnected = (connState?.isConnected == true)
-
-    private val isPlaying = (connState?.playerState?.isPlaying == true)
 
     val playerMediaId = connState?.playerState?.mediaId
 
     val playerMediaIds = connState?.playerMediaIds ?: emptyList()
 
-    val isMediaIdPreparing = (preparingMediaId != null && preparingMediaId == mediaId)
+    val playerMediaIdx: Int = media?.mediaId?.let { selectedMediaId ->
+        if (playerMediaId == selectedMediaId) {
+            mediaList.indexOfFirst { it.mediaId == selectedMediaId }
+        } else -1
+    } ?: -1
 
-    private val isMediaIdCurrent = (mediaId != null && mediaId == playerMediaId)
-    val isMediaIdPlaying = (isMediaIdCurrent && isPlaying)
+    private val playerMedia: Media? = if (playerMediaIdx != -1) {
+        mediaList[playerMediaIdx]
+    } else null
 
-    val isSelectedMediaIdCurrent = (isMediaIdCurrent && mediaId == selectedMediaId)
-    val isSelectedMediaIdPlaying = (isSelectedMediaIdCurrent && isPlaying)
-
-//    val enableResetSelectedMediaId =
-//        (playerMediaId != null && isMediaIdCurrent && mediaId != selectedMediaId)
-
-    val selectedChapterMediaIdx = selectedMediaId?.let { mediaIds.indexOf(it) } ?: -1
+    val isActiveMedia: Boolean = (playerMedia != null)
+    val isPlayingMedia: Boolean = (isActiveMedia && connState?.playerState?.isPlaying == true)
 
     val enableResetSelectedMediaId =
-        (selectedChapterMediaIdx != -1 && bookProgress?.chapterId != null &&
-                chapters[selectedChapterMediaIdx].chapterId != bookProgress.chapterId)
+        (mediaIds.contains(playerMediaId) && playerMediaId != media?.mediaId)
 
-    // mediaId => Chapter
-    val selectedChapter: Pair<String, Chapter>? = if (selectedChapterMediaIdx != -1)
-        mediaIds[selectedChapterMediaIdx] to chapters[selectedChapterMediaIdx]
-    else null
+    val progressPair: Pair<Long?, Long?> = media?.let {
+        it.chapterProgress.ms to it.chapterDuration.ms
+    } ?: (null to null)
 
-    private val isSelectedMediaIdWithProgress =
-        (selectedChapter?.second?.chapterId == bookProgress?.chapterId)
-
-    val progressPair: Pair<Long?, Long?> = if (isSelectedMediaIdCurrent) {
-        (connState?.playerState?.position ?: 0L) to (connState?.playerState?.duration ?: 0L)
-    } else if (isSelectedMediaIdWithProgress) {
-        (bookProgress?.chapterProgress?.ms ?: 0L) to (selectedChapter?.second?.duration?.ms ?: 0L)
-    } else if (selectedChapter != null) {
-        0L to selectedChapter.second.duration.ms
-    } else (null to null)
-
-    val hasPreviousChapter = (isSelectedMediaIdCurrent && selectedChapterMediaIdx - 1 >= 0)
-    val hasNextChapter = (isSelectedMediaIdCurrent && selectedChapterMediaIdx + 1 < chapters.size)
+    val hasPreviousChapter = (playerMediaIdx - 1 >= 0 && playerMediaIdx < mediaList.size)
+    val hasNextChapter = (playerMediaIdx >= 0 && playerMediaIdx + 1 < mediaList.size)
 
     fun formatTime(value: Long?): String = when (value) {
         null -> ""
@@ -121,8 +99,8 @@ data class PlayerViewState(
 }
 
 interface PlayerActions {
-    fun subscribe()
-    fun unsubscribe()
+    fun attachPlayer(context: Context)
+    fun detachPlayer()
 
     fun previousChapter(): Unit?
     fun nextChapter(): Unit?
@@ -137,49 +115,45 @@ interface PlayerActions {
 }
 
 class PlayerViewModel @AssistedInject constructor(
-    @Assisted private val state: PlayerViewState,
-    private val playerHolder: PlayerHolder,
-    store: SensayStore,
-    private val configStore: ConfigStore,
-) : MavericksViewModel<PlayerViewState>(state), PlayerActions {
+    @Assisted state: PlayerViewState,
+    private val store: SensayStore,
+) : BasePlayerViewModel<PlayerViewState>(state), PlayerActions {
 
-    private var player: SensayPlayer? = null
     private var job: Job? = null
 
     init {
         val bookId = state.bookId
 
-        store.bookWithChapters(bookId)
-            .setOnEach {
-                val chapters = it.chapters.sortedBy { c -> c.trackId }
-                logcat { "bookWithChapters book=${it.book.title} chapters=${chapters.size}" }
+        viewModelScope.launch(Dispatchers.IO) {
+            val progress = store.bookProgressWithBookAndChapters(bookId).first()
 
+            val mediaItems = Media.fromBookAndChapters(
+                progress.bookProgress,
+                progress.book,
+                progress.chapters,
+            )
+
+            val selectedMedia = mediaItems.first { it.chapterId == progress.bookProgress.chapterId }
+
+            val sliderPosition = PlayerViewState.getSliderPosition(
+                selectedMedia.chapterProgress.ms,
+                selectedMedia.chapterDuration.ms,
+            )
+
+            setState {
                 copy(
                     isLoading = false,
-                    book = it.book,
-                    chapters = it.chapters,
-                    mediaIds = chapters.map { c ->
-                        PlayerViewState.getMediaId(bookId, c.chapterId)
-                    },
+                    mediaList = mediaItems,
+                    mediaIds = mediaItems.map { it.mediaId },
+                    media = selectedMedia,
+                    sliderPosition = sliderPosition,
                 )
             }
+        }
 
-        store.bookProgress(bookId)
-            .setOnEach {
-                val mediaId = this.mediaId ?: PlayerViewState.getMediaId(bookId, it.chapterId)
-                val selectedMediaId = this.selectedMediaId ?: mediaId
-                logcat { "bookProgress mediaId=$mediaId selectedMediaId=$selectedMediaId" }
-
-                copy(
-                    bookProgress = it,
-                    mediaId = mediaId,
-                    selectedMediaId = selectedMediaId,
-                )
-            }
-
-        onEach(PlayerViewState::isMediaIdPlaying) { isMediaIdPlaying ->
+        onEach(PlayerViewState::isPlayingMedia) { isPlaying ->
             player?.apply {
-                if (isMediaIdPlaying) {
+                if (isPlaying) {
                     startLiveTracker(viewModelScope)
                 } else {
                     stopLiveTracker()
@@ -188,47 +162,56 @@ class PlayerViewModel @AssistedInject constructor(
         }
 
         onEach(
-            PlayerViewState::preparingMediaId,
-            PlayerViewState::playerMediaId
-        ) { preparingMediaId, playerMediaId ->
-            if (preparingMediaId != null && preparingMediaId == playerMediaId) {
-                logcat { "reset preparingMediaId" }
-                setState { copy(preparingMediaId = null) }
+            PlayerViewState::isActiveMedia,
+            PlayerViewState::media,
+            PlayerViewState::connState,
+        ) { isActiveMedia, media, connState ->
+            if (!isActiveMedia || media == null || connState?.playerState?.position == null) {
+                return@onEach
             }
+
+            val mediaUpdates = media.copy(
+                chapterProgress = ContentDuration.ms(connState.playerState.position),
+            )
+
+            setState { copy(media = mediaUpdates) }
         }
 
-        onEach(
-            PlayerViewState::progressPair,
-            PlayerViewState::selectedMediaId,
-        ) { (position, duration), _ ->
-            setState {
-                copy(
-                    sliderPosition = PlayerViewState.getSliderPosition(position, duration),
-                    isSliderDisabled = false,
-                )
-            }
-        }
-    }
+        onEach(PlayerViewState::progressPair) { (positionMs, durationMs) ->
+            val sliderPosition = PlayerViewState.getSliderPosition(
+                positionMs,
+                durationMs,
+            )
 
-    override fun subscribe() {
-        viewModelScope.launch {
-            playerHolder.connection.collectLatest { p ->
-                unsubscribe()
-                player = p
-
-                val state = p.toPlaybackConnectionState()
-                setState { copy(playbackConnectionState = Success(state)) }
-                logcat { "newPlayer: $player" }
-
-                job = p?.playerEvents
-                    ?.execute(retainValue = PlayerViewState::playbackConnectionState) {
-                        copy(playbackConnectionState = it)
-                    }
-            }
+            setState { copy(sliderPosition = sliderPosition) }
         }
     }
 
-    override fun unsubscribe() {
+    override fun onCleared() {
+        super.onCleared()
+
+        detachPlayer()
+    }
+
+    override fun attachPlayer(context: Context) {
+        logcat { "attachPlayer" }
+
+        setState { copy(isLoading = true) }
+        attach(context) { _, playerEvents, _ ->
+            setState { copy(isLoading = false) }
+
+            job?.cancel()
+            job = playerEvents
+                ?.execute(retainValue = PlayerViewState::playbackConnectionState) {
+                    copy(playbackConnectionState = it)
+                }
+        }
+    }
+
+    override fun detachPlayer() {
+        logcat { "detachPlayer" }
+        detach()
+
         job?.cancel()
         job = null
     }
@@ -236,13 +219,13 @@ class PlayerViewModel @AssistedInject constructor(
     override fun previousChapter() = withState { state ->
         if (!state.hasPreviousChapter) return@withState
 
-        setChapter(state.mediaIds[state.selectedChapterMediaIdx - 1])
+        setChapter(state.mediaIds[state.playerMediaIdx - 1])
     }
 
     override fun nextChapter() = withState { state ->
         if (!state.hasNextChapter) return@withState
 
-        setChapter(state.mediaIds[state.selectedChapterMediaIdx + 1])
+        setChapter(state.mediaIds[state.playerMediaIdx + 1])
     }
 
     private fun setChapter(mediaId: String) {
@@ -262,11 +245,11 @@ class PlayerViewModel @AssistedInject constructor(
     override fun seekForward() = player?.seekForward()
 
     override fun seekTo(fraction: Float, ofDurationMs: Long) = withState { state ->
-        if (!state.isSelectedMediaIdCurrent) return@withState
+        if (!state.isPlayingMedia) return@withState
         val mediaItemIndex = state.playerMediaIds.indexOf(state.playerMediaId)
         if (mediaItemIndex == -1) return@withState
 
-        setState { copy(sliderPosition = fraction, isSliderDisabled = true) }
+        setState { copy(sliderPosition = fraction) }
 
         val positionMs = (fraction * ofDurationMs).toLong()
 
@@ -274,9 +257,6 @@ class PlayerViewModel @AssistedInject constructor(
             player?.apply {
                 seekTo(mediaItemIndex, positionMs)
             }
-
-            delay(100.milliseconds)
-            setState { copy(isSliderDisabled = false) }
         }
     }
 
@@ -292,50 +272,34 @@ class PlayerViewModel @AssistedInject constructor(
     }
 
     private fun prepareMediaItems() = withState { state ->
-        val (selectedMediaId, selectedChapter) = state.selectedChapter ?: return@withState
-        val bookProgress = state.bookProgress ?: return@withState
-
-        // preparing items takes a while, possibly due to bundle stuff, so we disable playback
-        setState { copy(mediaId = selectedMediaId, preparingMediaId = selectedMediaId) }
+        val selectedMedia = state.media ?: return@withState
 
         // already set
-        if (selectedMediaId == state.playerMediaId) return@withState
+        if (state.playerMediaId == selectedMedia.mediaId) return@withState
 
-        val bookId = state.bookId
-        val playerMediaIdx = state.playerMediaIds.indexOf(selectedMediaId)
-        val mediaIds = state.mediaIds
-        val chapters = state.chapters
-
-        val startPositionMs = if (selectedChapter.chapterId == bookProgress.chapterId) {
-            // selectedMediaId has existing progress recorded
-            bookProgress.chapterProgress.ms
-        } else 0L
+        val startPositionMs = selectedMedia.chapterProgress.ms
+        val playerMediaIdx = state.playerMediaIds.indexOf(selectedMedia.mediaId)
+        val chapters = state.mediaList
 
         viewModelScope.launch {
             val player = this@PlayerViewModel.player ?: return@launch
-
-            withContext(Dispatchers.IO) {
-                configStore.setLastPlayedBookId(bookId)
-            }
 
             player.apply {
                 if (playerMediaIdx != -1) {
                     // selectedMediaId already exists in the player's media items
                     seekTo(playerMediaIdx, startPositionMs)
                 } else {
-                    // player's media items need to reloaded
-                    val chapterIdx = mediaIds.indexOf(selectedMediaId)
-                    val mediaItems = chapters.map { c ->
-                        val chapterId = c.chapterId
+                    val chapterIdx = state.mediaIds.indexOf(selectedMedia.mediaId)
 
+                    val mediaItems = chapters.map { c ->
                         MediaItem.Builder()
-                            .setMediaId(PlayerViewState.getMediaId(bookId, chapterId))
+                            .setMediaId(c.mediaId)
                             .setMediaMetadata(
                                 MediaMetadata.Builder()
                                     .setExtras(
                                         bundleOf(
-                                            BUNDLE_KEY_BOOK_ID to bookId,
-                                            BUNDLE_KEY_CHAPTER_ID to chapterId,
+                                            BUNDLE_KEY_BOOK_ID to c.bookId,
+                                            BUNDLE_KEY_CHAPTER_ID to c.chapterId,
                                         )
                                     )
                                     .build()
@@ -351,16 +315,19 @@ class PlayerViewModel @AssistedInject constructor(
         }
     }
 
-    override fun setSelectedMediaId(mediaId: String) = withState {
-        setState { copy(selectedMediaId = mediaId) }
+    override fun setSelectedMediaId(mediaId: String) {
+        setState {
+            copy(media = mediaList.first { it.mediaId == mediaId })
+        }
     }
 
-    override fun resetSelectedMediaId() {
-        setState {
-            bookProgress?.let {
-                val mediaId = PlayerViewState.getMediaId(it.bookId, it.chapterId)
-                copy(selectedMediaId = mediaId)
-            } ?: this
+    override fun resetSelectedMediaId() = withState { state ->
+        if (!state.enableResetSelectedMediaId) return@withState
+
+        state.mediaList.firstOrNull { it.mediaId == state.playerMediaId }?.let { selectedMedia ->
+            setState {
+                copy(media = selectedMedia)
+            }
         }
     }
 

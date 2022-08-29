@@ -1,26 +1,28 @@
 package com.dotslashlabs.sensay.ui.screen.home.nowplaying
 
 
-import com.airbnb.mvrx.*
+import android.content.Context
+import com.airbnb.mvrx.Async
+import com.airbnb.mvrx.MavericksState
+import com.airbnb.mvrx.MavericksViewModelFactory
+import com.airbnb.mvrx.Uninitialized
 import com.airbnb.mvrx.hilt.AssistedViewModelFactory
 import com.airbnb.mvrx.hilt.hiltMavericksViewModelFactory
 import com.dotslashlabs.sensay.common.BookProgressWithDuration
 import com.dotslashlabs.sensay.common.MediaSessionQueue
-import com.dotslashlabs.sensay.common.PlayerHolder
-import com.dotslashlabs.sensay.common.SensayPlayer
+import com.dotslashlabs.sensay.ui.screen.common.BasePlayerViewModel
 import com.dotslashlabs.sensay.util.PlayerState
 import config.ConfigStore
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.mapNotNull
-import kotlinx.coroutines.launch
 import logcat.logcat
 
 data class NowPlayingViewState(
+    val isLoading: Boolean = false,
     val data: Async<Pair<BookProgressWithDuration, PlayerState>> = Uninitialized,
 ) : MavericksState {
 
@@ -45,43 +47,50 @@ data class NowPlayingViewState(
 interface NowPlayingViewActions {
     fun play(): Unit?
     fun pause(): Unit?
-    fun subscribe()
-    fun unsubscribe()
+    fun attachPlayer(context: Context)
+    fun detachPlayer()
 }
 
 class NowPlayingViewModel @AssistedInject constructor(
-    @Assisted private val state: NowPlayingViewState,
+    @Assisted state: NowPlayingViewState,
     private val configStore: ConfigStore,
-    private val playerHolder: PlayerHolder,
     private val mediaSessionQueue: MediaSessionQueue,
-) : MavericksViewModel<NowPlayingViewState>(state), NowPlayingViewActions {
+) : BasePlayerViewModel<NowPlayingViewState>(state), NowPlayingViewActions {
 
-    private var player: SensayPlayer? = null
     private var job: Job? = null
 
-    override fun subscribe() {
-        viewModelScope.launch {
-            playerHolder.connection.collectLatest { p ->
-                unsubscribe()
-                player = p ?: return@collectLatest
+    override fun onCleared() {
+        super.onCleared()
 
-                job = p.serviceEvents
-                    .mapNotNull {
-                        it.mediaId?.let { mediaId ->
-                            mediaSessionQueue.getMedia(mediaId)?.let { progress ->
-                                progress to it
-                            }
+        detachPlayer()
+    }
+
+    override fun attachPlayer(context: Context) {
+        logcat { "attachPlayer" }
+
+        setState { copy(isLoading = true) }
+        attach(context) { _, _, serviceEvents ->
+            setState { copy(isLoading = false) }
+
+            job?.cancel()
+            job = serviceEvents
+                ?.mapNotNull {
+                    it.mediaId?.let { mediaId ->
+                        mediaSessionQueue.getMedia(mediaId)?.let { progress ->
+                            progress to it
                         }
                     }
-                    .execute(retainValue = NowPlayingViewState::data) {
-                        logcat { "nowPlayingBook: ${it()}" }
-                        copy(data = it)
-                    }
-            }
+                }
+                ?.execute(retainValue = NowPlayingViewState::data) {
+                    copy(data = it)
+                }
         }
     }
 
-    override fun unsubscribe() {
+    override fun detachPlayer() {
+        logcat { "detachPlayer" }
+        detach()
+
         job?.cancel()
         job = null
     }

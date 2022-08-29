@@ -20,9 +20,23 @@ fun BookProgressIndicator(
     if (bookProgress.bookCategory != BookCategory.CURRENT) return
 
     val bookDurationMs = book.duration.ms
-    if (bookDurationMs <= 0) return
-
     val bookProgressMs = bookProgress.bookProgress.ms
+
+    BookProgressIndicator(
+        bookProgressMs,
+        bookDurationMs,
+        modifier,
+    )
+}
+
+@Composable
+fun BookProgressIndicator(
+    bookProgressMs: Long,
+    bookDurationMs: Long,
+    modifier: Modifier = Modifier,
+) {
+
+    if (bookDurationMs <= 0) return
     if (bookProgressMs < 0) return
 
     val bookProgressFraction = bookProgressMs.toFloat().div(maxOf(1, bookDurationMs))

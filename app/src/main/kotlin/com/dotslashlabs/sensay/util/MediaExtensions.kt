@@ -4,7 +4,6 @@ import androidx.core.os.bundleOf
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MediaMetadata
 import androidx.media3.common.Player
-import com.dotslashlabs.sensay.ui.screen.player.PlayerViewState
 import data.entity.BookProgressWithBookAndChapters
 
 const val BUNDLE_KEY_BOOK_ID = "bookId"
@@ -35,15 +34,6 @@ fun BookProgressWithBookAndChapters.toExtras(chapterId: Long? = null) = bundleOf
     BUNDLE_KEY_BOOK_ID to book.bookId,
     BUNDLE_KEY_CHAPTER_ID to (chapterId ?: chapter.chapterId),
 )
-
-fun BookProgressWithBookAndChapters.toMediaItem(chapterId: Long) = MediaItem.Builder()
-    .setMediaId(PlayerViewState.getMediaId(book.bookId, chapterId))
-    .setMediaMetadata(
-        MediaMetadata.Builder()
-            .setExtras(toExtras(chapterId))
-            .build()
-    )
-    .build()
 
 fun BookProgressWithBookAndChapters.toMediaItem(mediaItem: MediaItem, chapterId: Long): MediaItem? {
     val resolvedChapter = when (chapterId) {

@@ -104,6 +104,7 @@ fun HomeContent(
                                 top = parent.top,
                                 bottom = nowPlayingRef.top,
                             )
+                            width = Dimension.matchParent
                             height = Dimension.fillToConstraints
                         },
                     ) {
@@ -127,6 +128,7 @@ fun HomeContent(
                                     top = listRef.bottom,
                                     bottom = parent.bottom,
                                 )
+                                width = Dimension.matchParent
                                 height = Dimension.wrapContent
                             },
                     )

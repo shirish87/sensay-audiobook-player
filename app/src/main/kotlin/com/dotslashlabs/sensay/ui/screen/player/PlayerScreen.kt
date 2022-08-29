@@ -1,6 +1,7 @@
 package com.dotslashlabs.sensay.ui.screen.player
 
 import android.annotation.SuppressLint
+import android.content.Context
 import android.net.Uri
 import android.os.Bundle
 import androidx.compose.foundation.clickable
@@ -16,6 +17,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
@@ -43,9 +45,12 @@ import com.dotslashlabs.sensay.ui.theme.contrastAgainst
 import com.dotslashlabs.sensay.ui.theme.rememberDominantColorState
 import com.dotslashlabs.sensay.util.PlayerState
 import com.dotslashlabs.sensay.util.verticalGradientScrim
+import data.BookCategory
 import data.entity.Book
 import data.entity.BookProgress
 import data.entity.Chapter
+import data.util.ContentDuration
+import kotlin.time.Duration.Companion.hours
 
 object PlayerScreen : SensayScreen {
     @Composable
@@ -70,12 +75,13 @@ fun PlayerContent(
     val viewModel: PlayerViewModel =
         mavericksViewModel(argsFactory = { PlayerViewArgs(argsBundle) })
     val state by viewModel.collectAsState()
+    val context = LocalContext.current
 
-    DisposableEffect(viewModel) {
-        viewModel.subscribe()
+    DisposableEffect(viewModel, context) {
+        viewModel.attachPlayer(context)
 
         onDispose {
-            viewModel.unsubscribe()
+            viewModel.detachPlayer()
         }
     }
 
@@ -135,9 +141,10 @@ fun PlayerContentViewNormal(
     onBackPress: () -> Unit,
 ) {
     Column(
-        modifier = modifier
+        modifier = Modifier
             .fillMaxSize()
-            .verticalScroll(rememberScrollState()),
+            .verticalScroll(rememberScrollState())
+            .then(modifier),
         verticalArrangement = Arrangement.SpaceEvenly,
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
@@ -158,7 +165,12 @@ fun PlayerContentViewNormal(
             verticalAlignment = Alignment.Top,
             horizontalArrangement = Arrangement.Center,
         ) {
-            PlayerInfo(state = state)
+            PlayerInfo(
+                state = state,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 40.dp)
+            )
         }
 
         Row(
@@ -195,9 +207,10 @@ fun PlayerContentViewLandscape(
     onBackPress: () -> Unit,
 ) {
     Row(
-        modifier = modifier
+        modifier = Modifier
             .fillMaxSize()
-            .verticalScroll(rememberScrollState()),
+            .verticalScroll(rememberScrollState())
+            .then(modifier),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceEvenly,
     ) {
@@ -216,7 +229,12 @@ fun PlayerContentViewLandscape(
         Column(
             modifier = Modifier.weight(0.7F),
         ) {
-            PlayerInfo(state = state)
+            PlayerInfo(
+                state = state,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 40.dp)
+            )
 
             SelectChapter(playerActions, state)
 
@@ -257,30 +275,29 @@ private fun PlayerInfo(
     modifier: Modifier = Modifier,
 ) {
 
-    val book = state.book ?: return
+    val book = state.media ?: return
 
     Column(
         modifier = modifier,
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
-        state.bookProgress?.let { bookProgress ->
-            BookProgressIndicator(
-                book = book,
-                bookProgress = bookProgress,
-                modifier = Modifier.sizeIn(maxWidth = 500.dp),
-            )
-        }
+
+        BookProgressIndicator(
+            bookProgressMs = state.media.bookProgress.ms,
+            bookDurationMs = state.media.bookDuration.ms,
+            modifier = Modifier.sizeIn(maxWidth = 500.dp),
+        )
 
         Text(
-            text = book.author ?: "",
+            text = "${book.author}",
             textAlign = TextAlign.Center,
             maxLines = 2,
             style = MaterialTheme.typography.titleSmall,
         )
 
         Text(
-            text = book.title,
+            text = book.bookTitle,
             textAlign = TextAlign.Center,
             maxLines = 3,
             style = MaterialTheme.typography.titleMedium,
@@ -322,7 +339,7 @@ private fun PlayerProgress(
             }
 
             Slider(
-                enabled = !state.isSliderDisabled,
+                enabled = !state.isLoading,
                 modifier = Modifier.semantics { contentDescription = "Localized Description" },
                 value = state.sliderPosition,
                 valueRange = 0F..0.99F,
@@ -330,7 +347,7 @@ private fun PlayerProgress(
                     playerActions.seekTo(it, duration)
                 },
             )
-        } else if (state.isLoading || state.isMediaIdPreparing) {
+        } else if (state.isLoading) {
             Row {
                 LinearProgressIndicator()
             }
@@ -358,8 +375,8 @@ private fun PlayerButtons(
         val buttonsModifier = Modifier.size(sideButtonSize)
 
         OutlinedIconButton(
-            enabled = state.isSelectedMediaIdCurrent &&
-                    !state.isMediaIdPreparing &&
+            enabled = state.isActiveMedia &&
+                    !state.isLoading &&
                     state.hasPreviousChapter,
             onClick = { playerActions.previousChapter() },
             modifier = buttonsModifier,
@@ -371,7 +388,7 @@ private fun PlayerButtons(
         }
 
         OutlinedIconButton(
-            enabled = state.isSelectedMediaIdCurrent && !state.isMediaIdPreparing,
+            enabled = state.isActiveMedia && !state.isLoading,
             onClick = { playerActions.seekBack() },
             modifier = buttonsModifier,
         ) {
@@ -382,10 +399,10 @@ private fun PlayerButtons(
         }
 
         OutlinedIconButton(
-            enabled = !state.isMediaIdPreparing,
+            enabled = !state.isLoading,
             onClick = {
                 playerActions.apply {
-                    if (state.isSelectedMediaIdPlaying) {
+                    if (state.isPlayingMedia) {
                         pause()
                     } else {
                         play()
@@ -395,7 +412,7 @@ private fun PlayerButtons(
             modifier = Modifier.size(playerButtonSize),
         ) {
             Icon(
-                imageVector = if (state.isSelectedMediaIdPlaying) {
+                imageVector = if (state.isPlayingMedia) {
                     Icons.Filled.PauseCircleFilled
                 } else {
                     Icons.Filled.PlayCircleFilled
@@ -406,7 +423,7 @@ private fun PlayerButtons(
         }
 
         OutlinedIconButton(
-            enabled = state.isSelectedMediaIdCurrent && !state.isMediaIdPreparing,
+            enabled = state.isActiveMedia && !state.isLoading,
             onClick = { playerActions.seekForward() },
             modifier = buttonsModifier,
         ) {
@@ -417,8 +434,8 @@ private fun PlayerButtons(
         }
 
         OutlinedIconButton(
-            enabled = state.isSelectedMediaIdCurrent &&
-                    !state.isMediaIdPreparing &&
+            enabled = state.isActiveMedia &&
+                    !state.isLoading &&
                     state.hasNextChapter,
             onClick = { playerActions.nextChapter() },
             modifier = buttonsModifier,
@@ -438,7 +455,7 @@ private fun SelectChapter(
     state: PlayerViewState,
 ) {
 
-    val chapters = state.chapters
+    val chapters = state.mediaList
     val chapterMediaIds = state.mediaIds
 
     // If there are no chapters, its an exception since all books must have at least one
@@ -446,7 +463,7 @@ private fun SelectChapter(
     // since it may be a book chapter that we have "synthetically" added
     if (chapters.size <= 1 || chapters.size != chapterMediaIds.size) return
 
-    val (selectedMediaId, selectedChapter) = state.selectedChapter ?: return
+    val selectedMedia = state.media ?: return
 
     Row(
         modifier = Modifier
@@ -464,7 +481,7 @@ private fun SelectChapter(
             TextField(
                 readOnly = true,
                 enabled = false,
-                value = selectedChapter.title,
+                value = selectedMedia.chapterTitle,
                 onValueChange = {},
                 label = { Text(text = "Chapter") },
                 leadingIcon = {
@@ -493,9 +510,9 @@ private fun SelectChapter(
                     val mediaId = chapterMediaIds[idx]
 
                     DropdownMenuItem(
-                        text = { Text(chapter.title) },
+                        text = { Text(chapter.chapterTitle) },
                         leadingIcon = {
-                            if (mediaId == selectedMediaId) {
+                            if (mediaId == selectedMedia.mediaId) {
                                 Icon(
                                     imageVector = Icons.Filled.Check,
                                     contentDescription = null,
@@ -505,7 +522,7 @@ private fun SelectChapter(
                         onClick = {
                             expanded = false
 
-                            if (mediaId != selectedMediaId) {
+                            if (mediaId != selectedMedia.mediaId) {
                                 playerActions.setSelectedMediaId(mediaId)
                             }
                         },
@@ -565,35 +582,47 @@ fun ExposedDropdownMenuDefaults.disabledTextFieldColors(): TextFieldColors {
 }
 
 
-@Preview
+@Preview(showBackground = true)
 @Composable
 fun PlayerContentPreview() {
     val bookId = 2L
+
+    val book = Book.empty().copy(
+        bookId = bookId,
+        title = "Book Title",
+        author = "Author",
+        duration = ContentDuration(5.hours),
+    )
 
     val chapters = listOf(
         Chapter.empty().copy(
             chapterId = 1,
             title = "Chapter 1 Title",
+            duration = ContentDuration(1.hours),
         ),
         Chapter.empty().copy(
             chapterId = 2,
             title = "Chapter 2 Title",
+            duration = ContentDuration(1.hours),
         ),
     )
 
+    val bookProgress = BookProgress.empty().copy(
+        bookCategory = BookCategory.CURRENT,
+        currentChapter = 1,
+        totalChapters = 2,
+        chapterProgress = ContentDuration(1.hours),
+        bookProgress = ContentDuration(1.hours),
+    )
+
+    val mediaList = Media.fromBookAndChapters(bookProgress, book, chapters)
     val mediaIds = chapters.map { PlayerViewState.getMediaId(bookId, it.chapterId) }
 
     val state = PlayerViewState(
         bookId = bookId,
-        book = Book.empty().copy(
-            bookId = bookId,
-            title = "Book Title",
-            author = "Author",
-        ),
-        bookProgress = BookProgress.empty(),
-        chapters = chapters,
+        media = mediaList.first(),
+        mediaList = mediaList,
         mediaIds = mediaIds,
-        mediaId = mediaIds.first(),
         playbackConnectionState = Success(
             PlaybackConnectionState(
                 isConnected = true,
@@ -605,11 +634,11 @@ fun PlayerContentPreview() {
     )
 
     val playerActions = object : PlayerActions {
-        override fun subscribe() {
+        override fun attachPlayer(context: Context) {
             TODO("Not yet implemented")
         }
 
-        override fun unsubscribe() {
+        override fun detachPlayer() {
             TODO("Not yet implemented")
         }
 

@@ -1,5 +1,6 @@
 package com.dotslashlabs.sensay.ui.screen.home.nowplaying
 
+import android.content.Context
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
@@ -11,6 +12,7 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
@@ -33,11 +35,13 @@ fun NowPlayingView(
     val viewModel: NowPlayingViewModel = mavericksViewModel(backStackEntry)
     val state by viewModel.collectAsState()
 
-    DisposableEffect(viewModel) {
-        viewModel.subscribe()
+    val context = LocalContext.current
+
+    DisposableEffect(viewModel, context) {
+        viewModel.attachPlayer(context)
 
         onDispose {
-            viewModel.unsubscribe()
+            viewModel.detachPlayer()
         }
     }
 
@@ -147,17 +151,18 @@ fun NowPlayingViewContentPreview() {
                 TODO("Not yet implemented")
             }
 
-            override fun subscribe() {
+            override fun attachPlayer(context: Context) {
                 TODO("Not yet implemented")
             }
 
-            override fun unsubscribe() {
+            override fun detachPlayer() {
                 TODO("Not yet implemented")
             }
          },
         state = NowPlayingViewState(
             data = Success(
                 BookProgressWithDuration(
+                    mediaId = "0",
                     bookProgressId = 0L,
                     bookId = 0L,
                     chapterId = 0L,

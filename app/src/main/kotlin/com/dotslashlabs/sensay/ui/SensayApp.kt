@@ -1,6 +1,5 @@
 package com.dotslashlabs.sensay.ui
 
-import android.content.Intent
 import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.material3.windowsizeclass.WindowSizeClass
 import androidx.compose.runtime.Composable
@@ -22,7 +21,7 @@ import logcat.logcat
 fun SensayApp(
     windowSize: WindowSizeClass,
     devicePosture: DevicePosture,
-    intentAction: String?,
+    navToLastBook: Boolean,
 ) {
 
     val appViewModel: SensayAppViewModel = mavericksActivityViewModel()
@@ -42,8 +41,8 @@ fun SensayApp(
         }
     }
 
-    LaunchedEffect(Unit) {
-        if (intentAction == Intent.ACTION_VIEW) {
+    LaunchedEffect(navToLastBook) {
+        if (navToLastBook) {
             val lastPlayedBookId = appViewModel.getLastPlayedBookId() ?: return@LaunchedEffect
             if (lastPlayedBookId == -1L) return@LaunchedEffect
 

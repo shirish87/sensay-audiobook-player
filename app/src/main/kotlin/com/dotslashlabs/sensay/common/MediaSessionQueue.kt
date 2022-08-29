@@ -16,6 +16,7 @@ import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.guava.future
 import kotlinx.coroutines.plus
+import logcat.logcat
 
 typealias MediaId = String
 
@@ -64,6 +65,7 @@ class MediaSessionQueue(private val store: SensayStore) {
                 val book = bookProgress.book
 
                 mediaItemsCache[it.mediaId] = BookProgressWithDuration(
+                    mediaId = it.mediaId,
                     bookProgressId = progress.bookProgressId,
                     bookId = bookId,
                     chapterId = chapter.chapterId,
@@ -81,6 +83,7 @@ class MediaSessionQueue(private val store: SensayStore) {
                     bookDuration = book.duration,
                 )
 
+                logcat { "Queued media item: mediaId=${it.mediaId}" }
                 acc.add(mediaItem)
                 acc
             }

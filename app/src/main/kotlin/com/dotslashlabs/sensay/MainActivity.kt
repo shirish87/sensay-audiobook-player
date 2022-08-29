@@ -1,5 +1,6 @@
 package com.dotslashlabs.sensay
 
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -9,17 +10,11 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.core.view.WindowCompat
 import com.dotslashlabs.sensay.ui.SensayApp
-import com.dotslashlabs.sensay.ui.ServiceConnection
 import com.dotslashlabs.sensay.util.createDevicePostureFlow
 import dagger.hilt.android.AndroidEntryPoint
-import javax.inject.Inject
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
-
-    @Inject
-    lateinit var serviceConnection: ServiceConnection
-
 
     @OptIn(ExperimentalMaterial3WindowSizeClassApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -34,13 +29,10 @@ class MainActivity : ComponentActivity() {
             val windowSize = calculateWindowSizeClass(this)
             val devicePosture by devicePostureFlow.collectAsState()
 
-            SensayApp(windowSize, devicePosture, intent.action)
+
+            SensayApp(windowSize, devicePosture, (intent.action == Intent.ACTION_VIEW))
+            // reset action to default
+            intent.action = Intent.ACTION_MAIN
         }
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
-
-        serviceConnection.release()
     }
 }
