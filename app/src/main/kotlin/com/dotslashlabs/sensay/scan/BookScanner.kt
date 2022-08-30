@@ -21,7 +21,10 @@ object BookScanner {
         coverScanner: CoverScanner,
         batchSize: Int = 4,
         bookFileFilter: suspend (file: DocumentFile) -> Boolean,
-        callback: suspend (sourceId: Long, booksWithChapters: List<BookWithChapters>) -> Int,
+        callback: suspend (
+            sourceId: Long,
+            booksWithChapters: List<Pair<BookWithChapters, DocumentFile>>,
+        ) -> Int,
     ): Int = withContext(Dispatchers.IO) {
 
         if (sources.isEmpty()) {
@@ -37,7 +40,7 @@ object BookScanner {
 
         return@withContext sourceDocumentFileMap.fold(0) { booksCount, sourceDocumentFile ->
             val (sourceId, df) = sourceDocumentFile
-            val sourceBooks = mutableListOf<BookWithChapters>()
+            val sourceBooks = mutableListOf<Pair<BookWithChapters, DocumentFile>>()
             var sourceBooksCount = 0
 
             mediaScanner.scan(
@@ -70,7 +73,7 @@ object BookScanner {
                                 duration = ContentDuration(chapter.duration),
                             )
                         }
-                    )
+                    ) to f
                 )
 
                 if (sourceBooks.size >= batchSize) {

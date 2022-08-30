@@ -8,6 +8,11 @@ import kotlinx.coroutines.flow.firstOrNull
 import logcat.logcat
 import javax.inject.Inject
 
+data class BookWithChaptersAndTags(
+    val booksWithChapters: BookWithChapters,
+    val tags: Collection<String>,
+)
+
 class SensayStore @Inject constructor(
     private val bookRepository: BookRepository,
     private val chapterRepository: ChapterRepository,
@@ -19,14 +24,18 @@ class SensayStore @Inject constructor(
 
     suspend fun createBooksWithChapters(
         sourceId: SourceId,
-        booksWithChapters: List<BookWithChapters>,
+        booksWithChaptersAndTags: Collection<BookWithChaptersAndTags>,
     ): List<Long> {
 
-        return booksWithChapters.mapNotNull {
-            if (it.chapters.isEmpty() || it.chapters.any { c -> c.isInvalid() }) {
+        return booksWithChaptersAndTags.mapNotNull {
+            val book = it.booksWithChapters.book
+            val chapters = it.booksWithChapters.chapters
+            val tags = it.tags
+
+            if (chapters.isEmpty() || chapters.any { c -> c.isInvalid() }) {
                 logcat {
-                    "Invalid chapters in book '${it.book.title}': ${
-                        it.chapters.joinToString(" ") { c ->
+                    "Invalid chapters in book '${book.title}': ${
+                        chapters.joinToString(" ") { c ->
                             "(${c.trackId}) ${c.title} [${c.start.format()} => ${c.end.format()}]"
                         }
                     }"
@@ -35,45 +44,76 @@ class SensayStore @Inject constructor(
                 return@mapNotNull null
             }
 
+            var bookId: Long = -1L
+
             try {
-                val bookId = bookRepository.createBook(it.book)
-                if (bookId == -1L) return@mapNotNull null
+                runInTransaction {
+                    bookId = bookRepository.createBook(book)
+                    if (bookId == -1L) return@mapNotNull null
 
-                val chapterIds = chapterRepository.createChapters(
-                    it.chapters.sortedBy { o -> o.trackId },
-                )
+                    val chapterIds = chapterRepository.createChapters(
+                        chapters.sortedBy { o -> o.trackId },
+                    )
 
-                if (chapterIds.any { c -> c == -1L }) {
-                    return@mapNotNull null
-                }
-
-                chapterRepository.insertBookChapterCrossRefs(
-                    chapterIds.map { chapterId ->
-                        BookChapterCrossRef(
-                            bookId,
-                            chapterId,
-                        )
+                    if (chapterIds.any { c -> c == -1L }) {
+                        return@mapNotNull null
                     }
-                )
 
-                bookProgressRepository.insertBookProgress(
-                    BookProgress(
-                        bookId = bookId,
-                        chapterId = chapterIds.first(),
-                        totalChapters = chapterIds.size,
+                    val existingTags =
+                        tagRepository.tagsByNames(tags).firstOrNull() ?: emptyList()
+
+                    val tagIds = existingTags.map { t -> t.tagId }.plus(
+                        tagRepository.createTags(
+                            tags.filterNot { t -> existingTags.any { et -> et.name == t } }
+                                .map { t -> Tag(name = t) },
+                        )
                     )
-                )
 
-                sourceRepository.insertSourceBookCrossRef(
-                    SourceBookCrossRef(
-                        sourceId = sourceId,
-                        bookId = bookId,
+                    tagRepository.insertBookTagCrossRefs(
+                        tagIds.map { tagId ->
+                            BookTagCrossRef(
+                                bookId,
+                                tagId,
+                            )
+                        }
                     )
-                )
 
-                bookId
+                    chapterRepository.insertBookChapterCrossRefs(
+                        chapterIds.map { chapterId ->
+                            BookChapterCrossRef(
+                                bookId,
+                                chapterId,
+                            )
+                        }
+                    )
+
+                    bookProgressRepository.insertBookProgress(
+                        BookProgress(
+                            bookId = bookId,
+                            chapterId = chapterIds.first(),
+                            totalChapters = chapterIds.size,
+                        )
+                    )
+
+                    sourceRepository.insertSourceBookCrossRef(
+                        SourceBookCrossRef(
+                            sourceId = sourceId,
+                            bookId = bookId,
+                        )
+                    )
+
+                    bookId
+                }
             } catch (ex: Exception) {
                 logcat { "createBooksWithChapters: Error importing book: ${ex.message}" }
+
+                // cleanup
+                if (bookId != -1L) {
+                    bookById(bookId).firstOrNull()?.let { b ->
+                        deleteBooks(listOf(b))
+                    }
+                }
+
                 return@mapNotNull null
             }
         }
@@ -105,23 +145,37 @@ class SensayStore @Inject constructor(
     suspend fun addSources(sources: Collection<Source>) = sourceRepository.addSources(sources)
 
     suspend fun deleteSource(sourceId: SourceId): Boolean {
-        try {
+        return try {
             runInTransaction {
                 val sourceWithBooks =
                     sourceRepository.sourceWithBooks(sourceId).firstOrNull() ?: return false
-                val bookIds = sourceWithBooks.books.map { it.bookId }
+
+                if (deleteBooks(sourceWithBooks.books)) {
+                    sourceRepository.deleteSource(sourceWithBooks.source)
+                }
+
+                true
+            }
+        } catch (ex: Exception) {
+            false
+        }
+    }
+
+    private suspend fun deleteBooks(books: Collection<Book>): Boolean {
+        return try {
+            runInTransaction {
+                val bookIds = books.map { it.bookId }
 
                 shelfRepository.deleteShelves(bookIds)
                 tagRepository.deleteTags(bookIds)
                 bookProgressRepository.deleteBooksProgress(bookIds)
                 chapterRepository.deleteChapters(bookIds)
-                bookRepository.deleteBooks(sourceWithBooks.books)
-                sourceRepository.deleteSource(sourceWithBooks.source)
-            }
+                bookRepository.deleteBooks(books)
 
-            return true
+                true
+            }
         } catch (ex: Exception) {
-            return false
+            false
         }
     }
 

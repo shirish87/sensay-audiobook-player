@@ -27,6 +27,9 @@ interface TagDao : BaseDao<Tag> {
     @Query("SELECT * FROM Tag WHERE tagId IN (:tagIds)")
     fun tags(tagIds: Collection<Long>): Flow<List<Tag>>
 
+    @Query("SELECT * FROM Tag WHERE name IN (:tagNames)")
+    fun tagsByNames(tagNames: Collection<String>): Flow<List<Tag>>
+
     @Transaction
     @Query("SELECT * FROM Tag WHERE tagId = :tagId")
     fun tagWithBooks(tagId: TagId): Flow<TagWithBooks>

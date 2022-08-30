@@ -2,14 +2,17 @@ package com.dotslashlabs.sensay.scan
 
 import android.app.Notification
 import android.content.Context
+import androidx.documentfile.provider.DocumentFile
 import androidx.hilt.work.HiltWorker
 import androidx.work.*
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
+import data.BookWithChaptersAndTags
 import data.SensayStore
 import kotlinx.coroutines.flow.firstOrNull
 import scanner.CoverScanner
 import scanner.MediaScanner
+import java.util.regex.Pattern
 
 @HiltWorker
 class BookScannerWorker @AssistedInject constructor(
@@ -32,6 +35,17 @@ class BookScannerWorker @AssistedInject constructor(
         fun buildRequest(batchSize: Int) = OneTimeWorkRequestBuilder<BookScannerWorker>()
             .setInputData(workDataOf(KEY_BATCH_SIZE to batchSize))
             .build()
+
+        private val excludeWords = listOf(
+            "^audiobook.*",
+            "^primary:.*",
+            "^document$",
+            "^tree$",
+        ).map { s -> s.toPattern(flags = Pattern.CASE_INSENSITIVE) }
+
+        private val tagFilter: (String) -> Boolean = { str ->
+            excludeWords.any { it.matcher(str).matches() }
+        }
     }
 
     override suspend fun doWork(): Result {
@@ -47,11 +61,16 @@ class BookScannerWorker @AssistedInject constructor(
             coverScanner,
             batchSize,
             bookFileFilter = { file -> (store.bookByUri(file.uri).firstOrNull() == null) },
-        ) { sourceId, booksWithChapters ->
+        ) { sourceId, sourceBooks ->
 
             store.createBooksWithChapters(
                 sourceId,
-                booksWithChapters
+                sourceBooks.map { (booksWithChapters, f) ->
+                    BookWithChaptersAndTags(
+                        booksWithChapters = booksWithChapters,
+                        tags = getTags(f),
+                    )
+                },
             ).size
         }
 
@@ -68,5 +87,19 @@ class BookScannerWorker @AssistedInject constructor(
                 .setContentText("")
                 .build(),
         )
+    }
+
+    private fun getTags(f: DocumentFile?, maxDepth: Int = 3): Set<String> {
+        if (f == null) return emptySet()
+        if (f.isFile) return getTags(f.parentFile, maxDepth)
+
+        var fileDir: DocumentFile? = f
+
+        return (0 until maxDepth).mapNotNull {
+            val name = fileDir?.name ?: return@mapNotNull null
+            fileDir = fileDir?.parentFile
+
+            if (tagFilter(name)) null else name
+        }.toSortedSet()
     }
 }
