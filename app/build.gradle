@@ -32,6 +32,9 @@ dependencies {
     implementation Libraries.Coil.coil
 
     implementation Libraries.Coroutines.guava
+    implementation Libraries.WorkManager.work
+    implementation Libraries.WorkManager.Hilt.work
+    kapt Libraries.WorkManager.Hilt.kapt
 
     // Espresso dependencies
     androidTestImplementation TestLibraries.Espresso.espressoCore

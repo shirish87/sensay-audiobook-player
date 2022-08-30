@@ -66,9 +66,8 @@ fun HomeContent(
                         navHostController.navigate(Destination.Sources.route)
                     },
                     onScanCancel = {
-                        appViewModel.cancelScanFolders()
-
                         appViewModel.viewModelScope.launch {
+                            appViewModel.cancelScanFolders(context)
                             Toast.makeText(context, "Cancelled scan", Toast.LENGTH_SHORT).show()
                         }
                     },

@@ -1,5 +1,6 @@
 package scanner
 
+import android.content.Context
 import androidx.documentfile.provider.DocumentFile
 import javax.inject.Inject
 
@@ -14,6 +15,7 @@ class MediaScanner @Inject constructor(private val mediaAnalyzer: MediaAnalyzer)
     }
 
     suspend fun scan(
+        context: Context,
         folders: List<DocumentFile>,
         audioFileFilter: suspend (file: DocumentFile) -> Boolean,
         onMetadata: suspend (file: DocumentFile, metadata: Metadata) -> Unit,
@@ -22,10 +24,11 @@ class MediaScanner @Inject constructor(private val mediaAnalyzer: MediaAnalyzer)
             .filter { it.isDirectory && it.canRead() }
             .flatMap { it.listFiles().toList() }
 
-        allFiles.forEach { analyzeFiles(it, audioFileFilter, onMetadata) }
+        allFiles.forEach { analyzeFiles(context, it, audioFileFilter, onMetadata) }
     }
 
     private suspend fun analyzeFiles(
+        context: Context,
         file: DocumentFile,
         audioFileFilter: suspend (file: DocumentFile) -> Boolean,
         onMetadata: suspend (file: DocumentFile, metadata: Metadata) -> Unit,
@@ -37,12 +40,12 @@ class MediaScanner @Inject constructor(private val mediaAnalyzer: MediaAnalyzer)
 
             if (!audioFileFilter(file)) return
 
-            mediaAnalyzer.analyze(file.uri)?.let {
+            mediaAnalyzer.analyze(context, file.uri)?.let {
                 onMetadata(file, it)
             }
         } else if (file.isDirectory) {
             file.listFiles().forEach {
-                analyzeFiles(it, audioFileFilter, onMetadata)
+                analyzeFiles(context, it, audioFileFilter, onMetadata)
             }
         }
     }

@@ -147,6 +147,19 @@ object Libraries {
         )
     }
 
+    object WorkManager {
+        private const val version = "2.7.1"
+
+        const val work = "androidx.work:work-runtime-ktx:$version"
+
+        object Hilt {
+            private const val version = "1.0.0"
+
+            const val work = "androidx.hilt:hilt-work:$version"
+            const val kapt = "androidx.hilt:hilt-compiler:$version"
+        }
+    }
+
     object DocumentFile {
         private const val version = "1.0.1"
 

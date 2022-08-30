@@ -69,7 +69,7 @@ fun SourcesContent(
         )
 
         viewModel.addAudiobookFolders(setOf(uri)).invokeOnCompletion {
-            appViewModel.scanFolders()
+            appViewModel.scanFolders(context)
         }
     }
 
@@ -94,7 +94,7 @@ fun SourcesContent(
 
                         IconButton(
                             enabled = !isScanningFolders,
-                            onClick = { appViewModel.scanFolders(true) },
+                            onClick = { appViewModel.scanFolders(context, true) },
                         ) {
                             Icon(
                                 imageVector = Icons.Default.Refresh,
@@ -135,7 +135,7 @@ fun SourcesContent(
                         trailingContent = {
                             IconButton(onClick = {
                                 viewModel.deleteSource(item.sourceId).invokeOnCompletion {
-                                    appViewModel.scanFolders()
+                                    appViewModel.scanFolders(context)
                                 }
                             }) {
                                 Icon(

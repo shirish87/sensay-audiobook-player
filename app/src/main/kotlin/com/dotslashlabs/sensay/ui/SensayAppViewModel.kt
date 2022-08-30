@@ -2,10 +2,14 @@ package com.dotslashlabs.sensay.ui
 
 import android.content.Context
 import androidx.compose.material3.windowsizeclass.WindowHeightSizeClass
-import androidx.documentfile.provider.DocumentFile
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.Observer
+import androidx.work.WorkInfo
+import androidx.work.WorkManager
 import com.airbnb.mvrx.*
 import com.airbnb.mvrx.hilt.AssistedViewModelFactory
 import com.airbnb.mvrx.hilt.hiltMavericksViewModelFactory
+import com.dotslashlabs.sensay.scan.BookScannerWorker
 import com.dotslashlabs.sensay.util.DevicePosture
 import com.dotslashlabs.sensay.util.WindowSizeClass
 import config.ConfigStore
@@ -13,20 +17,13 @@ import config.HomeLayout
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
-import dagger.hilt.android.qualifiers.ApplicationContext
 import data.SensayStore
-import data.entity.*
-import data.util.ContentDuration
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
+import data.entity.BookProgressWithBookAndChapters
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
-import scanner.CoverScanner
-import scanner.MediaScanner
 import java.time.Instant
+import java.util.*
 
 val DEFAULT_HOME_LAYOUT = HomeLayout.LIST
 
@@ -47,14 +44,12 @@ data class SensayAppState(
 
 class SensayAppViewModel @AssistedInject constructor(
     @Assisted private val state: SensayAppState,
-    @ApplicationContext private val context: Context,
-    private val store: SensayStore,
+    store: SensayStore,
     private val configStore: ConfigStore,
-    private val mediaScanner: MediaScanner,
-    private val coverScanner: CoverScanner,
 ) : MavericksViewModel<SensayAppState>(state) {
 
-    private var scannerJob : Job? = null
+    private var scannerLiveData : LiveData<WorkInfo>? = null
+    private var workRequestId: UUID? = null
 
     init {
         store.booksProgressWithBookAndChapters().execute {
@@ -72,6 +67,21 @@ class SensayAppViewModel @AssistedInject constructor(
             }
     }
 
+    private val observer = Observer<WorkInfo> { info ->
+        if (info.state.isFinished) {
+            setScanningFolders(false)
+            setState { copy(lastScanTime = Instant.now()) }
+        }
+    }
+
+    override fun onCleared() {
+        viewModelScope.launch {
+            scannerLiveData?.removeObserver(observer)
+        }
+
+        super.onCleared()
+    }
+
     fun configure(windowSize: WindowSizeClass, devicePosture: DevicePosture) = setState {
         copy(windowSize = windowSize, devicePosture = devicePosture)
     }
@@ -84,105 +94,31 @@ class SensayAppViewModel @AssistedInject constructor(
         setState { copy(isScanningFolders = isScanningFolders) }
     }
 
-    fun scanFolders(force: Boolean = false) = withState { state ->
+    fun scanFolders(context: Context, force: Boolean = false) = withState { state ->
         if (!force && !state.shouldScan) return@withState
 
-        cancelScanFolders()
+        viewModelScope.launch {
+            cancelScanFolders(context)
+            setScanningFolders(true)
 
-        scannerJob = viewModelScope.launch {
-            try {
-                setScanningFolders(true)
+            val workRequest = BookScannerWorker.buildRequest(batchSize = 4)
+            val workManager = WorkManager.getInstance(context)
+            workManager.enqueue(workRequest)
 
-                withContext(Dispatchers.IO) {
-                    val activeSources = (store.sources(isActive = true).firstOrNull() ?: emptyList())
-                        .sortedBy { -it.createdAt.toEpochMilli() }
+            workRequestId = workRequest.id
 
-                    if (activeSources.isEmpty()) return@withContext 0
-
-                    return@withContext scanFolders(activeSources)
-                }
-
-                setState { copy(lastScanTime = Instant.now()) }
-            } finally {
-                setScanningFolders(false)
+            scannerLiveData = workManager.getWorkInfoByIdLiveData(workRequest.id).apply {
+                observeForever(observer)
             }
         }
     }
 
-    fun cancelScanFolders() {
-        if (scannerJob?.isActive == true) {
-            scannerJob?.cancel()
-        }
-    }
+    fun cancelScanFolders(context: Context) {
+        workRequestId?.let { WorkManager.getInstance(context).cancelWorkById(it) }
+        workRequestId = null
 
-    private suspend fun scanFolders(
-        activeSources: Collection<Source>,
-        batchSize: Int = 4,
-    ): Int {
-
-        if (activeSources.isEmpty()) {
-            return 0
-        }
-
-        val sourceDocumentFiles = activeSources.mapNotNull { source ->
-            val df = DocumentFile.fromTreeUri(context, source.uri)
-            if (df == null || !df.isDirectory || !df.canRead()) return@mapNotNull null
-
-            source to df
-        }
-
-        return sourceDocumentFiles.fold(0) { totalBookCount, sourceDocumentFile ->
-            val (source, df) = sourceDocumentFile
-            val sourceBooks = mutableListOf<BookWithChapters>()
-            var sourceBookCount = 0
-
-            mediaScanner.scan(
-                listOf(df),
-                { file -> (store.bookByUri(file.uri).firstOrNull() == null) },
-            ) { f, metadata ->
-                val bookHash = metadata.hash
-                val coverFile = coverScanner.scanCover(f.parentFile?.uri, f.uri, bookHash)
-
-                sourceBooks.add(
-                    BookWithChapters(
-                        book = Book(
-                            uri = f.uri,
-                            author = metadata.author,
-                            series = metadata.album,
-                            title = metadata.title,
-                            duration = ContentDuration(metadata.duration),
-                            hash = bookHash,
-                            coverUri = coverFile?.uri,
-                        ),
-                        chapters = metadata.chapters.map { chapter ->
-                            Chapter(
-                                uri = f.uri,
-                                hash = chapter.hash,
-                                trackId = chapter.id,
-                                title = chapter.title,
-                                start = ContentDuration(chapter.start),
-                                end = ContentDuration(chapter.end),
-                                duration = ContentDuration(chapter.duration),
-                            )
-                        }
-                    )
-                )
-
-                if (sourceBooks.size >= batchSize) {
-                    sourceBookCount += store.createBooksWithChapters(
-                        source.sourceId,
-                        sourceBooks
-                    ).size
-                    sourceBooks.clear()
-                }
-            }
-
-            if (sourceBooks.isNotEmpty()) {
-                sourceBookCount += store.createBooksWithChapters(source.sourceId, sourceBooks).size
-            }
-
-            totalBookCount + sourceBookCount
-        }
+        scannerLiveData?.removeObserver(observer)
+        setScanningFolders(false)
     }
 
     suspend fun getLastPlayedBookId() = configStore.getLastPlayedBookId().first()

@@ -1,10 +1,8 @@
 package com.dotslashlabs.sensay.module
 
-import android.content.Context
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
-import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import scanner.CoverScanner
 import scanner.MediaAnalyzer
@@ -17,7 +15,7 @@ object ScannerModule {
 
     @Provides
     @Singleton
-    fun provideMediaAnalyzer(@ApplicationContext context: Context) = MediaAnalyzer(context)
+    fun provideMediaAnalyzer() = MediaAnalyzer()
 
     @Provides
     @Singleton
@@ -25,5 +23,5 @@ object ScannerModule {
 
     @Provides
     @Singleton
-    fun provideCoverScanner(@ApplicationContext context: Context) = CoverScanner(context)
+    fun provideCoverScanner() = CoverScanner()
 }

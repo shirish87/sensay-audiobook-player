@@ -14,18 +14,20 @@ fun DocumentFile.isNonEmptyFile() = (isFile && exists() && canRead() && length()
 fun DocumentFile.isImage() = type?.startsWith("image/") == true
 fun File.isNonEmptyFile() = (isFile && exists() && canRead() && length() > 0)
 
-class CoverScanner @Inject constructor(private val context: Context) {
+class CoverScanner @Inject constructor() {
 
     suspend fun scanCover(
+        context: Context,
         folderUri: Uri?,
         uri: Uri,
         coverFileId: String,
         forceCreate: Boolean = false,
     ): DocumentFile? = folderUri?.let { bookFolderUri ->
-        scanCoverFromDisk(bookFolderUri, coverFileId, forceCreate)
-    } ?: scanForEmbeddedCover(uri, coverFileId, forceCreate)
+        scanCoverFromDisk(context, bookFolderUri, coverFileId, forceCreate)
+    } ?: scanForEmbeddedCover(context, uri, coverFileId, forceCreate)
 
     suspend fun scanCoverFromDisk(
+        context: Context,
         folderUri: Uri,
         coverFileId: String,
         forceCreate: Boolean = false,
@@ -36,9 +38,9 @@ class CoverScanner @Inject constructor(private val context: Context) {
             ?: return@withContext null
         if (!documentFile.isDirectory) return@withContext null
 
-        val destFile = newBookCoverFile(coverFileId)
+        val destFile = newBookCoverFile(context, coverFileId)
         if (!forceCreate && destFile.isNonEmptyFile())
-            return@withContext fileToDocumentFile(destFile)
+            return@withContext fileToDocumentFile(context, destFile)
 
         for (f in documentFile.listFiles().filter { (it.isNonEmptyFile() && it.isImage()) }) {
             runCatching {
@@ -47,7 +49,7 @@ class CoverScanner @Inject constructor(private val context: Context) {
                 }
 
                 if (destFile.isNonEmptyFile()) {
-                    return@withContext fileToDocumentFile(destFile)
+                    return@withContext fileToDocumentFile(context, destFile)
                 }
             }
         }
@@ -56,16 +58,17 @@ class CoverScanner @Inject constructor(private val context: Context) {
     }
 
     suspend fun scanForEmbeddedCover(
+        context: Context,
         uri: Uri,
         coverFileId: String,
         forceCreate: Boolean = false,
     ): DocumentFile? = withContext(Dispatchers.IO) {
         logcat { "scanForEmbeddedCover: $uri" }
 
-        val coverFile = newBookCoverFile(coverFileId)
+        val coverFile = newBookCoverFile(context, coverFileId)
 
         if (!forceCreate && coverFile.isNonEmptyFile())
-            return@withContext fileToDocumentFile(coverFile)
+            return@withContext fileToDocumentFile(context, coverFile)
 
         ffmpeg(
             input = uri,
@@ -74,11 +77,12 @@ class CoverScanner @Inject constructor(private val context: Context) {
         )
 
         return@withContext if (coverFile.isNonEmptyFile())
-            fileToDocumentFile(coverFile)
+            fileToDocumentFile(context, coverFile)
         else null
     }
 
     private suspend fun newBookCoverFile(
+        context: Context,
         coverFileId: String,
         coverFile: String = "${coverFileId}.png",
     ): File = withContext(Dispatchers.IO) {
@@ -90,7 +94,7 @@ class CoverScanner @Inject constructor(private val context: Context) {
         File(coversFolder, coverFile)
     }
 
-    private fun fileToDocumentFile(file: File) = DocumentFile.fromSingleUri(
+    private fun fileToDocumentFile(context: Context, file: File) = DocumentFile.fromSingleUri(
         context,
         FileProvider.getUriForFile(context, "${context.packageName}.provider", file),
     )

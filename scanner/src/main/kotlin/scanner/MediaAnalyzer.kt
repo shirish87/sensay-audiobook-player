@@ -9,14 +9,14 @@ import logcat.logcat
 import javax.inject.Inject
 import kotlin.time.Duration.Companion.seconds
 
-class MediaAnalyzer @Inject constructor(private val context: Context) {
+class MediaAnalyzer @Inject constructor() {
 
   private val json = Json {
     ignoreUnknownKeys = true
     allowStructuredMapKeys = true
   }
 
-  suspend fun analyze(uri: Uri): Metadata? {
+  suspend fun analyze(context: Context, uri: Uri): Metadata? {
     logcat { "analyze $uri" }
 
     val result = ffprobe(
