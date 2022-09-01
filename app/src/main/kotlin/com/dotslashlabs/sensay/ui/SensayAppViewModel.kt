@@ -32,12 +32,12 @@ data class SensayAppState(
     val homeLayout: HomeLayout = DEFAULT_HOME_LAYOUT,
     val isScanningFolders: Boolean = false,
     val audiobookFoldersUpdateTime: Async<Long?> = Uninitialized,
-    val lastScanTime: Instant = Instant.EPOCH,
+    val lastScanTime: Long = Instant.EPOCH.toEpochMilli(),
     val windowSize: WindowSizeClass = WindowSizeClass.default(),
     val devicePosture: DevicePosture = DevicePosture.default(),
 ) : MavericksState {
 
-    val shouldScan = ((audiobookFoldersUpdateTime() ?: 0L) > lastScanTime.toEpochMilli())
+    val shouldScan = ((audiobookFoldersUpdateTime() ?: 0L) > lastScanTime)
 
     val useLandscapeLayout = (windowSize.heightSizeClass == WindowHeightSizeClass.Compact)
 }
@@ -70,7 +70,7 @@ class SensayAppViewModel @AssistedInject constructor(
     private val observer = Observer<WorkInfo> { info ->
         if (info.state.isFinished) {
             setScanningFolders(false)
-            setState { copy(lastScanTime = Instant.now()) }
+            setState { copy(lastScanTime = Instant.now().toEpochMilli()) }
         }
     }
 
