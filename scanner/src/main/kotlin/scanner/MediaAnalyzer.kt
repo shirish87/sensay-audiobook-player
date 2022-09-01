@@ -51,7 +51,7 @@ class MediaAnalyzer @Inject constructor() {
         duration = duration.seconds,
         author = parsed.findTag(TagType.Artist) ?: parsed.findTag(TagType.AlbumArtist),
         album = parsed.findTag(TagType.Album),
-        title = parsed.findTag(TagType.Title) ?: nameFromFileUri(uri),
+        title = parsed.findTag(TagType.Title) ?: "",
         chapters = parsed.chapters,
       )
     } else {

@@ -9,8 +9,8 @@ import data.entity.Source
 import data.util.ContentDuration
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import scanner.CoverScanner
 import scanner.MediaScanner
+import scanner.MediaScannerResult
 
 object BookScanner {
 
@@ -18,7 +18,6 @@ object BookScanner {
         context: Context,
         sources: Collection<Source>,
         mediaScanner: MediaScanner,
-        coverScanner: CoverScanner,
         batchSize: Int = 4,
         bookFileFilter: suspend (file: DocumentFile) -> Boolean,
         callback: suspend (
@@ -43,38 +42,14 @@ object BookScanner {
             val sourceBooks = mutableListOf<Pair<BookWithChapters, DocumentFile>>()
             var sourceBooksCount = 0
 
-            mediaScanner.scan(
+            val f = mediaScanner.scan(
                 context,
-                listOf(df),
+                df,
                 bookFileFilter,
-            ) { f, metadata ->
-                val bookHash = metadata.hash
-                val coverFile = coverScanner.scanCover(context, f.parentFile?.uri, f.uri, bookHash)
+            )
 
-                sourceBooks.add(
-                    BookWithChapters(
-                        book = Book(
-                            uri = f.uri,
-                            author = metadata.author,
-                            series = metadata.album,
-                            title = metadata.title,
-                            duration = ContentDuration(metadata.duration),
-                            hash = bookHash,
-                            coverUri = coverFile?.uri,
-                        ),
-                        chapters = metadata.chapters.map { chapter ->
-                            Chapter(
-                                uri = f.uri,
-                                hash = chapter.hash,
-                                trackId = chapter.id,
-                                title = chapter.title,
-                                start = ContentDuration(chapter.start),
-                                end = ContentDuration(chapter.end),
-                                duration = ContentDuration(chapter.duration),
-                            )
-                        }
-                    ) to f
-                )
+            f.collect { result ->
+                sourceBooks.add(result.toBookWithChapters() to result.root)
 
                 if (sourceBooks.size >= batchSize) {
                     sourceBooksCount += callback(sourceId, sourceBooks)
@@ -91,3 +66,27 @@ object BookScanner {
         }
     }
 }
+
+fun MediaScannerResult.toBookWithChapters() = BookWithChapters(
+    book = Book(
+        uri = root.uri,
+        coverUri = coverUri,
+        author = metadata.author,
+        series = metadata.album,
+        title = metadata.title,
+        duration = ContentDuration(metadata.duration),
+        hash = metadata.hash,
+    ),
+    chapters = chapters.map { c ->
+        Chapter(
+            uri = c.uri,
+            coverUri = c.coverUri,
+            hash = c.chapter.hash,
+            trackId = c.chapter.id,
+            title = c.chapter.title,
+            start = ContentDuration(c.chapter.start),
+            end = ContentDuration(c.chapter.end),
+            duration = ContentDuration(c.chapter.duration),
+        )
+    }
+)

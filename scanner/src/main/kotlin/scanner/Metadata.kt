@@ -1,11 +1,11 @@
 package scanner
 
 import kotlinx.serialization.SerialName
-import kotlin.time.Duration
-import kotlin.time.Duration.Companion.seconds
 import kotlinx.serialization.Serializable
 import java.lang.Double.max
 import java.util.*
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.seconds
 
 @Serializable
 data class MetaDataScanResult(
@@ -56,6 +56,28 @@ data class MetaDataChapter(
   @SerialName("end_time") private val endTime: Double,
   val tags: Map<String, String>? = null
 ) {
+
+  companion object {
+
+    fun create(
+      id: Int,
+      title: String,
+      artist: String?,
+      album: String?,
+      startTime: Double,
+      endTime: Double,
+    ) = MetaDataChapter(
+      id,
+      startTime,
+      endTime,
+      tags = listOfNotNull(
+        TagType.Title.name to title,
+        if (artist != null) TagType.Artist.name to artist else null,
+        if (album != null) TagType.Album.name to album else null,
+      ).toMap(),
+    )
+  }
+
   val start: Duration get() = startTime.seconds
   val end: Duration get() = endTime.seconds
 

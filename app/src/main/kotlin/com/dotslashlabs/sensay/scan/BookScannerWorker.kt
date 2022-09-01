@@ -20,7 +20,7 @@ class BookScannerWorker @AssistedInject constructor(
     @Assisted workerParams: WorkerParameters,
     private val store: SensayStore,
     private val mediaScanner: MediaScanner,
-    private val coverScanner: CoverScanner,
+    @Suppress("UNUSED_PARAMETER") private val coverScanner: CoverScanner,
 ) : CoroutineWorker(appContext, workerParams) {
 
     companion object {
@@ -58,7 +58,6 @@ class BookScannerWorker @AssistedInject constructor(
             applicationContext,
             activeSources,
             mediaScanner,
-            coverScanner,
             batchSize,
             bookFileFilter = { file -> (store.bookByUri(file.uri).firstOrNull() == null) },
         ) { sourceId, sourceBooks ->
