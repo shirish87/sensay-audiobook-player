@@ -26,7 +26,7 @@ fun Duration.Companion.format(value: Duration?) = if (value != null && value.ms 
 }
 
 fun Duration.Companion.formatFull(value: Duration?) = if (value != null && value.ms > 0) {
-    value.toComponents { hh, mm, _, _ ->
+    value.toComponents { hh, mm, ss, _ ->
         listOfNotNull(
             when {
                 hh == 1L -> "$hh hr"
@@ -37,7 +37,10 @@ fun Duration.Companion.formatFull(value: Duration?) = if (value != null && value
                 mm == 1 -> "$mm min"
                 mm > 1 -> "$mm mins"
                 else -> null
-            }
+            },
+            if (hh == 0L && mm == 0 && ss > 0) {
+                "$ss secs"
+            } else null,
         ).joinToString(" ")
     }
 } else {
@@ -45,10 +48,11 @@ fun Duration.Companion.formatFull(value: Duration?) = if (value != null && value
 }
 
 fun Duration.Companion.formatShort(value: Duration?) = if (value != null && value.ms > 0) {
-    value.toComponents { hh, mm, _, _ ->
+    value.toComponents { hh, mm, ss, _ ->
         listOfNotNull(
             if (hh > 0) "${hh}h" else null,
             if (mm > 0) "${mm}m" else null,
+            if (hh == 0L && mm == 0 && ss > 0) "${ss}s" else null,
         ).joinToString(" ")
     }
 } else {
