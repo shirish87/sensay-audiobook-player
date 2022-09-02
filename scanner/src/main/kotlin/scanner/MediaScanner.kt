@@ -154,6 +154,7 @@ class MediaScanner @Inject constructor(private val mediaAnalyzer: MediaAnalyzer)
                 // 0-chapter files in the same directory
                 consolidateSingleMediaScannerResults(grp)
             }
+            .filter { existingFileFilter(it.root) }
             .also {
                 logcat {
                     "levels processed books=${
