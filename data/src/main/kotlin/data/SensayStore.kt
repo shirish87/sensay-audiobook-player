@@ -139,6 +139,7 @@ class SensayStore @Inject constructor(
     fun bookWithChapters(bookId: BookId) = chapterRepository.bookWithChapters(bookId)
     fun bookProgress(bookId: BookId) = bookProgressRepository.bookProgress(bookId)
 
+    fun sourceById(sourceId: SourceId) = sourceRepository.sourceById(sourceId)
     fun sources() = sourceRepository.sources()
     fun sources(isActive: Boolean = true) = sourceRepository.sources(isActive)
 

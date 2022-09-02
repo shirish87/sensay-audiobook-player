@@ -19,6 +19,7 @@ import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import data.SensayStore
 import data.entity.BookProgressWithBookAndChapters
+import data.entity.SourceId
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
@@ -96,24 +97,25 @@ class SensayAppViewModel @AssistedInject constructor(
         setState { copy(isScanningFolders = isScanningFolders) }
     }
 
-    fun scanFolders(context: Context, force: Boolean = false) = withState { state ->
-        if (!force && !state.shouldScan) return@withState
+    fun scanFolders(context: Context, force: Boolean = false, sourceId: SourceId? = null) =
+        withState { state ->
+            if (!force && !state.shouldScan) return@withState
 
-        viewModelScope.launch {
-            cancelScanFolders(context)
-            setScanningFolders(true)
+            viewModelScope.launch {
+                cancelScanFolders(context)
+                setScanningFolders(true)
 
-            val workRequest = BookScannerWorker.buildRequest(batchSize = 4)
-            val workManager = WorkManager.getInstance(context)
-            workManager.enqueue(workRequest)
+                val workRequest = BookScannerWorker.buildRequest(batchSize = 4, sourceId = sourceId)
+                val workManager = WorkManager.getInstance(context)
+                workManager.enqueue(workRequest)
 
-            workRequestId = workRequest.id
+                workRequestId = workRequest.id
 
-            scannerLiveData = workManager.getWorkInfoByIdLiveData(workRequest.id).apply {
-                observeForever(observer)
+                scannerLiveData = workManager.getWorkInfoByIdLiveData(workRequest.id).apply {
+                    observeForever(observer)
+                }
             }
         }
-    }
 
     fun cancelScanFolders(context: Context) {
         workRequestId?.let { WorkManager.getInstance(context).cancelWorkById(it) }

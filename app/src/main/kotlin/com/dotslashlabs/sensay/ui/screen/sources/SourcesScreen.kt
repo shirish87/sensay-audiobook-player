@@ -53,6 +53,7 @@ fun SourcesContent(
 ) {
 
     val appViewModel: SensayAppViewModel = mavericksActivityViewModel()
+    val isScanningFolders by appViewModel.collectAsState(SensayAppState::isScanningFolders)
 
     val viewModel: SourcesViewModel = mavericksViewModel(backStackEntry)
     val state by viewModel.collectAsState()
@@ -89,8 +90,7 @@ fun SourcesContent(
                         }
                     },
                     actions = {
-                        val isScanningFolders by appViewModel
-                            .collectAsState(SensayAppState::isScanningFolders)
+
 
                         IconButton(
                             enabled = !isScanningFolders,
@@ -130,6 +130,22 @@ fun SourcesContent(
                                     Icons.Filled.Error,
                                     contentDescription = "",
                                 )
+                            } else {
+                                IconButton(
+                                    enabled = !isScanningFolders,
+                                    onClick = {
+                                        appViewModel.scanFolders(
+                                            context,
+                                            true,
+                                            item.sourceId,
+                                        )
+                                    },
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Refresh,
+                                        contentDescription = "",
+                                    )
+                                }
                             }
                         },
                         trailingContent = {

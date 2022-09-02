@@ -12,6 +12,8 @@ class SourceRepository @Inject constructor(
     private val sourceDao: SourceDao,
 ) {
 
+    fun sourceById(sourceId: SourceId) = sourceDao.sourceById(sourceId)
+
     fun sources() = sourceDao.sources()
 
     fun sources(isActive: Boolean = true) = sourceDao.sources(isActive)

@@ -25,6 +25,7 @@ class BookScannerWorker @AssistedInject constructor(
 
     companion object {
         const val KEY_BATCH_SIZE = "BATCH_SIZE"
+        const val KEY_SOURCE_ID = "SOURCE_ID"
         const val RESULT_BOOKS_ADDED_COUNT = "BOOKS_ADDED_COUNT"
 
         private const val DEFAULT_BATCH_SIZE = 4
@@ -32,8 +33,18 @@ class BookScannerWorker @AssistedInject constructor(
         private const val NOTIFICATION_ID = 1
         private const val NOTIFICATION_CHANNEL = "BookScannerWorker"
 
-        fun buildRequest(batchSize: Int) = OneTimeWorkRequestBuilder<BookScannerWorker>()
-            .setInputData(workDataOf(KEY_BATCH_SIZE to batchSize))
+        fun buildRequest(
+            batchSize: Int,
+            sourceId: Long? = null,
+        ) = OneTimeWorkRequestBuilder<BookScannerWorker>()
+            .setInputData(
+                workDataOf(
+                    *listOfNotNull(
+                        KEY_BATCH_SIZE to batchSize,
+                        sourceId?.let { KEY_SOURCE_ID to it },
+                    ).toTypedArray(),
+                ),
+            )
             .build()
 
         private val excludeWords = listOf(
@@ -49,7 +60,11 @@ class BookScannerWorker @AssistedInject constructor(
     }
 
     override suspend fun doWork(): Result {
-        val activeSources = (store.sources(isActive = true).firstOrNull() ?: emptyList())
+        val inputSourceId = inputData.getLong(KEY_SOURCE_ID, 0L)
+
+        val activeSources = if (inputSourceId > 0) {
+            listOfNotNull(store.sourceById(inputSourceId).firstOrNull())
+        } else (store.sources(isActive = true).firstOrNull() ?: emptyList())
             .sortedBy { -it.createdAt.toEpochMilli() }
 
         val batchSize = inputData.getInt(KEY_BATCH_SIZE, DEFAULT_BATCH_SIZE)
