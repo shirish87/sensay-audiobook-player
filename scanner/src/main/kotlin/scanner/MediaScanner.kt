@@ -180,6 +180,14 @@ class MediaScanner @Inject constructor(private val mediaAnalyzer: MediaAnalyzer)
             }
     }
 
+    private fun generateTags(r: MediaScannerResult, fallbackTitle: String): Map<String, String> =
+        listOfNotNull(
+            TagType.Title.name to (r.metadata.title ?: fallbackTitle),
+            r.metadata.author?.let { TagType.Artist.name to it },
+            r.metadata.album?.let { TagType.Album.name to it },
+            r.metadata.albumAuthor?.let { TagType.AlbumArtist.name to it },
+        ).toMap()
+
     private fun consolidateNonChapterizedSingleFiles(
         singleFiles: Collection<MediaScannerResult>,
     ): MediaScannerResult? {
@@ -204,6 +212,7 @@ class MediaScanner @Inject constructor(private val mediaAnalyzer: MediaAnalyzer)
                     id = fileIdx,
                     startTime = startTime.toDouble(DurationUnit.SECONDS),
                     endTime = (startTime + r.metadata.duration).toDouble(DurationUnit.SECONDS),
+                    tags = generateTags(r, "${fileIdx + 1} - ${r.fileName}"),
                 ),
             )
 
@@ -254,8 +263,8 @@ class MediaScanner @Inject constructor(private val mediaAnalyzer: MediaAnalyzer)
                             tags = c.chapter.titleTag?.let { titleTag ->
                                 c.chapter.tags!! + mapOf(
                                     titleTag to listOfNotNull(
-                                        fileIdx,
-                                        c.chapter.title
+                                        fileIdx + 1,
+                                        c.chapter.title,
                                     ).joinToString(" - ")
                                 )
                             } ?: c.chapter.tags,

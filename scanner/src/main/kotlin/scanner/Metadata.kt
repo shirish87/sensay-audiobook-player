@@ -40,7 +40,7 @@ fun Map<String, String>.find(tagType: TagType): String? {
     val targetKey = getTagKey(tagType)
 
     forEach { (key, value) ->
-        if (key.equals(targetKey, ignoreCase = true) && value.isNotEmpty()) {
+        if (key.replace("_", "").equals(targetKey, ignoreCase = true) && value.isNotEmpty()) {
             return value
         }
     }
