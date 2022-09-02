@@ -70,7 +70,9 @@ class SensayAppViewModel @AssistedInject constructor(
     private val observer = Observer<WorkInfo> { info ->
         if (info.state.isFinished) {
             setScanningFolders(false)
-            setState { copy(lastScanTime = Instant.now().toEpochMilli()) }
+
+            val lastScanTime = Instant.now().toEpochMilli()
+            setState { copy(lastScanTime = lastScanTime) }
         }
     }
 
