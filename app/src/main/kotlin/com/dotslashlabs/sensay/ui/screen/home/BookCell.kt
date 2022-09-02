@@ -66,6 +66,7 @@ private fun GridBookView(
         ) {
             CoverImage(
                 coverUri = bookProgressWithChapters.book.coverUri,
+                modifier = Modifier.fillMaxSize(),
             )
 
             book.author?.let { author ->

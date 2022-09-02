@@ -62,6 +62,7 @@ private fun ListBookView(
         ) {
             CoverImage(
                 coverUri = bookProgressWithChapters.book.coverUri,
+                modifier = Modifier.fillMaxSize(),
             )
         }
 
