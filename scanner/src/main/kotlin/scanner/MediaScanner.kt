@@ -195,20 +195,22 @@ class MediaScanner @Inject constructor(private val mediaAnalyzer: MediaAnalyzer)
         val chapters = sources.foldIndexed(
             Duration.ZERO to mutableListOf<MediaScannerChapter>(),
         ) { fileIdx, (startTime, list), r ->
-            list.add(
-                MediaScannerChapter(
-                    uri = r.root.uri,
-                    coverUri = r.coverUri,
-                    lastModified = r.root.lastModified(),
-                    chapter = MetaDataChapter(
-                        id = fileIdx + 1,
-                        startTime = startTime.toDouble(DurationUnit.SECONDS),
-                        endTime = (startTime + r.metadata.duration).toDouble(DurationUnit.SECONDS),
-                    ),
-                )
+
+            val newChapter = MediaScannerChapter(
+                uri = r.root.uri,
+                coverUri = r.coverUri,
+                lastModified = r.root.lastModified(),
+                chapter = MetaDataChapter(
+                    id = fileIdx,
+                    startTime = startTime.toDouble(DurationUnit.SECONDS),
+                    endTime = (startTime + r.metadata.duration).toDouble(DurationUnit.SECONDS),
+                ),
             )
 
-            startTime to list
+            list.add(newChapter)
+
+            val nextStartTime = newChapter.chapter.end + 1.milliseconds
+            nextStartTime to list
         }.second.toList()
 
         val baseBook = sources.first()
@@ -252,7 +254,7 @@ class MediaScanner @Inject constructor(private val mediaAnalyzer: MediaAnalyzer)
                             tags = c.chapter.titleTag?.let { titleTag ->
                                 c.chapter.tags!! + mapOf(
                                     titleTag to listOfNotNull(
-                                        (fileIdx + 1),
+                                        fileIdx,
                                         c.chapter.title
                                     ).joinToString(" - ")
                                 )
