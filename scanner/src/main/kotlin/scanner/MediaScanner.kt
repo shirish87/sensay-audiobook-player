@@ -4,7 +4,6 @@ import android.content.Context
 import android.net.Uri
 import androidx.documentfile.provider.DocumentFile
 import kotlinx.coroutines.flow.flow
-import logcat.LogPriority
 import logcat.logcat
 import javax.inject.Inject
 import kotlin.time.Duration
@@ -15,18 +14,21 @@ data class MediaScannerChapter(
     val uri: Uri,
     val coverUri: Uri?,
     val chapter: MetaDataChapter,
+    val lastModified: Long,
 )
 
 data class MediaScannerResult(
     val root: DocumentFile,
     val coverUri: Uri?,
     val metadata: Metadata,
-    val chapters: List<MediaScannerChapter>
+    val chapters: List<MediaScannerChapter>,
 ) {
+
+    val fileName: String = root.name!!.substringBeforeLast(".")
 
     companion object {
 
-        fun fromSingleFileMetadata(
+        fun create(
             f: DocumentFile,
             coverFile: DocumentFile?,
             metadata: Metadata,
@@ -39,39 +41,49 @@ data class MediaScannerResult(
                     uri = f.uri,
                     coverUri = coverFile?.uri,
                     chapter = it,
+                    lastModified = f.lastModified(),
                 )
             }
         )
     }
 }
 
+internal data class LevelScan(
+    val level: Int,
+    val pendingFiles: MutableList<DocumentFile> = mutableListOf(),
+    val leafDirs: MutableList<DocumentFile> = mutableListOf(),
+)
+
 class MediaScanner @Inject constructor(private val mediaAnalyzer: MediaAnalyzer) {
 
     private val coverScanner = CoverScanner()
 
-    private val supportedExtensions = listOf("m4a", "m4b", "mp4", "mp3", "mp2", "mp1", "ogg", "wav")
     private val singleFileExtensions = listOf("m4a", "m4b", "mp4")
+
+    private val supportedExtensions = singleFileExtensions +
+            listOf("mp3", "mp2", "mp1", "ogg", "wav")
 
     private val validSupportedFileExtension = supportedExtensions.run {
         ".*\\.(${joinToString("|")})$".toRegex(RegexOption.IGNORE_CASE)
     }
 
-    private val validSingleFileExtension = singleFileExtensions.run {
-        ".*\\.(${joinToString("|")})$".toRegex(RegexOption.IGNORE_CASE)
-    }
+//    private val validSingleFileExtension = singleFileExtensions.run {
+//        ".*\\.(${joinToString("|")})$".toRegex(RegexOption.IGNORE_CASE)
+//    }
 
     private val dirFilter = { f: DocumentFile ->
         f.isDirectory && f.canRead()
     }
 
     private val audioFileFilter = { f: DocumentFile ->
-        f.isFile && f.canRead() && (f.type?.startsWith("audio/", true) == true ||
-                validSupportedFileExtension.matches(f.uri.toString()))
+        f.isFile && f.canRead() && f.isNonEmptyFile() &&
+                (f.type?.startsWith("audio/", true) == true ||
+                        validSupportedFileExtension.matches(f.name!!))
     }
 
-    private val singleFileFilter = { f: DocumentFile ->
-        f.isFile && f.canRead() && validSingleFileExtension.matches(f.uri.toString())
-    }
+//    private val singleFileFilter = { f: DocumentFile ->
+//        f.isFile && f.canRead() && validSingleFileExtension.matches(f.uri.toString())
+//    }
 
 //    private val nonLeafDirFilter = { f: DocumentFile ->
 //        // current f is a readable directory
@@ -84,7 +96,8 @@ class MediaScanner @Inject constructor(private val mediaAnalyzer: MediaAnalyzer)
         // current f is a readable directory
         // not containing any directory
         // and contains at least one supported file
-        f.isDirectory && f.canRead() && f.listFiles().run { !any(dirFilter) && any(audioFileFilter) }
+        f.isDirectory && f.canRead() && f.listFiles()
+            .run { !any(dirFilter) && any(audioFileFilter) }
     }
 
     suspend fun scan(
@@ -100,176 +113,203 @@ class MediaScanner @Inject constructor(private val mediaAnalyzer: MediaAnalyzer)
         // (root) -> (author|series) -> (book) -> file.(m4b|mp3|...)
         // (root) -> (author|series) -> (book) -> (chapter) -> file.(m4b|mp3|...)
 
-        val (levels, _) = (0 until maxLevels).fold(
-            Triple(
-                mutableListOf<List<DocumentFile>>(),
-                mutableSetOf<Uri>(),
+        val levels = (0 until maxLevels).fold(
+            Pair(
+                mutableMapOf<Int, LevelScan>(),
                 rootDir.listFiles().toList(),
             ),
-        ) { (acc, result, listing), _ ->
+        ) { r, level ->
 
-            if (listing.isEmpty()) return@fold Triple(acc, result, listing)
+            if (r.second.isEmpty()) return@fold r
 
-            val (singleFiles, filesOrDirs) = listing.partition(singleFileFilter)
+            val (acc, listing) = r
+            val (audioFiles, filesOrDirs) = listing.partition(audioFileFilter)
+            val (levelLeafDirs, nextLevel) = filesOrDirs.partition(leafDirFilter)
 
-            singleFiles.forEach { f ->
-                // (root) -> file.m4b
-                analyzeFile(context, f, existingFileFilter)?.let {
-                    result.add(f.uri)
-                    emit(it)
-                }
+            acc.getOrPut(level) { LevelScan(level) }.apply {
+                pendingFiles.addAll(audioFiles)
+                leafDirs.addAll(levelLeafDirs)
             }
 
-            val (levelLeafDirs, levelPending) = filesOrDirs.partition(leafDirFilter)
-            if (levelLeafDirs.isNotEmpty()) {
-                acc.add(levelLeafDirs)
+            Pair(
+                acc,
+                nextLevel.flatMap { l -> l.listFiles().toList() },
+            )
+        }.first.values.toList()
+
+        levels.flatMap { (level, pendingFiles, levelDirs) ->
+            logcat { "level=$level levelDirs=${levelDirs.joinToString { it.name ?: "" }} pendingFiles=${pendingFiles.size}" }
+
+            if (levelDirs.isEmpty() && pendingFiles.isEmpty()) return@flatMap emptyList()
+
+            levelDirs.flatMap { it.listFiles().filter(audioFileFilter) }
+                .mapNotNull { f -> analyzeFile(context, f, existingFileFilter) }
+                .plus(pendingFiles.mapNotNull { f -> analyzeFile(context, f, existingFileFilter) })
+                .consolidate(::consolidateMediaScannerResults)
+        }
+            .groupBy { it.chapters.isNotEmpty() }
+            .flatMap { (k, grp) ->
+                if (k) return@flatMap grp
+
+                // 0-chapter files in the same directory
+                consolidateSingleMediaScannerResults(grp)
             }
-
-            Triple(acc, result, levelPending.flatMap { l -> l.listFiles().toList() })
-        }
-
-        levels.flatMapIndexed { depth, levelDirs ->
-            levelDirs.mapNotNull { d -> processLevelLeafDir(context, d, existingFileFilter, depth) }
-                .groupBy { it.metadata.title }
-                .flatMap { (_, results) ->
-                    combineMediaScannerResults(results)?.let { listOf(it) } ?: emptyList()
+            .also {
+                logcat {
+                    "levels processed books=${
+                        it.joinToString { m ->
+                            m.metadata.title ?: ""
+                        }
+                    } (${it.size})"
                 }
-        }
-        .map { r -> emit(r) }
+            }
+            .map { r -> emit(r) }
     }
 
-    private suspend fun processLevelLeafDir(
-        context: Context,
-        leafDir: DocumentFile,
-        existingFileFilter: suspend (file: DocumentFile) -> Boolean,
-        @Suppress("UNUSED_PARAMETER") depth: Int,
+    private fun consolidateSingleMediaScannerResults(
+        results: Collection<MediaScannerResult>,
+    ): List<MediaScannerResult> {
+
+        return results.filter { it.root.isFile }
+            .groupBy { it.root.parentNames().joinToString("/") }
+            .mapNotNull { (grp, files) ->
+                if (files.size <= 1) return@mapNotNull files.firstOrNull()
+
+                logcat { "level=$grp files=${files.size}" }
+                consolidateMediaScannerResults(files)
+            }
+    }
+
+    private fun consolidateNonChapterizedSingleFiles(
+        singleFiles: Collection<MediaScannerResult>,
     ): MediaScannerResult? {
 
-        val pathSegments = (0..depth).fold(leafDir to mutableListOf<String>()) { (l, r), _ ->
-            r.add(l.name!!)
-            l.parentFile!! to r
-        }.second.reversed()
+        val sources: List<MediaScannerResult> = singleFiles
+            .filter { it.chapters.isEmpty() }
+            .sortedBy { it.root.name }
 
-        val leafFiles = leafDir.listFiles().filter(audioFileFilter)
+        if (sources.isEmpty()) {
+            return null
+        }
 
-        // directory contains multiple files
-        // scan metadata for all
-        val leafFilesWithMetadata = leafFiles.mapNotNull l@{ f ->
-            val m = analyzeFile(context, f, existingFileFilter) ?: return@l null
-            f to m
-        }.sortedBy { (f) -> f.name }
+        val chapters = sources.foldIndexed(
+            Duration.ZERO to mutableListOf<MediaScannerChapter>(),
+        ) { fileIdx, (startTime, list), r ->
+            list.add(
+                MediaScannerChapter(
+                    uri = r.root.uri,
+                    coverUri = r.coverUri,
+                    lastModified = r.root.lastModified(),
+                    chapter = MetaDataChapter(
+                        id = fileIdx + 1,
+                        startTime = startTime.toDouble(DurationUnit.SECONDS),
+                        endTime = (startTime + r.metadata.duration).toDouble(DurationUnit.SECONDS),
+                    ),
+                )
+            )
 
-        if (
-            leafFilesWithMetadata.all { (_, m) ->
-                m.metadata.chapters.isEmpty() && m.metadata.duration > Duration.ZERO
-            }
-        ) {
+            startTime to list
+        }.second.toList()
 
-            var startTime = 0.0
+        val baseBook = sources.first()
+        val root = baseBook.root.parentFile!!
+        val coverUri = chapters.firstOrNull { it.coverUri != null }?.coverUri
 
-            val chapters: List<MediaScannerChapter> =
-                leafFilesWithMetadata.mapIndexed { idx, (f, r) ->
-                    val endTime = startTime + r.metadata.duration.inWholeSeconds
-
-                    val chapter = MediaScannerChapter(
-                        uri = r.root.uri,
-                        coverUri = r.coverUri,
-                        chapter = MetaDataChapter.create(
-                            id = idx,
-                            title = r.metadata.title.ifEmpty {
-                                f.name?.substringBeforeLast(".")
-                                    ?: "Chapter ${idx + 1}"
-                            },
-                            artist = r.metadata.author,
-                            album = r.metadata.album,
-                            startTime = startTime,
-                            endTime = endTime,
-                        ),
-                    )
-
-                    startTime = endTime + 1
-                    chapter
-                }
-
-            val bookDuration = chapters.fold(Duration.ZERO) { acc, c ->
-                acc + c.chapter.duration
-            }
-
-            val bookTitle = leafFilesWithMetadata.firstOrNull {
-                it.second.metadata.album?.isNotEmpty() == true
-            }?.second?.metadata?.album ?: leafDir.name!!
-
-            return MediaScannerResult(
-                root = leafDir,
-                coverUri = null,
-                chapters = chapters,
-                metadata = Metadata(
-                    title = bookTitle,
-                    duration = bookDuration,
-                    author = null,
-                    album = null,
-                    chapters = emptyList(),
+        logcat { "level consolidated-singles: book=${root.name} chapters=${chapters.size}" }
+        return MediaScannerResult(
+            root = root,
+            coverUri = coverUri,
+            chapters = chapters,
+            metadata = baseBook.metadata.run {
+                copy(
+                    title = root.name,
+                    duration = chapters.fold(Duration.ZERO) { acc, c -> acc + c.chapter.duration },
+                    chapters = chapters.map { c -> c.chapter },
                     result = MetaDataScanResult(
                         streams = emptyList(),
                         chapters = emptyList(),
                         format = null,
                     ),
-                ),
-            )
+                )
+            },
+        )
+    }
+
+    private fun consolidateChapterizedSplitFiles(
+        chapterized: Collection<MediaScannerResult>,
+    ): MediaScannerResult {
+        val chapters: List<MediaScannerChapter> = chapterized.foldIndexed(
+            Duration.ZERO to mutableListOf<MediaScannerChapter>(),
+        ) { fileIdx, (startTime, list), r ->
+
+            val newChapters = r.chapters.sortedBy { it.chapter.id }
+                .map { c ->
+                    c.copy(
+                        chapter = c.chapter.copy(
+                            id = fileIdx + c.chapter.id,
+                            startTime = startTime.toDouble(DurationUnit.SECONDS),
+                            endTime = (startTime + c.chapter.duration).toDouble(DurationUnit.SECONDS),
+                            tags = c.chapter.titleTag?.let { titleTag ->
+                                c.chapter.tags!! + mapOf(
+                                    titleTag to listOfNotNull(
+                                        (fileIdx + 1),
+                                        c.chapter.title
+                                    ).joinToString(" - ")
+                                )
+                            } ?: c.chapter.tags,
+                        )
+                    )
+                }
+
+            list.addAll(newChapters)
+
+            val nextStartTime = newChapters.last().chapter.end + 1.milliseconds
+            nextStartTime to list
+        }.second.toList()
+
+        val firstBook = chapterized.first()
+
+        val root = if (firstBook.root.isFile)
+            firstBook.root.parentFile!!
+        else firstBook.root
+
+        val coverUri = chapterized.firstOrNull { it.coverUri != null }?.coverUri
+
+        val metadata = firstBook.metadata.copy(
+            duration = chapters.fold(Duration.ZERO) { acc, c -> acc + c.chapter.duration },
+            chapters = chapters.map { c -> c.chapter },
+            result = MetaDataScanResult(
+                streams = emptyList(),
+                chapters = emptyList(),
+                format = null,
+            ),
+        )
+
+        logcat { "level consolidated-chapterized: book=${metadata.title} chapters=${chapters.size}" }
+        return MediaScannerResult(
+            root = root,
+            coverUri = coverUri,
+            chapters = chapters,
+            metadata = metadata,
+        )
+    }
+
+    private fun consolidateMediaScannerResults(results: Collection<MediaScannerResult>): MediaScannerResult? {
+        if (results.isEmpty()) return null
+
+        // prefer using chapterized files (m4b) with 1 chapter per file
+        val (chapterized, pendingFiles) = results.partition { it.chapters.isNotEmpty() }
+
+        if (chapterized.isNotEmpty()) {
+            return consolidateChapterizedSplitFiles(chapterized)
         }
 
-        leafFilesWithMetadata.forEach {
-            logcat(LogPriority.WARN) { "Skipped: ${it.first.name} (${pathSegments.joinToString(" > ")})" }
+        // merge files with 0 chapters per file
+        if (pendingFiles.isNotEmpty()) {
+            return consolidateNonChapterizedSingleFiles(pendingFiles)
         }
 
         return null
-    }
-
-    private fun combineMediaScannerResults(results: List<MediaScannerResult>): MediaScannerResult? {
-        if (results.size <= 1) {
-            return results.firstOrNull()
-        }
-
-        // merge books with same name
-        logcat { "COLLATE: book=${results.first().metadata.title} chapters=${results.size}" }
-        var startTime = Duration.ZERO
-
-        val chapters: List<MediaScannerChapter> =
-            results.flatMapIndexed { bookIdx, b ->
-                val offsetIdx = bookIdx * (if (bookIdx > 0)
-                    results[bookIdx - 1].chapters.size + 1
-                else 0)
-
-                b.chapters.mapIndexed { chapterIdx, r ->
-                    val endTime = startTime + r.chapter.duration
-
-                    val chapter = MediaScannerChapter(
-                        uri = r.uri,
-                        coverUri = r.coverUri,
-                        chapter = r.chapter.copy(
-                            id = offsetIdx + chapterIdx,
-                            startTime = startTime.toDouble(DurationUnit.SECONDS),
-                            endTime = endTime.toDouble(DurationUnit.SECONDS),
-                        ),
-                    )
-
-                    startTime = endTime + 1.milliseconds
-                    chapter
-                }
-            }
-
-        val bookDuration = chapters.fold(Duration.ZERO) { acc, c ->
-            acc + c.chapter.duration
-        }
-
-        return results.first().run {
-            copy(
-                chapters = chapters,
-                metadata = metadata.copy(
-                    duration = bookDuration,
-                )
-            )
-        }
     }
 
     private suspend fun analyzeFile(
@@ -277,20 +317,63 @@ class MediaScanner @Inject constructor(private val mediaAnalyzer: MediaAnalyzer)
         file: DocumentFile,
         existingFileFilter: suspend (file: DocumentFile) -> Boolean,
     ): MediaScannerResult? {
+
         if (file.type?.startsWith("audio/", true) != true &&
-            !validSupportedFileExtension.matches(file.uri.toString())
+            !validSupportedFileExtension.matches(file.name!!)
         ) return null
 
         if (!existingFileFilter(file)) return null
-        val metadata = mediaAnalyzer.analyze(context, file.uri) ?: return null
+        val metadata = mediaAnalyzer.analyze(context, file) ?: return null
 
         val coverFile = coverScanner.scanCover(
             context,
-            file.parentFile?.uri,
-            file.uri,
+            file,
             metadata.hash,
         )
 
-        return MediaScannerResult.fromSingleFileMetadata(file, coverFile, metadata)
+        return MediaScannerResult.create(file, coverFile, metadata)
+    }
+}
+
+fun Collection<MediaScannerResult>.consolidate(
+    consolidator: (Collection<MediaScannerResult>) -> MediaScannerResult?,
+): List<MediaScannerResult> {
+
+    return groupBy { r ->
+        listOfNotNull(
+            r.metadata.title ?: r.root.name,
+            r.metadata.author ?: r.root.parentFile?.name,
+            r.metadata.album,
+        ).joinToString()
+    }
+        .flatMap { (k, grp) ->
+            if (grp.size <= 1) return@flatMap grp
+
+            val chapterized = grp.filter {
+                it.chapters.size > 1 && it.metadata.duration > Duration.ZERO
+            }.maxByOrNull { it.chapters.size }
+
+            if (chapterized != null) {
+                // if chapterized files exists, use file with most the chapters and ignore all others
+                logcat { "FOUND level book=${k} USED CHAPTERIZED chapters=${chapterized.chapters.size}" }
+                return@flatMap listOf(chapterized)
+            }
+
+            return@flatMap listOfNotNull(consolidator(grp))
+        }
+}
+
+
+fun DocumentFile.parentNames(max: Int = 4) = sequence {
+    var d: DocumentFile? = parentFile
+    var i = 0
+
+    while (i < max && d?.isDirectory == true && d.canRead()) {
+        d.name?.let {
+            yield(it)
+            i++
+        }
+
+        d = d.parentFile
     }
 }

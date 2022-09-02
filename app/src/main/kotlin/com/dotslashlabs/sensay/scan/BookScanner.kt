@@ -73,7 +73,7 @@ fun MediaScannerResult.toBookWithChapters() = BookWithChapters(
         coverUri = coverUri,
         author = metadata.author,
         series = metadata.album,
-        title = metadata.title,
+        title = metadata.title ?: fileName,
         duration = ContentDuration(metadata.duration),
         hash = metadata.hash,
     ),

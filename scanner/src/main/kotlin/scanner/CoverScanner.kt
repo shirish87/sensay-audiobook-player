@@ -18,13 +18,12 @@ class CoverScanner @Inject constructor() {
 
     suspend fun scanCover(
         context: Context,
-        folderUri: Uri?,
-        uri: Uri,
+        file: DocumentFile,
         coverFileId: String,
         forceCreate: Boolean = false,
-    ): DocumentFile? = folderUri?.let { bookFolderUri ->
+    ): DocumentFile? = file.parentFile?.uri?.let { bookFolderUri ->
         scanCoverFromDisk(context, bookFolderUri, coverFileId, forceCreate)
-    } ?: scanForEmbeddedCover(context, uri, coverFileId, forceCreate)
+    } ?: scanForEmbeddedCover(context, file.uri, coverFileId, forceCreate)
 
     suspend fun scanCoverFromDisk(
         context: Context,
