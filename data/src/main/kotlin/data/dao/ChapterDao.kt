@@ -1,5 +1,6 @@
 package data.dao
 
+import android.net.Uri
 import androidx.room.*
 import data.entity.*
 import kotlinx.coroutines.flow.Flow
@@ -14,6 +15,9 @@ interface ChapterDao : BaseDao<Chapter> {
 
     @Delete
     suspend fun deleteBookChapterCrossRefs(refs: Collection<BookChapterCrossRef>): Int
+
+    @Query("SELECT * FROM Chapter WHERE uri = :uri")
+    fun chaptersByUri(uri: Uri): Flow<List<Chapter>>
 
     @Query("SELECT * FROM Chapter")
     fun chapters(): Flow<List<Chapter>>

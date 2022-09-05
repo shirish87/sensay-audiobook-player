@@ -1,5 +1,6 @@
 package data.repository
 
+import android.net.Uri
 import data.dao.ChapterDao
 import data.entity.BookChapterCrossRef
 import data.entity.BookId
@@ -10,6 +11,9 @@ import javax.inject.Inject
 class ChapterRepository @Inject constructor(
     private val chapterDao: ChapterDao,
 ) {
+
+    fun chaptersByUri(uri: Uri) = chapterDao.chaptersByUri(uri)
+
     fun chaptersCount() = chapterDao.chaptersCount()
 
     fun bookWithChapters(bookId: BookId) = chapterDao.bookWithChapters(bookId)

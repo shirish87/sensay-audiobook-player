@@ -63,6 +63,10 @@ data class MetaDataChapter(
     val start: Duration get() = startTime.seconds
     val end: Duration get() = endTime.seconds
 
+    val artist by lazy { tags?.find(TagType.Artist) }
+    val albumArtist by lazy { tags?.find(TagType.AlbumArtist) }
+    val album by lazy { tags?.find(TagType.Album) }
+
     val title by lazy {
         tags?.find(TagType.Title) ?: (id + 1).toString()
     }

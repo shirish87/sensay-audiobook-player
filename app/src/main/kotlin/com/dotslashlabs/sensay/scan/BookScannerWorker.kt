@@ -74,7 +74,13 @@ class BookScannerWorker @AssistedInject constructor(
             activeSources,
             mediaScanner,
             batchSize,
-            bookFileFilter = { file -> (store.bookByUri(file.uri).firstOrNull() == null) },
+            bookFileFilter = filter@{ file ->
+                val chapters = store.chaptersByUri(file.uri).firstOrNull() ?: return@filter true
+                val lastKnownModified = chapters.mapNotNull { it.lastModified }
+                    .maxOrNull() ?: return@filter true
+
+                (file.lastModified() > lastKnownModified.toEpochMilli())
+            },
         ) { sourceId, sourceBooks ->
 
             store.createBooksWithChapters(

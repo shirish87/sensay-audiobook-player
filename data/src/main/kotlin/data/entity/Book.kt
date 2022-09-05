@@ -35,6 +35,7 @@ data class Book(
     val narrator: String? = null,
     val year: String? = null,
     val coverUri: Uri? = null,
+    val lastModified: Instant? = null,
 
     val createdAt: Instant = Instant.now(),
 ) : Parcelable {

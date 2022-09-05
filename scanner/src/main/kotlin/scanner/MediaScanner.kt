@@ -5,6 +5,7 @@ import android.net.Uri
 import androidx.documentfile.provider.DocumentFile
 import kotlinx.coroutines.flow.flow
 import logcat.logcat
+import java.time.Instant
 import javax.inject.Inject
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
@@ -14,7 +15,7 @@ data class MediaScannerChapter(
     val uri: Uri,
     val coverUri: Uri?,
     val chapter: MetaDataChapter,
-    val lastModified: Long,
+    val lastModified: Instant,
 )
 
 data class MediaScannerResult(
@@ -41,7 +42,7 @@ data class MediaScannerResult(
                     uri = f.uri,
                     coverUri = coverFile?.uri,
                     chapter = it,
-                    lastModified = f.lastModified(),
+                    lastModified = Instant.ofEpochMilli(f.lastModified()),
                 )
             }
         )
@@ -103,7 +104,7 @@ class MediaScanner @Inject constructor(private val mediaAnalyzer: MediaAnalyzer)
     suspend fun scan(
         context: Context,
         rootDir: DocumentFile,
-        existingFileFilter: suspend (file: DocumentFile) -> Boolean,
+        acceptFileFilter: suspend (file: DocumentFile) -> Boolean,
         maxLevels: Int = 4,
     ) = flow {
         if (!rootDir.isDirectory || !rootDir.canRead()) return@flow
@@ -143,8 +144,8 @@ class MediaScanner @Inject constructor(private val mediaAnalyzer: MediaAnalyzer)
             if (levelDirs.isEmpty() && pendingFiles.isEmpty()) return@flatMap emptyList()
 
             levelDirs.flatMap { it.listFiles().filter(audioFileFilter) }
-                .mapNotNull { f -> analyzeFile(context, f, existingFileFilter) }
-                .plus(pendingFiles.mapNotNull { f -> analyzeFile(context, f, existingFileFilter) })
+                .mapNotNull { f -> analyzeFile(context, f, acceptFileFilter) }
+                .plus(pendingFiles.mapNotNull { f -> analyzeFile(context, f, acceptFileFilter) })
                 .consolidate(::consolidateMediaScannerResults)
         }
             .groupBy { it.chapters.isNotEmpty() }
@@ -154,7 +155,7 @@ class MediaScanner @Inject constructor(private val mediaAnalyzer: MediaAnalyzer)
                 // 0-chapter files in the same directory
                 consolidateSingleMediaScannerResults(grp)
             }
-            .filter { existingFileFilter(it.root) }
+            .filter { acceptFileFilter(it.root) }
             .also {
                 logcat {
                     "levels processed books=${
@@ -208,7 +209,7 @@ class MediaScanner @Inject constructor(private val mediaAnalyzer: MediaAnalyzer)
             val newChapter = MediaScannerChapter(
                 uri = r.root.uri,
                 coverUri = r.coverUri,
-                lastModified = r.root.lastModified(),
+                lastModified = Instant.ofEpochMilli(r.root.lastModified()),
                 chapter = MetaDataChapter(
                     id = fileIdx,
                     startTime = startTime.toDouble(DurationUnit.SECONDS),
@@ -327,14 +328,14 @@ class MediaScanner @Inject constructor(private val mediaAnalyzer: MediaAnalyzer)
     private suspend fun analyzeFile(
         context: Context,
         file: DocumentFile,
-        existingFileFilter: suspend (file: DocumentFile) -> Boolean,
+        acceptFileFilter: suspend (file: DocumentFile) -> Boolean,
     ): MediaScannerResult? {
 
         if (file.type?.startsWith("audio/", true) != true &&
             !validSupportedFileExtension.matches(file.name!!)
         ) return null
 
-        if (!existingFileFilter(file)) return null
+        if (!acceptFileFilter(file)) return null
         val metadata = mediaAnalyzer.analyze(context, file) ?: return null
 
         val coverFile = coverScanner.scanCover(

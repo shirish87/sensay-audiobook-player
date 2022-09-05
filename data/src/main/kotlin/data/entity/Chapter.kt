@@ -28,7 +28,9 @@ data class Chapter(
     val title: String,
     val description: String? = null,
     val author: String? = null,
+    val compilation: String? = null,
     val coverUri: Uri? = null,
+    val lastModified: Instant? = null,
 
     val duration: ContentDuration,
     val start: ContentDuration,

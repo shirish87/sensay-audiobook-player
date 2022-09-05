@@ -76,6 +76,7 @@ fun MediaScannerResult.toBookWithChapters() = BookWithChapters(
         title = metadata.title ?: fileName,
         duration = ContentDuration(metadata.duration),
         hash = metadata.hash,
+        lastModified = chapters.maxOf { it.lastModified },
     ),
     chapters = chapters.map { c ->
         Chapter(
@@ -84,6 +85,9 @@ fun MediaScannerResult.toBookWithChapters() = BookWithChapters(
             hash = c.chapter.hash,
             trackId = c.chapter.id,
             title = c.chapter.title,
+            author = c.chapter.artist ?: c.chapter.albumArtist,
+            compilation = c.chapter.album,
+            lastModified = c.lastModified,
             start = ContentDuration(c.chapter.start),
             end = ContentDuration(c.chapter.end),
             duration = ContentDuration(c.chapter.duration),
