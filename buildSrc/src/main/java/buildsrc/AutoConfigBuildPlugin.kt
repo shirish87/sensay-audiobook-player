@@ -45,8 +45,11 @@ fun Project.applyCommonDependencies(@Suppress("UNUSED_PARAMETER") plugin: Plugin
             add("implementation", Libraries.Compose.composeToolingPreview)
             add("debugImplementation", Libraries.Compose.composeTooling)
 
-            // Material3
+            // Material
             add("implementation", Libraries.Material.material)
+            add("implementation", Libraries.Compose.material)
+
+            // Material3
             add("implementation", Libraries.Compose.material3)
             add("implementation", Libraries.Compose.material3WindowSizeClass)
 

@@ -66,8 +66,8 @@ object Libraries {
     }
 
     object Compose {
-        const val version = "1.2.1"
-        private const val materialComposeVersion = "1.0.0-beta01"
+        private const val version = "1.2.1"
+        private const val material3ComposeVersion = "1.0.0-beta01"
 
         const val activityCompose = "androidx.activity:activity-compose:1.5.1"
         const val navigationCompose = "androidx.navigation:navigation-compose:2.5.1"
@@ -75,8 +75,11 @@ object Libraries {
         const val foundation = "androidx.compose.foundation:foundation:$version"
         const val constraintLayout = "androidx.constraintlayout:constraintlayout-compose:1.0.1"
 
-        const val material3 = "androidx.compose.material3:material3:$materialComposeVersion"
-        const val material3WindowSizeClass = "androidx.compose.material3:material3-window-size-class:$materialComposeVersion"
+
+        const val material3 = "androidx.compose.material3:material3:$material3ComposeVersion"
+        const val material3WindowSizeClass = "androidx.compose.material3:material3-window-size-class:$material3ComposeVersion"
+
+        const val material = "androidx.compose.material:material:$version"
         const val materialIconsExtended = "androidx.compose.material:material-icons-extended:$version"
 
         const val composeTooling = "androidx.compose.ui:ui-tooling:$version"

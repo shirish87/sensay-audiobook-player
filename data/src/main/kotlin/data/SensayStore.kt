@@ -20,6 +20,7 @@ class SensayStore @Inject constructor(
     private val tagRepository: TagRepository,
     private val bookProgressRepository: BookProgressRepository,
     private val sourceRepository: SourceRepository,
+    private val bookmarkRepository: BookmarkRepository,
 ) {
 
     suspend fun createBooksWithChapters(
@@ -184,6 +185,10 @@ class SensayStore @Inject constructor(
 
     suspend fun updateBookProgress(bookProgress: BookProgress) =
         bookProgressRepository.update(bookProgress)
+
+    suspend fun createBookmark(bookmark: Bookmark) = bookmarkRepository.createBookmark(bookmark)
+
+    fun bookmarksWithChapters(bookId: BookId) = bookmarkRepository.bookmarksWithChapters(bookId)
 }
 
 @Transaction

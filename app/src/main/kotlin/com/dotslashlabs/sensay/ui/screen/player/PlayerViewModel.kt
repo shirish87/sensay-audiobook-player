@@ -20,6 +20,7 @@ import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import data.SensayStore
+import data.entity.*
 import data.util.ContentDuration
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -43,6 +44,8 @@ data class PlayerViewState(
     val media: Media? = null,
 
     val playbackConnectionState: Async<PlaybackConnectionState> = Uninitialized,
+
+    val bookmarks: Async<List<BookmarkWithChapter>> = Uninitialized,
 ) : MavericksState {
 
     constructor(args: PlayerViewArgs) : this(bookId = args.bookId)
@@ -74,7 +77,7 @@ data class PlayerViewState(
         } else -1
     } ?: -1
 
-    private val playerMedia: Media? = if (playerMediaIdx != -1) {
+    val playerMedia: Media? = if (playerMediaIdx != -1) {
         mediaList[playerMediaIdx]
     } else null
 
@@ -90,6 +93,9 @@ data class PlayerViewState(
 
     val hasPreviousChapter = (playerMediaIdx - 1 >= 0 && playerMediaIdx < mediaList.size)
     val hasNextChapter = (playerMediaIdx >= 0 && playerMediaIdx + 1 < mediaList.size)
+
+    val isBookmarkEnabled =
+        (isActiveMedia && ((progressPair.first ?: 0L) >= 0 && (progressPair.second ?: 0L) > 0))
 
     fun formatTime(value: Long?): String = when (value) {
         null -> ""
@@ -107,11 +113,14 @@ interface PlayerActions {
     fun seekBack(): Unit?
     fun seekForward(): Unit?
     fun seekTo(fraction: Float, ofDurationMs: Long): Unit?
+    fun seekToPosition(mediaId: String, positionMs: Long, durationMs: Long): Unit?
     fun pause(): Unit?
     fun play(): Unit?
 
     fun setSelectedMediaId(mediaId: String)
     fun resetSelectedMediaId()
+
+    fun createBookmark()
 }
 
 class PlayerViewModel @AssistedInject constructor(
@@ -123,6 +132,9 @@ class PlayerViewModel @AssistedInject constructor(
 
     init {
         val bookId = state.bookId
+
+        store.bookmarksWithChapters(bookId)
+            .execute(retainValue = PlayerViewState::bookmarks) { copy(bookmarks = it) }
 
         viewModelScope.launch(Dispatchers.IO) {
             val progress = store.bookProgressWithBookAndChapters(bookId).first()
@@ -260,6 +272,19 @@ class PlayerViewModel @AssistedInject constructor(
         }
     }
 
+    override fun seekToPosition(mediaId: String, positionMs: Long, durationMs: Long) =
+        withState { state ->
+            val mediaIdx = state.mediaList.indexOfFirst { it.mediaId == mediaId }
+            if (mediaIdx == -1) return@withState
+
+            val media = state.mediaList[mediaIdx]
+                .copy(chapterProgress = ContentDuration.ms(positionMs))
+
+            setState { copy(media = media) }
+            prepareMediaItems()
+            seekTo((positionMs.toFloat() / maxOf(1L, durationMs)), durationMs)
+        }
+
     override fun pause() = player?.pause()
 
     override fun play() {
@@ -271,11 +296,32 @@ class PlayerViewModel @AssistedInject constructor(
         }
     }
 
+    override fun createBookmark() = withState { state ->
+        val playerMedia = state.playerMedia ?: return@withState
+
+        val (positionMs, durationMs) = state.progressPair
+        val chapterPosition = positionMs ?: return@withState
+        val chapterDuration = durationMs ?: return@withState
+
+        viewModelScope.launch (Dispatchers.IO) {
+            store.createBookmark(
+                Bookmark(
+                    bookmarkType = BookmarkType.USER,
+                    chapterId = playerMedia.chapterId,
+                    bookId = playerMedia.bookId,
+                    chapterPosition = ContentDuration.ms(chapterPosition),
+                    chapterDuration = ContentDuration.ms(chapterDuration),
+                    title = "${playerMedia.chapterTitle} (${playerMedia.currentChapter}/${playerMedia.totalChapters})",
+                )
+            )
+        }
+    }
+
     private fun prepareMediaItems() = withState { state ->
         val selectedMedia = state.media ?: return@withState
 
         // already set
-        if (state.playerMediaId == selectedMedia.mediaId) return@withState
+        // if (state.playerMediaId == selectedMedia.mediaId) return@withState
 
         val startPositionMs = selectedMedia.chapterProgress.ms
         val playerMediaIdx = state.playerMediaIds.indexOf(selectedMedia.mediaId)

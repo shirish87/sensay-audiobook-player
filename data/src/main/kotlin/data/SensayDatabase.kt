@@ -17,6 +17,7 @@ import data.util.DataTypeConverters
         Tag::class,
         BookProgress::class,
         Source::class,
+        Bookmark::class,
         BookChapterCrossRef::class,
         BookShelfCrossRef::class,
         BookTagCrossRef::class,
@@ -44,4 +45,5 @@ abstract class SensayDatabase : RoomDatabase() {
     abstract fun tagDao(): TagDao
     abstract fun bookProgressDao(): BookProgressDao
     abstract fun sourceDao(): SourceDao
+    abstract fun bookmarkDao(): BookmarkDao
 }

@@ -93,6 +93,9 @@ class SensayPlayer(internal val player: Player) {
     val isPlaying: Boolean
         get() = player.isPlaying
 
+    val currentPosition: Long
+        get() = player.currentPosition
+
     fun prepare() = player.prepare()
     fun play() = player.play()
     fun pause() = player.pause()

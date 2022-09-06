@@ -8,6 +8,8 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.ExperimentalMaterialApi
+import androidx.compose.material.ModalBottomSheetState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.outlined.Undo
@@ -63,6 +65,7 @@ object PlayerScreen : SensayScreen {
     } ?: Unit
 }
 
+@OptIn(ExperimentalMaterialApi::class)
 @Composable
 fun PlayerContent(
     argsBundle: Bundle,
@@ -85,15 +88,18 @@ fun PlayerContent(
         }
     }
 
-    PlayerContentView(viewModel, state, useLandscapeLayout, onBackPress)
+    PlayerBottomSheet(viewModel, state) { bottomSheetState ->
+        PlayerContentView(viewModel, state, bottomSheetState, useLandscapeLayout, onBackPress)
+    }
 }
 
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterialApi::class)
 @Composable
 fun PlayerContentView(
     playerActions: PlayerActions,
     state: PlayerViewState,
+    bottomSheetState: ModalBottomSheetState,
     useLandscapeLayout: Boolean,
     onBackPress: () -> Unit,
 ) {
@@ -109,7 +115,7 @@ fun PlayerContentView(
             Scaffold(
                 containerColor = Color.Transparent,
                 topBar = {
-                    PlayerAppBar(onBackPress = onBackPress)
+                    PlayerAppBar(playerActions, state, bottomSheetState, onBackPress = onBackPress)
                 },
                 content = { contentPadding ->
                     if (useLandscapeLayout) {
@@ -578,6 +584,7 @@ fun ExposedDropdownMenuDefaults.disabledTextFieldColors(): TextFieldColors {
 }
 
 
+@OptIn(ExperimentalMaterialApi::class)
 @Preview(showBackground = true)
 @Composable
 fun PlayerContentPreview() {
@@ -658,6 +665,10 @@ fun PlayerContentPreview() {
             TODO("Not yet implemented")
         }
 
+        override fun seekToPosition(mediaId: String, positionMs: Long, durationMs: Long): Unit? {
+            TODO("Not yet implemented")
+        }
+
         override fun pause(): Unit? {
             TODO("Not yet implemented")
         }
@@ -673,12 +684,19 @@ fun PlayerContentPreview() {
         override fun resetSelectedMediaId() {
             TODO("Not yet implemented")
         }
+
+        override fun createBookmark() {
+            TODO("Not yet implemented")
+        }
     }
 
-    PlayerContentView(
-        playerActions,
-        state,
-        useLandscapeLayout = false,
-        onBackPress = {},
-    )
+    PlayerBottomSheet(playerActions, state) { bottomSheetState ->
+        PlayerContentView(
+            playerActions,
+            state,
+            bottomSheetState,
+            useLandscapeLayout = false,
+            onBackPress = {},
+        )
+    }
 }
