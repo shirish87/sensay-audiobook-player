@@ -161,10 +161,10 @@ fun PlayerContentViewNormal(
         ) {
             PlayerImage(
                 coverUri = state.coverUri,
+                onClick = onBackPress,
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(horizontal = 40.dp, vertical = 20.dp)
-                    .clickable { onBackPress() },
+                    .padding(horizontal = 40.dp, vertical = 20.dp),
             )
         }
 
@@ -226,10 +226,10 @@ fun PlayerContentViewLandscape(
         ) {
             PlayerImage(
                 coverUri = state.coverUri,
+                onClick = onBackPress,
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(20.dp)
-                    .clickable { onBackPress() },
+                    .padding(20.dp),
             )
         }
 
@@ -264,6 +264,7 @@ fun PlayerContentViewLandscape(
 private fun PlayerImage(
     coverUri: Uri?,
     modifier: Modifier = Modifier,
+    onClick: () -> Unit,
     drawableResId: Int = R.drawable.empty,
 ) {
     CoverImage(
@@ -272,7 +273,8 @@ private fun PlayerImage(
         modifier = modifier
             .sizeIn(maxWidth = 500.dp, maxHeight = 500.dp)
             .aspectRatio(1f)
-            .clip(MaterialTheme.shapes.medium),
+            .clip(MaterialTheme.shapes.medium)
+            .clickable(onClick = onClick),
     )
 }
 
