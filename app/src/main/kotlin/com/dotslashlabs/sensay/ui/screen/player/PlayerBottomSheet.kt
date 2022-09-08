@@ -124,6 +124,6 @@ fun PlayerBottomSheet(
         },
         sheetBackgroundColor = MaterialTheme.colorScheme.surface,
         sheetContentColor = MaterialTheme.colorScheme.onSurface,
-        scrimColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.32f),
+        scrimColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.5f),
     )
 }
