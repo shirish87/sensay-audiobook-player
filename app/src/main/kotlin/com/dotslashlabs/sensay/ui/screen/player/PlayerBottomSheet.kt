@@ -64,7 +64,7 @@ fun PlayerBottomSheet(
         sheetShape = RoundedCornerShape(topEnd = 16.dp, topStart = 16.dp),
         sheetContent = {
 
-            LazyColumn(modifier = Modifier.systemBarsPadding()) {
+            LazyColumn(modifier = Modifier.systemBarsPadding().padding(bottom = 20.dp)) {
                 stickyHeader {
                     Text(
                         "Bookmarks",
@@ -122,5 +122,8 @@ fun PlayerBottomSheet(
                 }
             }
         },
+        sheetBackgroundColor = MaterialTheme.colorScheme.surface,
+        sheetContentColor = MaterialTheme.colorScheme.onSurface,
+        scrimColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.32f),
     )
 }
