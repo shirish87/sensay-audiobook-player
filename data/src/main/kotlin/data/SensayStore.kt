@@ -174,6 +174,7 @@ class SensayStore @Inject constructor(
                 tagRepository.deleteTags(bookIds)
                 bookProgressRepository.deleteBooksProgress(bookIds)
                 chapterRepository.deleteChapters(bookIds)
+                bookmarkRepository.deleteBookmarksForBooks(bookIds)
                 bookRepository.deleteBooks(books)
 
                 true
@@ -187,6 +188,9 @@ class SensayStore @Inject constructor(
         bookProgressRepository.update(bookProgress)
 
     suspend fun createBookmark(bookmark: Bookmark) = bookmarkRepository.createBookmark(bookmark)
+
+    suspend fun deleteBookmark(bookmark: Bookmark) =
+        bookmarkRepository.deleteBookmarks(listOf(bookmark))
 
     fun bookmarksWithChapters(bookId: BookId) = bookmarkRepository.bookmarksWithChapters(bookId)
 }

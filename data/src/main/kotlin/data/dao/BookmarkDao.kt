@@ -19,4 +19,8 @@ interface BookmarkDao : BaseDao<Bookmark> {
 
     @Query("SELECT COUNT(*) FROM Bookmark")
     fun bookmarksCount(): Flow<Int>
+
+    @Transaction
+    @Query("DELETE FROM Bookmark WHERE bookId IN (:bookIds)")
+    suspend fun deleteBookmarksForBooks(bookIds: Collection<BookId>): Int
 }

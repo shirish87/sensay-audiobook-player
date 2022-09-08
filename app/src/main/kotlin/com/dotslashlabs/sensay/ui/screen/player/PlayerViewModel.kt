@@ -121,6 +121,7 @@ interface PlayerActions {
     fun resetSelectedMediaId()
 
     fun createBookmark()
+    fun deleteBookmark(bookmark: Bookmark)
 }
 
 class PlayerViewModel @AssistedInject constructor(
@@ -311,9 +312,15 @@ class PlayerViewModel @AssistedInject constructor(
                     bookId = playerMedia.bookId,
                     chapterPosition = ContentDuration.ms(chapterPosition),
                     chapterDuration = ContentDuration.ms(chapterDuration),
-                    title = "${playerMedia.chapterTitle} (${playerMedia.currentChapter}/${playerMedia.totalChapters})",
+                    title = playerMedia.chapterTitle,
                 )
             )
+        }
+    }
+
+    override fun deleteBookmark(bookmark: Bookmark) {
+        viewModelScope.launch (Dispatchers.IO) {
+            store.deleteBookmark(bookmark)
         }
     }
 

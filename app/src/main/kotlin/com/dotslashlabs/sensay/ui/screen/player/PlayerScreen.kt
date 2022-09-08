@@ -50,6 +50,7 @@ import com.dotslashlabs.sensay.util.verticalGradientScrim
 import data.BookCategory
 import data.entity.Book
 import data.entity.BookProgress
+import data.entity.Bookmark
 import data.entity.Chapter
 import data.util.ContentDuration
 import kotlin.time.Duration.Companion.hours
@@ -686,6 +687,10 @@ fun PlayerContentPreview() {
         }
 
         override fun createBookmark() {
+            TODO("Not yet implemented")
+        }
+
+        override fun deleteBookmark(bookmark: Bookmark) {
             TODO("Not yet implemented")
         }
     }
