@@ -1,5 +1,6 @@
 package com.dotslashlabs.sensay.ui.screen.player
 
+import android.widget.Toast
 import androidx.compose.material.ContentAlpha
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.ModalBottomSheetState
@@ -13,6 +14,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
@@ -25,6 +27,8 @@ fun PlayerAppBar(
     scope: CoroutineScope = rememberCoroutineScope(),
     onBackPress: () -> Unit,
 ) {
+
+    val context = LocalContext.current
 
     SmallTopAppBar(
         colors = TopAppBarDefaults.smallTopAppBarColors(containerColor = Color.Transparent),
@@ -39,7 +43,12 @@ fun PlayerAppBar(
         },
         actions = {
             IconButton(
-                onClick = if (!state.isBookmarkEnabled) ({}) else playerActions::createBookmark,
+                onClick = {
+                    if (!state.isBookmarkEnabled) return@IconButton
+
+                    playerActions.createBookmark()
+                    Toast.makeText(context, "Saved bookmark", Toast.LENGTH_SHORT).show()
+                },
                 modifier = Modifier.alpha(if (!state.isBookmarkEnabled) ContentAlpha.disabled else 1F),
             ) {
                 Icon(
