@@ -3,6 +3,7 @@ package com.dotslashlabs.sensay.ui.screen.sources
 import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
+import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.lazy.LazyColumn
@@ -11,8 +12,7 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -27,7 +27,9 @@ import com.dotslashlabs.sensay.ui.SensayAppState
 import com.dotslashlabs.sensay.ui.SensayAppViewModel
 import com.dotslashlabs.sensay.ui.screen.Destination
 import com.dotslashlabs.sensay.ui.screen.SensayScreen
+import com.dotslashlabs.sensay.ui.screen.common.ConfirmDialog
 import com.dotslashlabs.sensay.ui.screen.common.SensayFrame
+import data.entity.Source
 
 object SourcesScreen : SensayScreen {
     @Composable
@@ -71,6 +73,23 @@ fun SourcesContent(
 
         viewModel.addAudiobookFolders(setOf(uri)).invokeOnCompletion {
             appViewModel.scanFolders(context)
+        }
+    }
+
+    val data: MutableState<Source?> = remember { mutableStateOf(null) }
+
+    ConfirmDialog(
+        data,
+        title = { _ -> "Delete Source" },
+        message = { d -> "Are you sure you want to delete ${d?.displayName?.let { "'$it'" } ?: "this"} source?" },
+        confirmLabel = "Delete",
+        cancelLabel = "Cancel",
+    ) {
+        val source = it ?: return@ConfirmDialog
+
+        viewModel.deleteSource(source.sourceId).invokeOnCompletion {
+            appViewModel.scanFolders(context)
+            Toast.makeText(context, "Deleted source", Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -149,11 +168,7 @@ fun SourcesContent(
                             }
                         },
                         trailingContent = {
-                            IconButton(onClick = {
-                                viewModel.deleteSource(item.sourceId).invokeOnCompletion {
-                                    appViewModel.scanFolders(context)
-                                }
-                            }) {
+                            IconButton(onClick = { data.value = item }) {
                                 Icon(
                                     imageVector = Icons.Filled.Delete,
                                     contentDescription = "",
