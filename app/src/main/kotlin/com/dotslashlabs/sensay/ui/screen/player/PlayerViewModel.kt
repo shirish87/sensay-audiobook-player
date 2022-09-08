@@ -20,7 +20,9 @@ import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import data.SensayStore
-import data.entity.*
+import data.entity.Bookmark
+import data.entity.BookmarkType
+import data.entity.BookmarkWithChapter
 import data.util.ContentDuration
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
