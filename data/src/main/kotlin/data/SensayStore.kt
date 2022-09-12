@@ -148,20 +148,20 @@ class SensayStore @Inject constructor(
 
     suspend fun addSources(sources: Collection<Source>) = sourceRepository.addSources(sources)
 
-    suspend fun deleteSource(sourceId: SourceId): Boolean {
+    suspend fun deleteSource(sourceId: SourceId): List<BookId> {
         return try {
             runInTransaction {
                 val sourceWithBooks =
-                    sourceRepository.sourceWithBooks(sourceId).firstOrNull() ?: return false
+                    sourceRepository.sourceWithBooks(sourceId).firstOrNull() ?: return emptyList()
 
                 if (deleteBooks(sourceWithBooks.books)) {
                     sourceRepository.deleteSource(sourceWithBooks.source)
                 }
 
-                true
+                sourceWithBooks.books.map { it.bookId }
             }
         } catch (ex: Exception) {
-            false
+            emptyList()
         }
     }
 

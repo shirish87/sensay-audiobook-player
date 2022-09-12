@@ -91,5 +91,12 @@ class MediaSessionQueue(private val store: SensayStore) {
     }
 
     fun getMedia(mediaId: MediaId) = mediaItemsCache[mediaId]
+
     fun clear() = mediaItemsCache.clear()
+
+    fun clearBooks(bookIds: List<BookId>) {
+        mediaItemsCache.filterValues { bookIds.contains(it.bookId) }.map {
+            mediaItemsCache.remove(it.key)
+        }
+    }
 }

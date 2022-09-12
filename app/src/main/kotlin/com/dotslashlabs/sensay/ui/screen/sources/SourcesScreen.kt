@@ -30,6 +30,9 @@ import com.dotslashlabs.sensay.ui.screen.SensayScreen
 import com.dotslashlabs.sensay.ui.screen.common.ConfirmDialog
 import com.dotslashlabs.sensay.ui.screen.common.SensayFrame
 import data.entity.Source
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 object SourcesScreen : SensayScreen {
     @Composable
@@ -87,9 +90,13 @@ fun SourcesContent(
     ) {
         val source = it ?: return@ConfirmDialog
 
-        viewModel.deleteSource(source.sourceId).invokeOnCompletion {
-            appViewModel.scanFolders(context)
-            Toast.makeText(context, "Deleted source", Toast.LENGTH_SHORT).show()
+        viewModel.viewModelScope.launch(Dispatchers.IO) {
+            viewModel.deleteSource(source.sourceId)
+
+            withContext(Dispatchers.Main) {
+                appViewModel.scanFolders(context)
+                Toast.makeText(context, "Deleted source", Toast.LENGTH_SHORT).show()
+            }
         }
     }
 

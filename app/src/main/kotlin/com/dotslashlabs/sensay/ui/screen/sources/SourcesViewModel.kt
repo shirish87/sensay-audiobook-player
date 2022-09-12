@@ -6,6 +6,7 @@ import androidx.documentfile.provider.DocumentFile
 import com.airbnb.mvrx.*
 import com.airbnb.mvrx.hilt.AssistedViewModelFactory
 import com.airbnb.mvrx.hilt.hiltMavericksViewModelFactory
+import com.dotslashlabs.sensay.common.MediaSessionQueue
 import config.ConfigStore
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
@@ -27,6 +28,7 @@ class SourcesViewModel @AssistedInject constructor(
     @ApplicationContext private val context: Context,
     private val store: SensayStore,
     private val configStore: ConfigStore,
+    private val mediaSessionQueue: MediaSessionQueue,
 ) : MavericksViewModel<SourcesViewState>(state) {
 
     init {
@@ -59,8 +61,10 @@ class SourcesViewModel @AssistedInject constructor(
         }
     }
 
-    fun deleteSource(sourceId: Long) = viewModelScope.launch(Dispatchers.IO) {
-        if (store.deleteSource(sourceId)) {
+    suspend fun deleteSource(sourceId: Long) {
+        val bookIds = store.deleteSource(sourceId)
+        if (bookIds.isNotEmpty()) {
+            mediaSessionQueue.clearBooks(bookIds)
             configStore.setAudiobookFoldersUpdateTime(Instant.now())
         }
     }

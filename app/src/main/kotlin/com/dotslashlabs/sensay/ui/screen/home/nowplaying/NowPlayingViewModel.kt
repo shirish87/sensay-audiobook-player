@@ -2,10 +2,7 @@ package com.dotslashlabs.sensay.ui.screen.home.nowplaying
 
 
 import android.content.Context
-import com.airbnb.mvrx.Async
-import com.airbnb.mvrx.MavericksState
-import com.airbnb.mvrx.MavericksViewModelFactory
-import com.airbnb.mvrx.Uninitialized
+import com.airbnb.mvrx.*
 import com.airbnb.mvrx.hilt.AssistedViewModelFactory
 import com.airbnb.mvrx.hilt.hiltMavericksViewModelFactory
 import com.dotslashlabs.sensay.common.BookProgressWithDuration
@@ -18,7 +15,6 @@ import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.mapNotNull
 import logcat.logcat
 
 data class NowPlayingViewState(
@@ -73,17 +69,18 @@ class NowPlayingViewModel @AssistedInject constructor(
             setState { copy(isLoading = false) }
 
             job?.cancel()
-            job = serviceEvents
-                ?.mapNotNull {
-                    it.mediaId?.let { mediaId ->
-                        mediaSessionQueue.getMedia(mediaId)?.let { progress ->
-                            progress to it
-                        }
-                    }
+            job = serviceEvents?.execute(retainValue = NowPlayingViewState::data) {
+                val playerState = (it() as? PlayerState)
+                val media = playerState?.mediaId?.let { mediaId ->
+                    mediaSessionQueue.getMedia(mediaId)
                 }
-                ?.execute(retainValue = NowPlayingViewState::data) {
-                    copy(data = it)
+
+                if (media == null) {
+                    copy(data = Uninitialized)
+                } else {
+                    copy(data = Success(media to playerState))
                 }
+            }
         }
     }
 
