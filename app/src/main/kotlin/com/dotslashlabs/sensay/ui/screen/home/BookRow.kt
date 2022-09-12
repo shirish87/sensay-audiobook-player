@@ -42,7 +42,10 @@ fun BookRow(
             .padding(horizontal = 16.dp, vertical = 8.dp)
             .fillMaxWidth(),
     ) {
-        ListBookView(bookProgressWithChapters)
+        Box {
+            ListBookView(bookProgressWithChapters)
+            BookContextMenu(bookProgressWithChapters)
+        }
     }
 }
 

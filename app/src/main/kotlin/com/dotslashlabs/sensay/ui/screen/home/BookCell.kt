@@ -44,7 +44,10 @@ fun BookCell(
         },
         modifier = modifier.fillMaxWidth(),
     ) {
-        GridBookView(bookProgressWithChapters)
+        Box {
+            GridBookView(bookProgressWithChapters)
+            BookContextMenu(bookProgressWithChapters)
+        }
     }
 }
 

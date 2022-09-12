@@ -133,6 +133,10 @@ data class BookProgressWithBookAndChapters(
     @Ignore
     val chapterDuration = chapter.duration.format()
 
+    @IgnoredOnParcel
+    @Ignore
+    val isEmpty = (durationMs < 1)
+
     companion object {
         fun empty() = BookProgressWithBookAndChapters(
             bookProgress = BookProgress.empty(),
