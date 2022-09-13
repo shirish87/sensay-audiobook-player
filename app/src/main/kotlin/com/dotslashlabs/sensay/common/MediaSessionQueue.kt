@@ -9,14 +9,12 @@ import com.google.common.util.concurrent.ListenableFuture
 import data.SensayStore
 import data.entity.BookId
 import data.entity.BookProgressWithBookAndChapters
-import data.entity.ChapterId
 import data.util.ContentDuration
 import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.guava.future
 import kotlinx.coroutines.plus
-import logcat.logcat
 
 typealias MediaId = String
 
@@ -36,54 +34,47 @@ class MediaSessionQueue(private val store: SensayStore) {
             mediaSession.player.clearMediaItems()
             mediaItemsCache.clear()
 
-            val mediaBookChapterMap: Map<MediaId, Pair<BookId, ChapterId>> = mediaItems.mapNotNull {
-                val bookId = it.bookId ?: return@mapNotNull null
-                val chapterId = it.chapterId ?: return@mapNotNull null
-
-                it.mediaId to (bookId to chapterId)
-            }.toMap()
+            val bookIds = mediaItems.mapNotNull { it.bookId }.toSet()
 
             val bookProgressMap: Map<BookId, BookProgressWithBookAndChapters> =
-                store.bookProgressWithBookAndChapters(mediaBookChapterMap.values.map { it.first })
+                store.bookProgressWithBookAndChapters(bookIds)
                     .first()
-                    .fold(mutableMapOf()) { acc, it ->
-                        acc[it.book.bookId] = it
-                        acc
-                    }
+                    .associateBy { it.book.bookId }
 
             mediaItems.fold(mutableListOf()) { acc, it ->
-                val (bookId, chapterId) = mediaBookChapterMap[it.mediaId] ?: return@fold acc
+                val bookId = it.bookId ?: return@fold acc
+                val chapterId = it.chapterId ?: return@fold acc
                 val bookProgress = bookProgressMap[bookId] ?: return@fold acc
                 val mediaItem = bookProgress.toMediaItem(it, chapterId) ?: return@fold acc
 
-                val progress = bookProgress.bookProgress
-                val chapterIndex =
-                    bookProgress.chapters
-                        .sortedBy { c -> c.trackId }
-                        .indexOfFirst { c -> c.chapterId == chapterId }
-                val chapter = bookProgress.chapters[chapterIndex]
-                val book = bookProgress.book
+                val (progress, book, _, chapters) = bookProgress
+                val chaptersSorted = chapters.sortedBy { c -> c.trackId }
 
-                mediaItemsCache[it.mediaId] = BookProgressWithDuration(
-                    mediaId = it.mediaId,
+                val chapterIndex = chaptersSorted.indexOfFirst { c -> c.chapterId == chapterId }
+                val chapter = chaptersSorted[chapterIndex]
+
+                val bookChapterStartMs = chaptersSorted.subList(0, chapterIndex)
+                    .sumOf { it.duration.ms }
+
+                mediaItemsCache[mediaItem.mediaId] = BookProgressWithDuration(
+                    mediaId = mediaItem.mediaId,
                     bookProgressId = progress.bookProgressId,
-                    bookId = bookId,
+                    bookId = book.bookId,
                     chapterId = chapter.chapterId,
                     bookTitle = book.title,
                     chapterTitle = chapter.title,
                     author = chapter.author ?: book.author,
                     series = book.series,
-                    coverUri = book.coverUri,
+                    coverUri = chapter.coverUri ?: book.coverUri,
                     totalChapters = progress.totalChapters,
                     currentChapter = chapterIndex + 1,
                     chapterStart = chapter.start,
                     chapterProgress = ContentDuration.ZERO,
                     chapterDuration = chapter.duration,
-                    // bookProgress = chapterStart + chapterProgress
                     bookDuration = book.duration,
+                    bookChapterStart = ContentDuration.ms(bookChapterStartMs),
                 )
 
-                logcat { "Queued media item: mediaId=${it.mediaId}" }
                 acc.add(mediaItem)
                 acc
             }

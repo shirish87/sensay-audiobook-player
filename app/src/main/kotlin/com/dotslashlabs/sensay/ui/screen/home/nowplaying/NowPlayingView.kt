@@ -25,6 +25,7 @@ import com.dotslashlabs.sensay.common.BookProgressWithDuration
 import com.dotslashlabs.sensay.ui.screen.Destination
 import com.dotslashlabs.sensay.ui.screen.SensayScreen
 import com.dotslashlabs.sensay.util.PlayerState
+import data.util.ContentDuration
 
 @Composable
 fun NowPlayingView(
@@ -172,6 +173,8 @@ fun NowPlayingViewContentPreview() {
                     series = null,
                     coverUri = null,
                     totalChapters = 10,
+                    bookChapterStart = ContentDuration.ms(0L),
+                    bookDuration = ContentDuration.ms(10_000L),
                 ) to PlayerState(
                     isPlaying = false,
                 )

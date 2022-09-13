@@ -203,8 +203,8 @@ class MediaScanner @Inject constructor(private val mediaAnalyzer: MediaAnalyzer)
         }
 
         val chapters = sources.foldIndexed(
-            Duration.ZERO to mutableListOf<MediaScannerChapter>(),
-        ) { fileIdx, (startTime, list), r ->
+            mutableListOf<MediaScannerChapter>(),
+        ) { fileIdx, list, r ->
 
             val newChapter = MediaScannerChapter(
                 uri = r.root.uri,
@@ -212,23 +212,21 @@ class MediaScanner @Inject constructor(private val mediaAnalyzer: MediaAnalyzer)
                 lastModified = Instant.ofEpochMilli(r.root.lastModified()),
                 chapter = MetaDataChapter(
                     id = fileIdx,
-                    startTime = startTime.toDouble(DurationUnit.SECONDS),
-                    endTime = (startTime + r.metadata.duration).toDouble(DurationUnit.SECONDS),
+                    startTime = 0.0,
+                    endTime = r.metadata.duration.toDouble(DurationUnit.SECONDS),
                     tags = generateTags(r, "${fileIdx + 1} - ${r.fileName}"),
                 ),
             )
 
             list.add(newChapter)
-
-            val nextStartTime = newChapter.chapter.end + 1.milliseconds
-            nextStartTime to list
-        }.second.toList()
+            list
+        }.toList()
 
         val baseBook = sources.first()
         val root = baseBook.root.parentFile!!
         val coverUri = chapters.firstOrNull { it.coverUri != null }?.coverUri
 
-        logcat { "level consolidated-singles: book=${root.name} chapters=${chapters.size}" }
+        logcat { "level consolidated-singles: book=${root.name} chapters=${chapters.size} $chapters" }
         return MediaScannerResult(
             root = root,
             coverUri = coverUri,
@@ -248,45 +246,56 @@ class MediaScanner @Inject constructor(private val mediaAnalyzer: MediaAnalyzer)
         )
     }
 
-    private fun consolidateChapterizedSplitFiles(
-        chapterized: Collection<MediaScannerResult>,
+    private fun consolidateChapterizedFiles(
+        files: Collection<MediaScannerResult>,
     ): MediaScannerResult {
-        val chapters: List<MediaScannerChapter> = chapterized.foldIndexed(
-            Duration.ZERO to mutableListOf<MediaScannerChapter>(),
-        ) { fileIdx, (startTime, list), r ->
 
-            val newChapters = r.chapters.sortedBy { it.chapter.id }
-                .map { c ->
-                    c.copy(
-                        chapter = c.chapter.copy(
-                            id = fileIdx + c.chapter.id,
-                            startTime = startTime.toDouble(DurationUnit.SECONDS),
-                            endTime = (startTime + c.chapter.duration).toDouble(DurationUnit.SECONDS),
-                            tags = c.chapter.titleTag?.let { titleTag ->
-                                c.chapter.tags!! + mapOf(
-                                    titleTag to listOfNotNull(
-                                        fileIdx + 1,
-                                        c.chapter.title,
-                                    ).joinToString(" - ")
+        var sequenceId = 0
+
+        val chapters: List<MediaScannerChapter> = files
+            .groupBy { it.root.uri }
+            .toSortedMap()
+            .flatMap { (_, chapterized) ->
+
+                chapterized.fold(
+                    Duration.ZERO to mutableListOf<MediaScannerChapter>(),
+                ) { (startTime, list), r ->
+
+                    val newChapters = r.chapters.sortedBy { it.chapter.id }
+                        .map { c ->
+                            sequenceId++
+
+                            c.copy(
+                                chapter = c.chapter.copy(
+                                    id = sequenceId + c.chapter.id,
+                                    startTime = startTime.toDouble(DurationUnit.SECONDS),
+                                    endTime = (startTime + c.chapter.duration).toDouble(DurationUnit.SECONDS),
+                                    tags = c.chapter.titleTag?.let { titleTag ->
+                                        c.chapter.tags!! + mapOf(
+                                            titleTag to listOfNotNull(
+                                                sequenceId,
+                                                c.chapter.title,
+                                            ).joinToString(" - ")
+                                        )
+                                    } ?: c.chapter.tags,
                                 )
-                            } ?: c.chapter.tags,
-                        )
-                    )
-                }
+                            )
+                        }
 
-            list.addAll(newChapters)
+                    list.addAll(newChapters)
 
-            val nextStartTime = newChapters.last().chapter.end + 1.milliseconds
-            nextStartTime to list
-        }.second.toList()
+                    val nextStartTime = newChapters.last().chapter.end + 1.milliseconds
+                    nextStartTime to list
+                }.second.toList()
+            }
 
-        val firstBook = chapterized.first()
+        val firstBook = files.first()
 
         val root = if (firstBook.root.isFile)
             firstBook.root.parentFile!!
         else firstBook.root
 
-        val coverUri = chapterized.firstOrNull { it.coverUri != null }?.coverUri
+        val coverUri = files.firstOrNull { it.coverUri != null }?.coverUri
 
         val metadata = firstBook.metadata.copy(
             duration = chapters.fold(Duration.ZERO) { acc, c -> acc + c.chapter.duration },
@@ -298,7 +307,7 @@ class MediaScanner @Inject constructor(private val mediaAnalyzer: MediaAnalyzer)
             ),
         )
 
-        logcat { "level consolidated-chapterized: book=${metadata.title} chapters=${chapters.size}" }
+        logcat { "level consolidated-chapterized: book=${metadata.title} chapters=${chapters.size} $chapters" }
         return MediaScannerResult(
             root = root,
             coverUri = coverUri,
@@ -310,11 +319,11 @@ class MediaScanner @Inject constructor(private val mediaAnalyzer: MediaAnalyzer)
     private fun consolidateMediaScannerResults(results: Collection<MediaScannerResult>): MediaScannerResult? {
         if (results.isEmpty()) return null
 
-        // prefer using chapterized files (m4b) with 1 chapter per file
+        // prefer using chapterized files (m4b) with at least 1 chapter per file
         val (chapterized, pendingFiles) = results.partition { it.chapters.isNotEmpty() }
 
         if (chapterized.isNotEmpty()) {
-            return consolidateChapterizedSplitFiles(chapterized)
+            return consolidateChapterizedFiles(chapterized)
         }
 
         // merge files with 0 chapters per file

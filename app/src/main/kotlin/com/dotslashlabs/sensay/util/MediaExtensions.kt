@@ -39,14 +39,14 @@ fun BookProgressWithBookAndChapters.toMediaItem(mediaItem: MediaItem, chapterId:
     val resolvedChapter = when (chapterId) {
         chapter.chapterId -> chapter
         else -> chapters.find { c -> chapterId == c.chapterId }
-    } ?: chapter
+    } ?: return null
 
     if (resolvedChapter.isInvalid()) {
         return null
     }
 
     return mediaItem.buildUpon()
-        .setUri(chapter.uri)
+        .setUri(resolvedChapter.uri)
         .setClippingConfiguration(
             MediaItem.ClippingConfiguration.Builder()
                 .setStartPositionMs(resolvedChapter.start.ms)
@@ -58,9 +58,8 @@ fun BookProgressWithBookAndChapters.toMediaItem(mediaItem: MediaItem, chapterId:
                 .setTitle("${book.title}: ${resolvedChapter.title}")
                 .setArtist(book.author)
                 .setIsPlayable(true)
-                .setTrackNumber(chapters.indexOf(chapter) + 1)
+                .setTrackNumber(resolvedChapter.trackId)
                 .setTotalTrackCount(chapters.size)
-                .setExtras(toExtras(resolvedChapter.chapterId))
                 .build()
         )
         .build()

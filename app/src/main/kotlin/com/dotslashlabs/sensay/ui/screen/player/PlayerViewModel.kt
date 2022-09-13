@@ -26,9 +26,11 @@ import data.entity.BookmarkWithChapter
 import data.util.ContentDuration
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.launch
 import logcat.logcat
+import kotlin.math.absoluteValue
 import kotlin.time.Duration.Companion.milliseconds
 
 typealias Media = BookProgressWithDuration
@@ -136,35 +138,44 @@ class PlayerViewModel @AssistedInject constructor(
     init {
         val bookId = state.bookId
 
+        combine(
+            // load one-time data
+            store.bookWithChapters(bookId).take(1),
+            store.bookProgress(bookId),
+        ) { a, b -> a to b }.setOnEach { (bookWithChapters, bookProgress) ->
+
+            val progressMediaId =
+                PlayerViewState.getMediaId(bookProgress.bookId, bookProgress.chapterId)
+
+            if (media?.mediaId == progressMediaId) {
+                return@setOnEach this
+            }
+
+            val (book, chapters) = bookWithChapters
+            val mediaItems = Media.fromBookAndChapters(
+                bookProgress,
+                book,
+                chapters,
+            )
+
+            val progressMedia = mediaItems.first { it.mediaId == progressMediaId }
+
+            val progressSliderPosition = PlayerViewState.getSliderPosition(
+                progressMedia.chapterProgress.ms,
+                progressMedia.chapterDuration.ms,
+            )
+
+            copy(
+                isLoading = false,
+                mediaIds = mediaIds.ifEmpty { mediaItems.map { it.mediaId } },
+                media = progressMedia,
+                sliderPosition = progressSliderPosition,
+                mediaList = mediaItems,
+            )
+        }
+
         store.bookmarksWithChapters(bookId)
             .execute(retainValue = PlayerViewState::bookmarks) { copy(bookmarks = it) }
-
-        viewModelScope.launch(Dispatchers.IO) {
-            val progress = store.bookProgressWithBookAndChapters(bookId).first()
-
-            val mediaItems = Media.fromBookAndChapters(
-                progress.bookProgress,
-                progress.book,
-                progress.chapters,
-            )
-
-            val selectedMedia = mediaItems.first { it.chapterId == progress.bookProgress.chapterId }
-
-            val sliderPosition = PlayerViewState.getSliderPosition(
-                selectedMedia.chapterProgress.ms,
-                selectedMedia.chapterDuration.ms,
-            )
-
-            setState {
-                copy(
-                    isLoading = false,
-                    mediaList = mediaItems,
-                    mediaIds = mediaItems.map { it.mediaId },
-                    media = selectedMedia,
-                    sliderPosition = sliderPosition,
-                )
-            }
-        }
 
         onEach(PlayerViewState::isPlayingMedia) { isPlaying ->
             player?.apply {
@@ -332,8 +343,11 @@ class PlayerViewModel @AssistedInject constructor(
         // already set
         // if (state.playerMediaId == selectedMedia.mediaId) return@withState
 
-        val startPositionMs = selectedMedia.chapterProgress.ms
         val playerMediaIdx = state.playerMediaIds.indexOf(selectedMedia.mediaId)
+        val hasCurrentChapterEnded =
+            (selectedMedia.chapterDuration.ms - selectedMedia.chapterProgress.ms).absoluteValue < 20
+
+        val startPositionMs = if (hasCurrentChapterEnded) 0L else selectedMedia.chapterProgress.ms
         val chapters = state.mediaList
 
         viewModelScope.launch {

@@ -25,7 +25,7 @@ data class NowPlayingViewState(
     val nowPlayingBook = data()?.first
     private val playerState = data()?.second
 
-    val bookProgress: Long? = nowPlayingBook?.let {
+    private val bookProgressMs: Long? = nowPlayingBook?.let {
         val chapterPosition = playerState?.position ?: -1
 
         if (chapterPosition >= 0) {
@@ -34,7 +34,7 @@ data class NowPlayingViewState(
     }
 
     val bookProgressFraction: Float? = nowPlayingBook?.let {
-        bookProgress?.toFloat()?.div(maxOf(1, it.bookDuration.ms))
+        bookProgressMs?.toFloat()?.div(maxOf(1, it.bookDuration.ms))
     }
 
     val isPlaying = (playerState?.isPlaying == true)

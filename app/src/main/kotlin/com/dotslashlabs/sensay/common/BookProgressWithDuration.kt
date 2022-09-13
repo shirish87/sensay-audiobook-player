@@ -19,11 +19,11 @@ data class BookProgressWithDuration(
     val coverUri: Uri?,
     val totalChapters: Int,
     val currentChapter: Int = 0,
-    val bookDuration: ContentDuration = ContentDuration.ZERO,
+    val bookDuration: ContentDuration,
+    val bookChapterStart: ContentDuration,
     val chapterStart: ContentDuration = ContentDuration.ZERO,
     val chapterProgress: ContentDuration = ContentDuration.ZERO,
     val chapterDuration: ContentDuration = ContentDuration.ZERO,
-    val lastUpdatedAt: Instant = Instant.now(),
 ) {
 
     companion object {
@@ -34,14 +34,18 @@ data class BookProgressWithDuration(
             chapters: List<Chapter>,
         ): List<BookProgressWithDuration> {
 
-            return chapters
+            val chaptersSorted = chapters
                 .sortedBy { c -> c.trackId }
+
+            return chaptersSorted
                 .mapIndexed { idx, chapter ->
                     val mediaId = PlayerViewState.getMediaId(book.bookId, chapter.chapterId)
 
                     val chapterProgress = if (chapter.chapterId == bookProgress.chapterId) {
                         bookProgress.chapterProgress
                     } else ContentDuration.ZERO
+
+                    val bookChapterStartMs = chaptersSorted.subList(0, idx).sumOf { it.duration.ms }
 
                     BookProgressWithDuration(
                         mediaId = mediaId,
@@ -59,12 +63,14 @@ data class BookProgressWithDuration(
                         chapterProgress = chapterProgress,
                         chapterDuration = chapter.duration,
                         bookDuration = book.duration,
+                        bookChapterStart = ContentDuration.ms(bookChapterStartMs),
                     )
                 }
         }
     }
 
-    val bookProgress: ContentDuration = ContentDuration.ms(chapterStart.ms + chapterProgress.ms)
+    val bookProgress: ContentDuration =
+        ContentDuration.ms(minOf(bookDuration.ms, bookChapterStart.ms + chapterProgress.ms))
 
     val bookCategory = when (bookProgress.ms) {
         0L -> BookCategory.NOT_STARTED
@@ -73,7 +79,7 @@ data class BookProgressWithDuration(
     }
 
     fun toBookProgress(chapterPosition: Long): BookProgress {
-        val bookProgressMs = chapterStart.ms + chapterPosition
+        val bookProgressMs = minOf(bookDuration.ms, bookChapterStart.ms + chapterPosition)
 
         return BookProgress(
             chapterProgress = ContentDuration.ms(chapterPosition),
