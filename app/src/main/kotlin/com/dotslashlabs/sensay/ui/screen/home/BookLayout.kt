@@ -3,10 +3,7 @@ package com.dotslashlabs.sensay.ui.screen.home
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyGridState
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.rememberLazyGridState
+import androidx.compose.foundation.lazy.grid.*
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -45,6 +42,12 @@ fun BooksList(
     val books = resolveAsyncState(items)
 
     LazyColumn(state = state) {
+        if (books.isEmpty()) return@LazyColumn
+
+        item {
+            FilterBar()
+        }
+
         item {
             Spacer(modifier = Modifier.height(8.dp))
         }
@@ -82,6 +85,10 @@ fun BooksGrid(
         modifier = Modifier.fillMaxSize(),
     ) {
         if (books.isEmpty()) return@LazyVerticalGrid
+
+        item(span = { GridItemSpan(cellCount) }) {
+            FilterBar()
+        }
 
         items(count = books.size) { index ->
             BookCell(
