@@ -1,5 +1,6 @@
 package com.dotslashlabs.sensay.ui.screen.home
 
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Book
@@ -9,8 +10,8 @@ import androidx.compose.material.icons.outlined.ViewList
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.constraintlayout.compose.ConstraintLayout
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import com.dotslashlabs.sensay.ui.screen.Destination
@@ -29,21 +30,13 @@ fun HomeAppBar(
     onChangeLayout: (layout: HomeLayout) -> Unit,
 ) {
 
-    ConstraintLayout(
-        modifier = Modifier.fillMaxWidth(),
-    ) {
-        val (appBar, loading) = createRefs()
-
+    Box {
         val navBackStackEntry by homeNavController.currentBackStackEntryAsState()
         val isLibraryRoute =
             (navBackStackEntry?.destination?.route == Destination.Home.Library.route)
 
         SmallTopAppBar(
-            modifier = Modifier
-                .fillMaxWidth()
-                .constrainAs(appBar) {
-                    top.linkTo(parent.top)
-                },
+            modifier = Modifier.fillMaxWidth().align(Alignment.TopStart),
             title = { Text("Sensay") },
             actions = {
                 IconButton(onClick = {
@@ -81,11 +74,7 @@ fun HomeAppBar(
 
         if (isBusy) {
             LinearProgressIndicator(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .constrainAs(loading) {
-                        top.linkTo(appBar.bottom)
-                    },
+                modifier = Modifier.fillMaxWidth().align(Alignment.BottomStart),
             )
         }
     }
