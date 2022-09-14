@@ -15,6 +15,7 @@ import com.dotslashlabs.sensay.ui.screen.common.SensayFrame
 import com.dotslashlabs.sensay.ui.screen.home.BooksGrid
 import com.dotslashlabs.sensay.ui.screen.home.BooksList
 import com.dotslashlabs.sensay.ui.screen.home.library.OnNavToBook
+import com.dotslashlabs.sensay.util.isLifecycleResumed
 import config.HomeLayout
 
 object CurrentScreen : SensayScreen {
@@ -31,14 +32,28 @@ object CurrentScreen : SensayScreen {
         val viewModel: CurrentViewModel = mavericksViewModel(backStackEntry)
         val state by viewModel.collectAsState()
 
-        val onNavToBook: OnNavToBook = { bookId, _ ->
-            navHostController.navigate(Destination.Player.useRoute(bookId))
+        val onNavToBook: OnNavToBook = { bookId ->
+            if (backStackEntry.isLifecycleResumed()) {
+                navHostController.navigate(Destination.Player.useRoute(bookId))
+            }
         }
 
         SensayFrame {
             when (homeLayout) {
-                HomeLayout.LIST -> BooksList(state.books, onNavToBook = onNavToBook)
-                HomeLayout.GRID -> BooksGrid(state.books, onNavToBook = onNavToBook)
+                HomeLayout.LIST -> BooksList(
+                    state.books,
+                    state.sortMenuItems,
+                    state.sortFilter,
+                    onSortMenuChange = viewModel::setSortFilter,
+                    onNavToBook = onNavToBook,
+                )
+                HomeLayout.GRID -> BooksGrid(
+                    state.books,
+                    state.sortMenuItems,
+                    state.sortFilter,
+                    onSortMenuChange = viewModel::setSortFilter,
+                    onNavToBook = onNavToBook,
+                )
             }
         }
     }

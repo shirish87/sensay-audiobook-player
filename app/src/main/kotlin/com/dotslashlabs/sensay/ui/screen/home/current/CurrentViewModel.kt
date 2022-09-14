@@ -1,19 +1,27 @@
 package com.dotslashlabs.sensay.ui.screen.home.current
 
+import androidx.compose.ui.graphics.vector.ImageVector
 import com.airbnb.mvrx.*
 import com.airbnb.mvrx.hilt.AssistedViewModelFactory
 import com.airbnb.mvrx.hilt.hiltMavericksViewModelFactory
+import com.dotslashlabs.sensay.ui.screen.home.SortFilter
+import com.dotslashlabs.sensay.ui.screen.home.library.LibrarySortType
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import data.BookCategory
 import data.SensayStore
 import data.entity.BookProgressWithBookAndChapters
-import kotlinx.coroutines.flow.map
 
+typealias CurrentSortType = LibrarySortType
 
 data class CurrentState(
     val books: Async<List<BookProgressWithBookAndChapters>> = Uninitialized,
+
+    val sortMenuItems: Collection<Pair<CurrentSortType, ImageVector>> = CurrentSortType.values()
+        .map { it to it.imageVector },
+
+    val sortFilter: SortFilter<CurrentSortType> = CurrentSortType.UPDATED to false,
 ) : MavericksState
 
 class CurrentViewModel @AssistedInject constructor(
@@ -22,13 +30,19 @@ class CurrentViewModel @AssistedInject constructor(
 ) : MavericksViewModel<CurrentState>(state) {
 
     init {
-        store.booksProgressWithBookAndChapters(
-            listOf(BookCategory.CURRENT),
-        ).map {
-            it.sortedBy { o -> -o.bookProgress.lastUpdatedAt.toEpochMilli() }
-        }.execute {
-            copy(books = it)
+        onEach(CurrentState::sortFilter) { (sortType, isAscending) ->
+            store.booksProgressWithBookAndChapters(
+                listOf(BookCategory.CURRENT),
+                orderBy = sortType.columnName,
+                isAscending = isAscending,
+            ).execute {
+                copy(books = it)
+            }
         }
+    }
+
+    fun setSortFilter(sortFilter: SortFilter<CurrentSortType>) {
+        setState { copy(sortFilter = sortFilter) }
     }
 
     @AssistedFactory

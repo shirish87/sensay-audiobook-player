@@ -32,12 +32,7 @@ fun BookRow(
     modifier: Modifier = Modifier,
 ) {
     ElevatedCard(
-        onClick = {
-            onNavToBook(
-                bookProgressWithChapters.book.bookId,
-                bookProgressWithChapters.chapter.chapterId
-            )
-        },
+        onClick = { onNavToBook(bookProgressWithChapters.book.bookId) },
         modifier = modifier
             .padding(horizontal = 16.dp, vertical = 8.dp)
             .fillMaxWidth(),

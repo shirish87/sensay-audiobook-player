@@ -7,6 +7,7 @@ import androidx.compose.foundation.lazy.grid.*
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.dp
@@ -34,41 +35,49 @@ fun resolveAsyncState(
 }
 
 @Composable
-fun BooksList(
+fun <SortMenuType> BooksList(
     items: Async<List<BookProgressWithBookAndChapters>>,
+    sortMenuItems: Collection<Pair<SortMenuType, ImageVector>>,
+    sortMenuDefaults: SortFilter<SortMenuType>,
+    onSortMenuChange: OnSortMenuChange<SortMenuType>,
     onNavToBook: OnNavToBook,
 ) {
     val state: LazyListState = rememberLazyListState()
     val books = resolveAsyncState(items)
 
-    LazyColumn(state = state) {
-        if (books.isEmpty()) return@LazyColumn
-
-        item {
-            FilterBar()
-        }
-
-        item {
-            Spacer(modifier = Modifier.height(8.dp))
-        }
-
-        items(count = books.size) { index ->
-            BookRow(
-                books[index],
-                onNavToBook,
-                modifier = Modifier,
+    Column(Modifier.fillMaxSize()) {
+        if (books.any { !it.isEmpty }) {
+            FilterBar(
+                sortMenuItems = sortMenuItems,
+                sortMenuDefaults = sortMenuDefaults,
+                onSortMenuChange = onSortMenuChange,
             )
         }
 
-        item {
-            Spacer(modifier = Modifier.height(36.dp))
+        LazyColumn(state = state, modifier = Modifier.weight(1F)) {
+            if (books.isEmpty()) return@LazyColumn
+
+            items(count = books.size) { index ->
+                BookRow(
+                    books[index],
+                    onNavToBook,
+                    modifier = Modifier,
+                )
+            }
+
+            item {
+                Spacer(modifier = Modifier.height(36.dp))
+            }
         }
     }
 }
 
 @Composable
-fun BooksGrid(
+fun <SortMenuType> BooksGrid(
     items: Async<List<BookProgressWithBookAndChapters>>,
+    sortMenuItems: Collection<Pair<SortMenuType, ImageVector>>,
+    sortMenuDefaults: SortFilter<SortMenuType>,
+    onSortMenuChange: OnSortMenuChange<SortMenuType>,
     onNavToBook: OnNavToBook,
 ) {
     val state: LazyGridState = rememberLazyGridState()
@@ -86,8 +95,14 @@ fun BooksGrid(
     ) {
         if (books.isEmpty()) return@LazyVerticalGrid
 
-        item(span = { GridItemSpan(cellCount) }) {
-            FilterBar()
+        if (books.any { !it.isEmpty }) {
+            item(span = { GridItemSpan(cellCount) }) {
+                FilterBar(
+                    sortMenuItems = sortMenuItems,
+                    sortMenuDefaults = sortMenuDefaults,
+                    onSortMenuChange = onSortMenuChange,
+                )
+            }
         }
 
         items(count = books.size) { index ->

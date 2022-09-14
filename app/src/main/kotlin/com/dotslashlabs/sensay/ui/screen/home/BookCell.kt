@@ -36,12 +36,7 @@ fun BookCell(
     modifier: Modifier = Modifier,
 ) {
     ElevatedCard(
-        onClick = {
-            onNavToBook(
-                bookProgressWithChapters.book.bookId,
-                bookProgressWithChapters.chapter.chapterId
-            )
-        },
+        onClick = { onNavToBook(bookProgressWithChapters.book.bookId) },
         modifier = modifier.fillMaxWidth(),
     ) {
         Box {
