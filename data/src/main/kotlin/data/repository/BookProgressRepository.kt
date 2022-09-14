@@ -1,6 +1,7 @@
 package data.repository
 
 import data.BookCategory
+import data.BookProgressUpdate
 import data.dao.BookProgressDao
 import data.entity.BookId
 import data.entity.BookProgress
@@ -23,6 +24,12 @@ class BookProgressRepository @Inject constructor(
     fun booksProgressWithBookAndChapters(bookCategories: Collection<BookCategory>) =
         bookProgressDao.booksProgressWithBookAndChapters(bookCategories)
 
+    fun booksProgressWithBookAndChapters(
+        bookCategories: Collection<BookCategory>,
+        orderBy: String,
+        isAscending: Boolean,
+    ) = bookProgressDao.booksProgressWithBookAndChapters(bookCategories, orderBy, isAscending)
+
     fun bookProgressWithBookAndChapters(bookId: BookId) =
         bookProgressDao.bookProgressWithBookAndChapters(bookId)
 
@@ -38,5 +45,6 @@ class BookProgressRepository @Inject constructor(
         }
     }
 
-    suspend fun update(bookProgress: BookProgress) = bookProgressDao.update(bookProgress)
+    suspend fun update(bookProgressUpdate: BookProgressUpdate) =
+        bookProgressDao.update(bookProgressUpdate)
 }

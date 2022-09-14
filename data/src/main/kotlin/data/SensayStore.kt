@@ -6,6 +6,7 @@ import data.entity.*
 import data.repository.*
 import kotlinx.coroutines.flow.firstOrNull
 import logcat.logcat
+import java.time.Instant
 import javax.inject.Inject
 
 data class BookWithChaptersAndTags(
@@ -30,7 +31,7 @@ class SensayStore @Inject constructor(
 
         return booksWithChaptersAndTags.mapNotNull {
             val book = it.booksWithChapters.book
-            val chapters = it.booksWithChapters.chapters
+            val chapters = it.booksWithChapters.chapters.sortedBy { o -> o.trackId }
             val tags = it.tags
 
             if (chapters.isEmpty() || chapters.any { c -> c.isInvalid() }) {
@@ -52,9 +53,7 @@ class SensayStore @Inject constructor(
                     bookId = bookRepository.createBook(book)
                     if (bookId == -1L) return@mapNotNull null
 
-                    val chapterIds = chapterRepository.createChapters(
-                        chapters.sortedBy { o -> o.trackId },
-                    )
+                    val chapterIds = chapterRepository.createChapters(chapters)
 
                     if (chapterIds.any { c -> c == -1L }) {
                         return@mapNotNull null
@@ -93,6 +92,10 @@ class SensayStore @Inject constructor(
                             bookId = bookId,
                             chapterId = chapterIds.first(),
                             totalChapters = chapterIds.size,
+                            bookTitle = book.title,
+                            bookAuthor = book.author,
+                            createdAt = Instant.now(),
+                            bookRemaining = book.duration,
                         )
                     )
 
@@ -122,6 +125,16 @@ class SensayStore @Inject constructor(
 
     fun booksProgressWithBookAndChapters(bookCategories: Collection<BookCategory>) =
         bookProgressRepository.booksProgressWithBookAndChapters(bookCategories)
+
+    fun booksProgressWithBookAndChapters(
+        bookCategories: Collection<BookCategory>,
+        orderBy: String,
+        isAscending: Boolean,
+    ) = bookProgressRepository.booksProgressWithBookAndChapters(
+        bookCategories,
+        orderBy,
+        isAscending,
+    )
 
     fun booksProgressWithBookAndChapters() =
         bookProgressRepository.booksProgressWithBookAndChapters()
@@ -184,8 +197,8 @@ class SensayStore @Inject constructor(
         }
     }
 
-    suspend fun updateBookProgress(bookProgress: BookProgress) =
-        bookProgressRepository.update(bookProgress)
+    suspend fun updateBookProgress(bookProgressUpdate: BookProgressUpdate) =
+        bookProgressRepository.update(bookProgressUpdate)
 
     suspend fun createBookmark(bookmark: Bookmark) = bookmarkRepository.createBookmark(bookmark)
 

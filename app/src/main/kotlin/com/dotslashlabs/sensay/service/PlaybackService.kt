@@ -60,13 +60,13 @@ class PlaybackService : MediaSessionService() {
         val chapterPosition = playerState.position ?: return
         val mediaProgress = mediaSessionQueue.getMedia(mediaId) ?: return
 
-        val bookProgress = mediaProgress.toBookProgress(chapterPosition)
-        if (bookProgress.chapterProgress > mediaProgress.chapterDuration) return
-        if (bookProgress.bookProgress > mediaProgress.bookDuration) return
+        val bookProgressUpdate = mediaProgress.toBookProgressUpdate(chapterPosition)
+        if (bookProgressUpdate.chapterProgress > mediaProgress.chapterDuration) return
+        if (bookProgressUpdate.bookProgress > mediaProgress.bookDuration) return
 
         withContext(Dispatchers.IO) {
-            store.updateBookProgress(bookProgress)
-            configStore.setLastPlayedBookId(bookProgress.bookId)
+            store.updateBookProgress(bookProgressUpdate)
+            configStore.setLastPlayedBookId(mediaProgress.bookId)
             logcat { "updated mediaId=$mediaId" }
         }
     }

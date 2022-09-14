@@ -3,6 +3,7 @@ package com.dotslashlabs.sensay.common
 import android.net.Uri
 import com.dotslashlabs.sensay.ui.screen.player.PlayerViewState
 import data.BookCategory
+import data.BookProgressUpdate
 import data.entity.*
 import data.util.ContentDuration
 import java.time.Instant
@@ -72,23 +73,18 @@ data class BookProgressWithDuration(
     val bookProgress: ContentDuration =
         ContentDuration.ms(minOf(bookDuration.ms, bookChapterStart.ms + chapterProgress.ms))
 
-    val bookCategory = when (bookProgress.ms) {
-        0L -> BookCategory.NOT_STARTED
-        bookDuration.ms -> BookCategory.FINISHED
-        else -> BookCategory.CURRENT
-    }
-
-    fun toBookProgress(chapterPosition: Long): BookProgress {
+    fun toBookProgressUpdate(chapterPosition: Long): BookProgressUpdate {
         val bookProgressMs = minOf(bookDuration.ms, bookChapterStart.ms + chapterPosition)
 
-        return BookProgress(
-            chapterProgress = ContentDuration.ms(chapterPosition),
-            bookProgress = ContentDuration.ms(bookProgressMs),
+        return BookProgressUpdate(
             bookProgressId = bookProgressId,
-            bookId = bookId,
-            chapterId = chapterId,
-            totalChapters = totalChapters,
+
             currentChapter = currentChapter,
+            chapterProgress = ContentDuration.ms(chapterPosition),
+
+            bookProgress = ContentDuration.ms(bookProgressMs),
+            bookRemaining = ContentDuration.ms(maxOf(0, bookDuration.ms - bookProgressMs)),
+
             bookCategory = when (bookProgressMs) {
                 0L -> BookCategory.NOT_STARTED
                 bookDuration.ms -> BookCategory.FINISHED
@@ -98,3 +94,4 @@ data class BookProgressWithDuration(
         )
     }
 }
+

@@ -23,11 +23,15 @@ data class BookProgress(
     @PrimaryKey(autoGenerate = true) val bookProgressId: BookProgressId = 0,
     val bookId: BookId,
     val chapterId: ChapterId,
+    val bookTitle: String,
+    val bookAuthor: String?,
     val totalChapters: Int,
     val currentChapter: Int = 0,
     val bookProgress: ContentDuration = ContentDuration.ZERO,
+    val bookRemaining: ContentDuration = ContentDuration.ZERO,
     val chapterProgress: ContentDuration = ContentDuration.ZERO,
     val bookCategory: BookCategory = BookCategory.NOT_STARTED,
+    val createdAt: Instant = Instant.now(),
     val lastUpdatedAt: Instant = Instant.now(),
 ) : Parcelable {
 
@@ -35,6 +39,8 @@ data class BookProgress(
         fun empty() = BookProgress(
             bookId = 0L,
             chapterId = 0L,
+            bookTitle = "",
+            bookAuthor = null,
             totalChapters = 0,
         )
     }
