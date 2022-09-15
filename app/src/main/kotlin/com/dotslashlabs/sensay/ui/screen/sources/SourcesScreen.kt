@@ -75,7 +75,7 @@ fun SourcesContent(
         )
 
         viewModel.addAudiobookFolders(setOf(uri)).invokeOnCompletion {
-            appViewModel.scanFolders(context)
+            appViewModel.scanFolders(context, force = true)
         }
     }
 
