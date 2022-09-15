@@ -1,16 +1,13 @@
-package com.dotslashlabs.sensay.ui.screen.home.library
+package com.dotslashlabs.sensay.ui.screen.home
 
+import android.os.Parcel
+import android.os.Parcelable
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.*
 import androidx.compose.ui.graphics.vector.ImageVector
-import com.airbnb.mvrx.Async
-import com.airbnb.mvrx.MavericksState
-import com.airbnb.mvrx.MavericksViewModelFactory
-import com.airbnb.mvrx.Uninitialized
+import com.airbnb.mvrx.*
 import com.airbnb.mvrx.hilt.AssistedViewModelFactory
 import com.airbnb.mvrx.hilt.hiltMavericksViewModelFactory
-import com.dotslashlabs.sensay.ui.screen.home.HomeBaseViewModel
-import com.dotslashlabs.sensay.ui.screen.home.SortFilter
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
@@ -18,11 +15,13 @@ import data.BookCategory
 import data.SensayStore
 import data.entity.BookProgressWithBookAndChapters
 
-enum class LibrarySortType(
+
+enum class HomeSortType(
     private val displayName: String,
     val imageVector: ImageVector,
     val columnName: String,
 ) {
+
     TITLE("Title", Icons.Outlined.Title, "bookTitle"),
     AUTHOR("Author", Icons.Outlined.Person, "bookAuthor"),
     UPDATED("Updated", Icons.Outlined.Timer, "lastUpdatedAt"),
@@ -33,44 +32,51 @@ enum class LibrarySortType(
     override fun toString() = displayName
 }
 
-data class LibraryState(
+data class HomeViewState(
+    @PersistState val bookCategories: Collection<BookCategory>,
     val books: Async<List<BookProgressWithBookAndChapters>> = Uninitialized,
 
-    val sortMenuItems: Collection<Pair<LibrarySortType, ImageVector>> = LibrarySortType.values()
+    val sortMenuItems: Collection<Pair<HomeSortType, ImageVector>> = HomeSortType.values()
         .map { it to it.imageVector },
 
-    val sortFilter: SortFilter<LibrarySortType> = LibrarySortType.UPDATED to false,
+    val sortFilter: SortFilter<HomeSortType> = HomeSortType.UPDATED to false,
 
     val isFilterEnabled: Boolean = false,
     val filter: String = "",
-) : MavericksState
+) : MavericksState {
 
-class LibraryViewModel @AssistedInject constructor(
-    @Assisted state: LibraryState,
+    constructor(args: HomeViewArgs) : this(bookCategories = args.bookCategories)
+}
+
+
+class HomeViewModel @AssistedInject constructor(
+    @Assisted state: HomeViewState,
     private val store: SensayStore,
-) : HomeBaseViewModel<LibraryState>(state) {
+) : HomeBaseViewModel<HomeViewState>(state) {
+
+    private val bookCategories = state.bookCategories
 
     init {
         onEachThrottled(
-            LibraryState::sortFilter,
-            LibraryState::filter,
+            HomeViewState::sortFilter,
+            HomeViewState::filter,
             delayByMillis = { _, filter -> if (filter.length > 1) 200L else 0L },
         ) { (sortType, isAscending), filter ->
 
             val filterCondition = if (filter.isNotBlank()) "%${filter.lowercase()}%" else "%"
 
             store.booksProgressWithBookAndChapters(
-                listOf(BookCategory.NOT_STARTED, BookCategory.FINISHED),
+                bookCategories, // listOf(BookCategory.NOT_STARTED, BookCategory.FINISHED),
                 filter = filterCondition,
                 orderBy = sortType.columnName,
                 isAscending = isAscending,
-            ).execute(retainValue = LibraryState::books) {
+            ).execute(retainValue = HomeViewState::books) {
                 copy(books = it)
             }
         }
     }
 
-    fun setSortFilter(sortFilter: SortFilter<LibrarySortType>) {
+    fun setSortFilter(sortFilter: SortFilter<HomeSortType>) {
         setState { copy(sortFilter = sortFilter) }
     }
 
@@ -89,10 +95,37 @@ class LibraryViewModel @AssistedInject constructor(
     }
 
     @AssistedFactory
-    interface Factory : AssistedViewModelFactory<LibraryViewModel, LibraryState> {
-        override fun create(state: LibraryState): LibraryViewModel
+    interface Factory : AssistedViewModelFactory<HomeViewModel, HomeViewState> {
+        override fun create(state: HomeViewState): HomeViewModel
     }
 
-    companion object : MavericksViewModelFactory<LibraryViewModel, LibraryState>
+    companion object : MavericksViewModelFactory<HomeViewModel, HomeViewState>
     by hiltMavericksViewModelFactory()
+}
+
+data class HomeViewArgs(
+    val bookCategories: Collection<BookCategory>,
+) : Parcelable {
+
+    constructor(parcel: Parcel) : this(
+        parcel.createStringArray()!!.map { BookCategory.valueOf(it) },
+    )
+
+    override fun writeToParcel(parcel: Parcel, flags: Int) {
+        parcel.writeStringArray(bookCategories.map { it.name }.toTypedArray())
+    }
+
+    override fun describeContents(): Int {
+        return 0
+    }
+
+    companion object CREATOR : Parcelable.Creator<HomeViewArgs> {
+        override fun createFromParcel(parcel: Parcel): HomeViewArgs {
+            return HomeViewArgs(parcel)
+        }
+
+        override fun newArray(size: Int): Array<HomeViewArgs?> {
+            return arrayOfNulls(size)
+        }
+    }
 }

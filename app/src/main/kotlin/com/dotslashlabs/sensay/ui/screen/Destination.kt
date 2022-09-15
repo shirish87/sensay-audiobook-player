@@ -3,9 +3,9 @@ package com.dotslashlabs.sensay.ui.screen
 import androidx.navigation.NamedNavArgument
 import androidx.navigation.NavType
 import androidx.navigation.navArgument
+import com.dotslashlabs.sensay.ui.screen.home.CurrentScreen
 import com.dotslashlabs.sensay.ui.screen.home.HomeScreen
-import com.dotslashlabs.sensay.ui.screen.home.current.CurrentScreen
-import com.dotslashlabs.sensay.ui.screen.home.library.LibraryScreen
+import com.dotslashlabs.sensay.ui.screen.home.LibraryScreen
 import com.dotslashlabs.sensay.ui.screen.player.PlayerScreen
 import com.dotslashlabs.sensay.ui.screen.settings.SettingsScreen
 import com.dotslashlabs.sensay.ui.screen.sources.SourcesScreen

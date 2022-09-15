@@ -15,7 +15,6 @@ import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import com.dotslashlabs.sensay.ui.screen.Destination
-import com.dotslashlabs.sensay.ui.screen.home.current.CurrentScreen
 
 @Composable
 fun HomeBottomBar(

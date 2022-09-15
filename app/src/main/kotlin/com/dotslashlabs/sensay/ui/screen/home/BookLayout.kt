@@ -16,7 +16,6 @@ import androidx.compose.ui.unit.dp
 import com.airbnb.mvrx.Async
 import com.airbnb.mvrx.Loading
 import com.airbnb.mvrx.Success
-import com.dotslashlabs.sensay.ui.screen.home.library.OnNavToBook
 import data.entity.BookProgressWithBookAndChapters
 import kotlin.math.roundToInt
 

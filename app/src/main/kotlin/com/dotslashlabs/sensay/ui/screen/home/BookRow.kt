@@ -14,7 +14,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.em
 import com.dotslashlabs.sensay.ui.screen.common.BookChaptersDurationInfoRow
 import com.dotslashlabs.sensay.ui.screen.common.CoverImage
-import com.dotslashlabs.sensay.ui.screen.home.library.OnNavToBook
 import data.BookCategory
 import data.entity.Book
 import data.entity.BookProgress

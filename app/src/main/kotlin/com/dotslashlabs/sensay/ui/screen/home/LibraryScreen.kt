@@ -1,4 +1,4 @@
-package com.dotslashlabs.sensay.ui.screen.home.library
+package com.dotslashlabs.sensay.ui.screen.home
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -12,10 +12,9 @@ import com.dotslashlabs.sensay.ui.SensayAppViewModel
 import com.dotslashlabs.sensay.ui.screen.Destination
 import com.dotslashlabs.sensay.ui.screen.SensayScreen
 import com.dotslashlabs.sensay.ui.screen.common.SensayFrame
-import com.dotslashlabs.sensay.ui.screen.home.BooksGrid
-import com.dotslashlabs.sensay.ui.screen.home.BooksList
 import com.dotslashlabs.sensay.util.isLifecycleResumed
 import config.HomeLayout
+import data.BookCategory
 
 typealias OnNavToBook = (bookId: Long) -> Unit
 
@@ -30,7 +29,10 @@ object LibraryScreen : SensayScreen {
         val appViewModel: SensayAppViewModel = mavericksActivityViewModel()
         val homeLayout by appViewModel.collectAsState(SensayAppState::homeLayout)
 
-        val viewModel: LibraryViewModel = mavericksViewModel(backStackEntry)
+        val viewModel: HomeViewModel = mavericksViewModel(backStackEntry, argsFactory = {
+            HomeViewArgs(listOf(BookCategory.NOT_STARTED, BookCategory.FINISHED))
+        })
+
         val state by viewModel.collectAsState()
 
         val onNavToBook: OnNavToBook = { bookId ->
