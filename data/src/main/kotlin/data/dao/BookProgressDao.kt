@@ -58,12 +58,22 @@ interface BookProgressDao : BaseDao<BookProgress> {
         FROM BookProgress
         WHERE
             bookCategory IN (:bookCategories)
+            AND (
+                bookTitle LIKE :filter
+                OR bookAuthor LIKE :filter
+            )
         ORDER BY
             CASE WHEN lower(:orderBy) = lower('bookTitle') AND :isAscending THEN bookTitle END COLLATE NOCASE ASC,
             CASE WHEN lower(:orderBy) = lower('bookTitle') AND NOT :isAscending THEN bookTitle END COLLATE NOCASE DESC,
 
+            CASE WHEN lower(:orderBy) = lower('chapterTitle') AND :isAscending THEN chapterTitle END COLLATE NOCASE ASC,
+            CASE WHEN lower(:orderBy) = lower('chapterTitle') AND NOT :isAscending THEN chapterTitle END COLLATE NOCASE DESC,
+
             CASE WHEN lower(:orderBy) = lower('bookAuthor') AND :isAscending THEN bookAuthor END COLLATE NOCASE ASC,
             CASE WHEN lower(:orderBy) = lower('bookAuthor') AND NOT :isAscending THEN bookAuthor END COLLATE NOCASE DESC,
+
+            CASE WHEN lower(:orderBy) = lower('bookSeries') AND :isAscending THEN bookSeries END COLLATE NOCASE ASC,
+            CASE WHEN lower(:orderBy) = lower('bookSeries') AND NOT :isAscending THEN bookSeries END COLLATE NOCASE DESC,
 
             CASE WHEN lower(:orderBy) = lower('bookRemaining') AND :isAscending THEN bookRemaining END ASC,
             CASE WHEN lower(:orderBy) = lower('bookRemaining') AND NOT :isAscending THEN bookRemaining END DESC,
@@ -76,6 +86,7 @@ interface BookProgressDao : BaseDao<BookProgress> {
     """)
     fun booksProgressWithBookAndChapters(
         bookCategories: Collection<BookCategory>,
+        filter: String,
         orderBy: String,
         isAscending: Boolean,
     ): Flow<List<BookProgressWithBookAndChapters>>

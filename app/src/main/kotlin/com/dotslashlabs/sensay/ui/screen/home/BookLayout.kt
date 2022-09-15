@@ -5,11 +5,13 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.grid.*
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.airbnb.mvrx.Async
 import com.airbnb.mvrx.Loading
@@ -24,13 +26,13 @@ fun resolveAsyncState(
     emptyListItemsCount: Int = 12,
 ) = when (items) {
     is Success -> {
-        items()
+        false to items()
     }
     is Loading -> {
-        List(emptyListItemsCount) { BookProgressWithBookAndChapters.empty() }
+        true to List(emptyListItemsCount) { BookProgressWithBookAndChapters.empty() }
     }
     else -> {
-        emptyList()
+        false to emptyList()
     }
 }
 
@@ -40,29 +42,50 @@ fun <SortMenuType> BooksList(
     sortMenuItems: Collection<Pair<SortMenuType, ImageVector>>,
     sortMenuDefaults: SortFilter<SortMenuType>,
     onSortMenuChange: OnSortMenuChange<SortMenuType>,
+    isFilterEnabled: Boolean,
+    onFilterEnabled: OnFilterEnabled,
+    filter: String,
+    onFilterChange: OnFilterChange,
+    filterLabel: String,
     onNavToBook: OnNavToBook,
 ) {
+
     val state: LazyListState = rememberLazyListState()
-    val books = resolveAsyncState(items)
+    val (isLoading, books) = resolveAsyncState(items)
 
     Column(Modifier.fillMaxSize()) {
-        if (books.any { !it.isEmpty }) {
+        if (isFilterEnabled || (!isLoading && books.isNotEmpty())) {
             FilterBar(
                 sortMenuItems = sortMenuItems,
                 sortMenuDefaults = sortMenuDefaults,
                 onSortMenuChange = onSortMenuChange,
+                isFilterEnabled = isFilterEnabled,
+                onFilterEnabled = onFilterEnabled,
+                filter = filter,
+                onFilterChange = onFilterChange,
+                filterLabel = filterLabel,
             )
         }
 
         LazyColumn(state = state, modifier = Modifier.weight(1F)) {
-            if (books.isEmpty()) return@LazyColumn
+            if (books.isEmpty() && isFilterEnabled) {
+                item {
+                    Text(
+                        modifier = Modifier.fillMaxWidth().padding(20.dp),
+                        textAlign = TextAlign.Center,
+                        text = "Nothing found.",
+                    )
+                }
+            }
 
             items(count = books.size) { index ->
-                BookRow(
-                    books[index],
-                    onNavToBook,
-                    modifier = Modifier,
-                )
+                books[index].run {
+                    BookRow(
+                        this,
+                        onNavToBook = if (isEmpty) ({}) else onNavToBook,
+                        modifier = Modifier,
+                    )
+                }
             }
 
             item {
@@ -78,41 +101,63 @@ fun <SortMenuType> BooksGrid(
     sortMenuItems: Collection<Pair<SortMenuType, ImageVector>>,
     sortMenuDefaults: SortFilter<SortMenuType>,
     onSortMenuChange: OnSortMenuChange<SortMenuType>,
+    isFilterEnabled: Boolean,
+    onFilterEnabled: OnFilterEnabled,
+    filter: String,
+    onFilterChange: OnFilterChange,
+    filterLabel: String,
     onNavToBook: OnNavToBook,
 ) {
     val state: LazyGridState = rememberLazyGridState()
     val cellCount = gridColumnCount()
 
-    val books = resolveAsyncState(items)
+    val (isLoading, books) = resolveAsyncState(items)
 
     val lastRowStartCell =
         books.size - (if (books.size % cellCount == 0) cellCount else books.size % cellCount)
 
-    LazyVerticalGrid(
-        state = state,
-        columns = GridCells.Fixed(cellCount),
-        modifier = Modifier.fillMaxSize(),
-    ) {
-        if (books.isEmpty()) return@LazyVerticalGrid
-
-        if (books.any { !it.isEmpty }) {
-            item(span = { GridItemSpan(cellCount) }) {
-                FilterBar(
-                    sortMenuItems = sortMenuItems,
-                    sortMenuDefaults = sortMenuDefaults,
-                    onSortMenuChange = onSortMenuChange,
-                )
-            }
+    Column(Modifier.fillMaxSize()) {
+        if (isFilterEnabled || (!isLoading && books.isNotEmpty())) {
+            FilterBar(
+                sortMenuItems = sortMenuItems,
+                sortMenuDefaults = sortMenuDefaults,
+                onSortMenuChange = onSortMenuChange,
+                isFilterEnabled = isFilterEnabled,
+                onFilterEnabled = onFilterEnabled,
+                filter = filter,
+                onFilterChange = onFilterChange,
+                filterLabel = filterLabel,
+            )
         }
 
-        items(count = books.size) { index ->
-            BookCell(
-                books[index],
-                onNavToBook,
-                modifier = Modifier.padding(
-                    paddingValuesForCell(index + 1, cellCount, lastRowStartCell),
-                ),
-            )
+        LazyVerticalGrid(
+            state = state,
+            columns = GridCells.Fixed(cellCount),
+            modifier = Modifier
+                .fillMaxSize()
+                .weight(1F),
+        ) {
+            if (books.isEmpty() && isFilterEnabled) {
+                item(span = { GridItemSpan(cellCount) }) {
+                    Text(
+                        modifier = Modifier.fillMaxWidth().padding(20.dp),
+                        textAlign = TextAlign.Center,
+                        text = "Nothing found.",
+                    )
+                }
+            }
+
+            items(count = books.size) { index ->
+                books[index].run {
+                    BookCell(
+                        this,
+                        onNavToBook = if (isEmpty) ({}) else onNavToBook,
+                        modifier = Modifier.padding(
+                            paddingValuesForCell(index + 1, cellCount, lastRowStartCell),
+                        ),
+                    )
+                }
+            }
         }
     }
 }

@@ -9,6 +9,7 @@ data class BookProgressUpdate(
 
     val currentChapter: Int,
     val chapterProgress: ContentDuration,
+    val chapterTitle: String,
 
     val bookProgress: ContentDuration,
     val bookRemaining: ContentDuration,

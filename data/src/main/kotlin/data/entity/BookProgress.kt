@@ -23,8 +23,10 @@ data class BookProgress(
     @PrimaryKey(autoGenerate = true) val bookProgressId: BookProgressId = 0,
     val bookId: BookId,
     val chapterId: ChapterId,
+    val chapterTitle: String,
     val bookTitle: String,
     val bookAuthor: String?,
+    val bookSeries: String?,
     val totalChapters: Int,
     val currentChapter: Int = 0,
     val bookProgress: ContentDuration = ContentDuration.ZERO,
@@ -39,8 +41,10 @@ data class BookProgress(
         fun empty() = BookProgress(
             bookId = 0L,
             chapterId = 0L,
+            chapterTitle = "",
             bookTitle = "",
             bookAuthor = null,
+            bookSeries = null,
             totalChapters = 0,
         )
     }

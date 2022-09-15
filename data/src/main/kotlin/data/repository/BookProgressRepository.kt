@@ -26,9 +26,15 @@ class BookProgressRepository @Inject constructor(
 
     fun booksProgressWithBookAndChapters(
         bookCategories: Collection<BookCategory>,
+        filter: String,
         orderBy: String,
         isAscending: Boolean,
-    ) = bookProgressDao.booksProgressWithBookAndChapters(bookCategories, orderBy, isAscending)
+    ) = bookProgressDao.booksProgressWithBookAndChapters(
+        bookCategories,
+        filter,
+        orderBy,
+        isAscending,
+    )
 
     fun bookProgressWithBookAndChapters(bookId: BookId) =
         bookProgressDao.bookProgressWithBookAndChapters(bookId)

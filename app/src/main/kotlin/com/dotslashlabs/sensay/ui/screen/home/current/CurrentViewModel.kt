@@ -1,9 +1,13 @@
 package com.dotslashlabs.sensay.ui.screen.home.current
 
 import androidx.compose.ui.graphics.vector.ImageVector
-import com.airbnb.mvrx.*
+import com.airbnb.mvrx.Async
+import com.airbnb.mvrx.MavericksState
+import com.airbnb.mvrx.MavericksViewModelFactory
+import com.airbnb.mvrx.Uninitialized
 import com.airbnb.mvrx.hilt.AssistedViewModelFactory
 import com.airbnb.mvrx.hilt.hiltMavericksViewModelFactory
+import com.dotslashlabs.sensay.ui.screen.home.HomeBaseViewModel
 import com.dotslashlabs.sensay.ui.screen.home.SortFilter
 import com.dotslashlabs.sensay.ui.screen.home.library.LibrarySortType
 import dagger.assisted.Assisted
@@ -22,17 +26,28 @@ data class CurrentState(
         .map { it to it.imageVector },
 
     val sortFilter: SortFilter<CurrentSortType> = CurrentSortType.UPDATED to false,
+
+    val isFilterEnabled: Boolean = false,
+    val filter: String = "",
 ) : MavericksState
 
 class CurrentViewModel @AssistedInject constructor(
-    @Assisted private val state: CurrentState,
+    @Assisted state: CurrentState,
     private val store: SensayStore,
-) : MavericksViewModel<CurrentState>(state) {
+) : HomeBaseViewModel<CurrentState>(state) {
 
     init {
-        onEach(CurrentState::sortFilter) { (sortType, isAscending) ->
+        onEachThrottled(
+            CurrentState::sortFilter,
+            CurrentState::filter,
+            delayByMillis = { _, filter -> if (filter.length > 1) 200L else 0L },
+        ) { (sortType, isAscending), filter ->
+
+            val filterCondition = if (filter.isNotBlank()) "%${filter.lowercase()}%" else "%"
+
             store.booksProgressWithBookAndChapters(
                 listOf(BookCategory.CURRENT),
+                filter = filterCondition,
                 orderBy = sortType.columnName,
                 isAscending = isAscending,
             ).execute {
@@ -43,6 +58,20 @@ class CurrentViewModel @AssistedInject constructor(
 
     fun setSortFilter(sortFilter: SortFilter<CurrentSortType>) {
         setState { copy(sortFilter = sortFilter) }
+    }
+
+    fun setFilterEnabled(enabled: Boolean) {
+        setState {
+            if (enabled) {
+                copy(isFilterEnabled = true)
+            } else {
+                copy(isFilterEnabled = false, filter = "")
+            }
+        }
+    }
+
+    fun setFilter(filter: String) {
+        setState { copy(filter = filter) }
     }
 
     @AssistedFactory

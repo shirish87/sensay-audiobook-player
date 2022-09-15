@@ -46,6 +46,11 @@ object LibraryScreen : SensayScreen {
                     state.sortMenuItems,
                     state.sortFilter,
                     onSortMenuChange = viewModel::setSortFilter,
+                    isFilterEnabled = state.isFilterEnabled,
+                    onFilterEnabled = viewModel::setFilterEnabled,
+                    filter = state.filter,
+                    onFilterChange = viewModel::setFilter,
+                    filterLabel = "Book Title or Author",
                     onNavToBook = onNavToBook,
                 )
                 HomeLayout.GRID -> BooksGrid(
@@ -53,6 +58,11 @@ object LibraryScreen : SensayScreen {
                     state.sortMenuItems,
                     state.sortFilter,
                     onSortMenuChange = viewModel::setSortFilter,
+                    isFilterEnabled = state.isFilterEnabled,
+                    onFilterEnabled = viewModel::setFilterEnabled,
+                    filter = state.filter,
+                    onFilterChange = viewModel::setFilter,
+                    filterLabel = "Book Title or Author",
                     onNavToBook = onNavToBook,
                 )
             }

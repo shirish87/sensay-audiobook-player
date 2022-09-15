@@ -3,9 +3,13 @@ package com.dotslashlabs.sensay.ui.screen.home.library
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.*
 import androidx.compose.ui.graphics.vector.ImageVector
-import com.airbnb.mvrx.*
+import com.airbnb.mvrx.Async
+import com.airbnb.mvrx.MavericksState
+import com.airbnb.mvrx.MavericksViewModelFactory
+import com.airbnb.mvrx.Uninitialized
 import com.airbnb.mvrx.hilt.AssistedViewModelFactory
 import com.airbnb.mvrx.hilt.hiltMavericksViewModelFactory
+import com.dotslashlabs.sensay.ui.screen.home.HomeBaseViewModel
 import com.dotslashlabs.sensay.ui.screen.home.SortFilter
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
@@ -13,7 +17,6 @@ import dagger.assisted.AssistedInject
 import data.BookCategory
 import data.SensayStore
 import data.entity.BookProgressWithBookAndChapters
-import logcat.logcat
 
 enum class LibrarySortType(
     private val displayName: String,
@@ -37,17 +40,28 @@ data class LibraryState(
         .map { it to it.imageVector },
 
     val sortFilter: SortFilter<LibrarySortType> = LibrarySortType.UPDATED to false,
+
+    val isFilterEnabled: Boolean = false,
+    val filter: String = "",
 ) : MavericksState
 
 class LibraryViewModel @AssistedInject constructor(
-    @Assisted private val state: LibraryState,
+    @Assisted state: LibraryState,
     private val store: SensayStore,
-) : MavericksViewModel<LibraryState>(state) {
+) : HomeBaseViewModel<LibraryState>(state) {
 
     init {
-        onEach(LibraryState::sortFilter) { (sortType, isAscending) ->
+        onEachThrottled(
+            LibraryState::sortFilter,
+            LibraryState::filter,
+            delayByMillis = { _, filter -> if (filter.length > 1) 200L else 0L },
+        ) { (sortType, isAscending), filter ->
+
+            val filterCondition = if (filter.isNotBlank()) "%${filter.lowercase()}%" else "%"
+
             store.booksProgressWithBookAndChapters(
                 listOf(BookCategory.NOT_STARTED, BookCategory.FINISHED),
+                filter = filterCondition,
                 orderBy = sortType.columnName,
                 isAscending = isAscending,
             ).execute(retainValue = LibraryState::books) {
@@ -58,6 +72,20 @@ class LibraryViewModel @AssistedInject constructor(
 
     fun setSortFilter(sortFilter: SortFilter<LibrarySortType>) {
         setState { copy(sortFilter = sortFilter) }
+    }
+
+    fun setFilterEnabled(enabled: Boolean) {
+        setState {
+            if (enabled) {
+                copy(isFilterEnabled = enabled)
+            } else {
+                copy(isFilterEnabled = enabled, filter = "")
+            }
+        }
+    }
+
+    fun setFilter(filter: String) {
+        setState { copy(filter = filter) }
     }
 
     @AssistedFactory

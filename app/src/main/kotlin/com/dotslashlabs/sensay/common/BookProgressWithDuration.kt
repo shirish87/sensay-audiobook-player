@@ -81,6 +81,7 @@ data class BookProgressWithDuration(
 
             currentChapter = currentChapter,
             chapterProgress = ContentDuration.ms(chapterPosition),
+            chapterTitle = chapterTitle,
 
             bookProgress = ContentDuration.ms(bookProgressMs),
             bookRemaining = ContentDuration.ms(maxOf(0, bookDuration.ms - bookProgressMs)),

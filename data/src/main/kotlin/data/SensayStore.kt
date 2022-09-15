@@ -91,9 +91,11 @@ class SensayStore @Inject constructor(
                         BookProgress(
                             bookId = bookId,
                             chapterId = chapterIds.first(),
+                            chapterTitle = chapters.first().title,
                             totalChapters = chapterIds.size,
                             bookTitle = book.title,
                             bookAuthor = book.author,
+                            bookSeries = book.series,
                             createdAt = Instant.now(),
                             bookRemaining = book.duration,
                         )
@@ -128,10 +130,12 @@ class SensayStore @Inject constructor(
 
     fun booksProgressWithBookAndChapters(
         bookCategories: Collection<BookCategory>,
+        filter: String,
         orderBy: String,
         isAscending: Boolean,
     ) = bookProgressRepository.booksProgressWithBookAndChapters(
         bookCategories,
+        filter,
         orderBy,
         isAscending,
     )
