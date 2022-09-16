@@ -12,11 +12,12 @@ abstract class HomeBaseViewModel<S : MavericksState>(
     initialState: S
 ) : MavericksViewModel<S>(initialState) {
 
-    protected fun <A, B> onEachThrottled(
+    protected fun <A, B, C> onEachThrottled(
         prop1: KProperty1<S, A>,
         prop2: KProperty1<S, B>,
-        delayByMillis: (A, B) -> Long,
-        action: suspend (A, B) -> Unit,
+        prop3: KProperty1<S, C>,
+        delayByMillis: (A, B, C) -> Long,
+        action: suspend (A, B, C) -> Unit,
     ) {
 
         var loadingJob: Job? = null
@@ -24,16 +25,13 @@ abstract class HomeBaseViewModel<S : MavericksState>(
         onEach(
             prop1,
             prop2,
-        ) { val1, val2 ->
+            prop3,
+        ) { val1, val2, val3 ->
 
             loadingJob?.cancel()
             loadingJob = viewModelScope.launch {
-                val delayMillis = delayByMillis(val1, val2)
-                if (delayMillis > 0) {
-                    delay(delayMillis)
-                }
-
-                action(val1, val2)
+                delay(delayByMillis(val1, val2, val3))
+                action(val1, val2, val3)
             }
         }
     }

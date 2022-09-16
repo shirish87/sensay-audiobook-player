@@ -131,11 +131,13 @@ class SensayStore @Inject constructor(
     fun booksProgressWithBookAndChapters(
         bookCategories: Collection<BookCategory>,
         filter: String,
+        authorsFilter: List<String>,
         orderBy: String,
         isAscending: Boolean,
     ) = bookProgressRepository.booksProgressWithBookAndChapters(
         bookCategories,
         filter,
+        authorsFilter,
         orderBy,
         isAscending,
     )

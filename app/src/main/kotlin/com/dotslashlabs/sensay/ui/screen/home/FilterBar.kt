@@ -5,8 +5,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Clear
-import androidx.compose.material.icons.outlined.FilterList
+import androidx.compose.material.icons.outlined.Clear
 import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -34,6 +33,7 @@ data class FilterMenuOptions(
 fun <SortMenuType> FilterBar(
     sortMenuOptions: SortMenuOptions<SortMenuType>,
     filterMenuOptions: FilterMenuOptions,
+    @Suppress("UNUSED_PARAMETER") filterListOptions: FilterListOptions<String>,
     modifier: Modifier = Modifier
         .fillMaxWidth()
         .heightIn(min = 40.dp),
@@ -59,26 +59,6 @@ fun <SortMenuType> FilterBar(
                 shape = MaterialTheme.shapes.small,
                 selected = isFilterEnabled,
                 onClick = { onFilterEnabled(!isFilterEnabled) },
-                label = { Text("Authors") },
-                leadingIcon = {
-                    Icon(
-                        Icons.Outlined.FilterList,
-                        contentDescription = null,
-                        Modifier.size(FilterChipDefaults.IconSize),
-                    )
-                },
-            )
-        }
-        item {
-            SortMenu(
-                sortMenuOptions = sortMenuOptions,
-            )
-        }
-        item {
-            FilterChip(
-                shape = MaterialTheme.shapes.small,
-                selected = isFilterEnabled,
-                onClick = { onFilterEnabled(!isFilterEnabled) },
                 label = { Text("Search") },
                 leadingIcon = {
                     Icon(
@@ -87,6 +67,26 @@ fun <SortMenuType> FilterBar(
                         Modifier.size(FilterChipDefaults.IconSize),
                     )
                 },
+            )
+        }
+//        item {
+//            FilterChip(
+//                shape = MaterialTheme.shapes.small,
+//                selected = filterListOptions.isFilterEnabled,
+//                onClick = { filterListOptions.onFilterEnabled(!filterListOptions.isFilterEnabled) },
+//                label = { Text(filterListOptions.filterLabel) },
+//                leadingIcon = {
+//                    Icon(
+//                        Icons.Outlined.FilterList,
+//                        contentDescription = null,
+//                        Modifier.size(FilterChipDefaults.IconSize),
+//                    )
+//                },
+//            )
+//        }
+        item {
+            SortMenu(
+                sortMenuOptions = sortMenuOptions,
             )
         }
     }
@@ -107,7 +107,7 @@ fun <SortMenuType> FilterBar(
                 trailingIcon = {
                     if (filter.isNotEmpty()) {
                         Icon(
-                            Icons.Default.Clear,
+                            Icons.Outlined.Clear,
                             contentDescription = null,
                             modifier = Modifier.clickable { onFilterChange("") },
                         )
@@ -120,4 +120,10 @@ fun <SortMenuType> FilterBar(
             focusRequester.requestFocus()
         }
     }
+
+//    if (filterListOptions.isFilterEnabled) {
+//        FilterList(
+//            filterListOptions = filterListOptions,
+//        )
+//    }
 }

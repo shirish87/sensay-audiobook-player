@@ -39,22 +39,26 @@ fun <SortMenuType> BooksList(
     items: Async<List<BookProgressWithBookAndChapters>>,
     sortMenuOptions: SortMenuOptions<SortMenuType>,
     filterMenuOptions: FilterMenuOptions,
+    filterListOptions: FilterListOptions<String>,
     onNavToBook: OnNavToBook,
 ) {
 
     val state: LazyListState = rememberLazyListState()
     val (isLoading, books) = resolveAsyncState(items)
 
+    val isFilterEnabled = filterMenuOptions.isFilterEnabled || filterListOptions.isFilterEnabled
+
     Column(Modifier.fillMaxSize()) {
-        if (filterMenuOptions.isFilterEnabled || (!isLoading && books.isNotEmpty())) {
+        if (isFilterEnabled || (!isLoading && books.isNotEmpty())) {
             FilterBar(
                 sortMenuOptions = sortMenuOptions,
                 filterMenuOptions = filterMenuOptions,
+                filterListOptions = filterListOptions,
             )
         }
 
         LazyColumn(state = state, modifier = Modifier.weight(1F)) {
-            if (books.isEmpty() && filterMenuOptions.isFilterEnabled) {
+            if (books.isEmpty() && isFilterEnabled) {
                 item {
                     Text(
                         modifier = Modifier.fillMaxWidth().padding(20.dp),
@@ -86,6 +90,7 @@ fun <SortMenuType> BooksGrid(
     items: Async<List<BookProgressWithBookAndChapters>>,
     sortMenuOptions: SortMenuOptions<SortMenuType>,
     filterMenuOptions: FilterMenuOptions,
+    filterListOptions: FilterListOptions<String>,
     onNavToBook: OnNavToBook,
 ) {
     val state: LazyGridState = rememberLazyGridState()
@@ -96,11 +101,14 @@ fun <SortMenuType> BooksGrid(
     val lastRowStartCell =
         books.size - (if (books.size % cellCount == 0) cellCount else books.size % cellCount)
 
+    val isFilterEnabled = filterMenuOptions.isFilterEnabled || filterListOptions.isFilterEnabled
+
     Column(Modifier.fillMaxSize()) {
-        if (filterMenuOptions.isFilterEnabled || (!isLoading && books.isNotEmpty())) {
+        if (isFilterEnabled || (!isLoading && books.isNotEmpty())) {
             FilterBar(
                 sortMenuOptions = sortMenuOptions,
                 filterMenuOptions = filterMenuOptions,
+                filterListOptions = filterListOptions,
             )
         }
 
@@ -111,7 +119,7 @@ fun <SortMenuType> BooksGrid(
                 .fillMaxSize()
                 .weight(1F),
         ) {
-            if (books.isEmpty() && filterMenuOptions.isFilterEnabled) {
+            if (books.isEmpty() && isFilterEnabled) {
                 item(span = { GridItemSpan(cellCount) }) {
                     Text(
                         modifier = Modifier.fillMaxWidth().padding(20.dp),

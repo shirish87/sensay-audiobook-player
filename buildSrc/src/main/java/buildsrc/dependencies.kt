@@ -101,6 +101,7 @@ object Libraries {
         private const val version = "0.25.1"
 
         const val accompanistNavigation = "com.google.accompanist:accompanist-navigation-animation:$version"
+        const val accompanistFlowLayout = "com.google.accompanist:accompanist-flowlayout:$version"
     }
 
     object Room {

@@ -1,5 +1,6 @@
 package data.dao
 
+import androidx.annotation.Nullable
 import androidx.paging.PagingSource
 import androidx.room.Dao
 import androidx.room.Query
@@ -87,6 +88,47 @@ interface BookProgressDao : BaseDao<BookProgress> {
     fun booksProgressWithBookAndChapters(
         bookCategories: Collection<BookCategory>,
         filter: String,
+        orderBy: String,
+        isAscending: Boolean,
+    ): Flow<List<BookProgressWithBookAndChapters>>
+
+    @Transaction
+    @Query("""
+        SELECT *
+        FROM BookProgress
+        WHERE
+            bookCategory IN (:bookCategories)
+            AND (
+                bookTitle LIKE :filter
+                OR bookAuthor LIKE :filter
+            )
+            AND bookAuthor IN (:authorsFilter)
+        ORDER BY
+            CASE WHEN lower(:orderBy) = lower('bookTitle') AND :isAscending THEN bookTitle END COLLATE NOCASE ASC,
+            CASE WHEN lower(:orderBy) = lower('bookTitle') AND NOT :isAscending THEN bookTitle END COLLATE NOCASE DESC,
+
+            CASE WHEN lower(:orderBy) = lower('chapterTitle') AND :isAscending THEN chapterTitle END COLLATE NOCASE ASC,
+            CASE WHEN lower(:orderBy) = lower('chapterTitle') AND NOT :isAscending THEN chapterTitle END COLLATE NOCASE DESC,
+
+            CASE WHEN lower(:orderBy) = lower('bookAuthor') AND :isAscending THEN bookAuthor END COLLATE NOCASE ASC,
+            CASE WHEN lower(:orderBy) = lower('bookAuthor') AND NOT :isAscending THEN bookAuthor END COLLATE NOCASE DESC,
+
+            CASE WHEN lower(:orderBy) = lower('bookSeries') AND :isAscending THEN bookSeries END COLLATE NOCASE ASC,
+            CASE WHEN lower(:orderBy) = lower('bookSeries') AND NOT :isAscending THEN bookSeries END COLLATE NOCASE DESC,
+
+            CASE WHEN lower(:orderBy) = lower('bookRemaining') AND :isAscending THEN bookRemaining END ASC,
+            CASE WHEN lower(:orderBy) = lower('bookRemaining') AND NOT :isAscending THEN bookRemaining END DESC,
+
+            CASE WHEN lower(:orderBy) = lower('createdAt') AND :isAscending THEN createdAt END ASC,
+            CASE WHEN lower(:orderBy) = lower('createdAt') AND NOT :isAscending THEN createdAt END DESC,
+
+            CASE WHEN lower(:orderBy) = lower('lastUpdatedAt') AND :isAscending THEN lastUpdatedAt END ASC,
+            CASE WHEN lower(:orderBy) = lower('lastUpdatedAt') AND NOT :isAscending THEN lastUpdatedAt END DESC
+    """)
+    fun booksProgressWithBookAndChapters(
+        bookCategories: Collection<BookCategory>,
+        filter: String,
+        authorsFilter: List<String>,
         orderBy: String,
         isAscending: Boolean,
     ): Flow<List<BookProgressWithBookAndChapters>>

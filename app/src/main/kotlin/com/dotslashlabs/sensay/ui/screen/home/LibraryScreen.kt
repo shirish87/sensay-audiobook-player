@@ -55,18 +55,34 @@ object LibraryScreen : SensayScreen {
             filterLabel = "Book Title or Author",
         )
 
+        val filterListOptions = FilterListOptions(
+            isFilterEnabled = state.isAuthorFilterEnabled,
+            onFilterEnabled = viewModel::setAuthorFilterEnabled,
+            items = state.authors,
+            selection = state.authorsFilter,
+            filterLabel = "Authors",
+            onAdd = {
+                viewModel.setAuthorsFilter((state.authorsFilter + it).sorted())
+            },
+            onDelete = {
+                viewModel.setAuthorsFilter((state.authorsFilter - it).sorted())
+            },
+        )
+
         SensayFrame {
             when (homeLayout) {
                 HomeLayout.LIST -> BooksList(
                     state.books,
                     sortMenuOptions = sortMenuOptions,
                     filterMenuOptions = filterMenuOptions,
+                    filterListOptions = filterListOptions,
                     onNavToBook = onNavToBook,
                 )
                 HomeLayout.GRID -> BooksGrid(
                     state.books,
                     sortMenuOptions = sortMenuOptions,
                     filterMenuOptions = filterMenuOptions,
+                    filterListOptions = filterListOptions,
                     onNavToBook = onNavToBook,
                 )
             }

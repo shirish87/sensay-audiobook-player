@@ -43,9 +43,17 @@ data class HomeViewState(
 
     val isFilterEnabled: Boolean = false,
     val filter: String = "",
+
+    val isAuthorFilterEnabled: Boolean = false,
+    val authorsFilter: List<String> = emptyList(),
 ) : MavericksState {
 
     constructor(args: HomeViewArgs) : this(bookCategories = args.bookCategories)
+
+    val authors: List<String> = books()?.fold(mutableSetOf<String>()) { acc, b ->
+        b.book.author?.let { acc.add(it) }
+        acc
+    }?.sorted() ?: emptyList()
 }
 
 
@@ -59,15 +67,17 @@ class HomeViewModel @AssistedInject constructor(
     init {
         onEachThrottled(
             HomeViewState::sortFilter,
+            HomeViewState::authorsFilter,
             HomeViewState::filter,
-            delayByMillis = { _, filter -> if (filter.length > 3) 200L else 50L },
-        ) { (sortType, isAscending), filter ->
+            delayByMillis = { _, _, filter -> if (filter.length > 3) 200L else 50L },
+        ) { (sortType, isAscending), authorsFilter, filter ->
 
             val filterCondition = if (filter.isNotBlank()) "%${filter.lowercase()}%" else "%"
 
             store.booksProgressWithBookAndChapters(
                 bookCategories,
                 filter = filterCondition,
+                authorsFilter = authorsFilter,
                 orderBy = sortType.columnName,
                 isAscending = isAscending,
             ).execute(retainValue = HomeViewState::books) {
@@ -92,6 +102,20 @@ class HomeViewModel @AssistedInject constructor(
 
     fun setFilter(filter: String) {
         setState { copy(filter = filter) }
+    }
+
+    fun setAuthorFilterEnabled(enabled: Boolean) {
+        setState {
+            if (enabled) {
+                copy(isAuthorFilterEnabled = enabled)
+            } else {
+                copy(isAuthorFilterEnabled = enabled, authorsFilter = emptyList())
+            }
+        }
+    }
+
+    fun setAuthorsFilter(authorsFilter: List<String>) {
+        setState { copy(authorsFilter = authorsFilter) }
     }
 
     @AssistedFactory
