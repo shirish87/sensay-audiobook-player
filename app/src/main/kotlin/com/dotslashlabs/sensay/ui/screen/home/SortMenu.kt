@@ -17,14 +17,24 @@ import androidx.compose.ui.graphics.vector.ImageVector
 typealias SortFilter<T> = Pair<T, Boolean>
 typealias OnSortMenuChange<T> = (sortFilter: SortFilter<T>) -> Unit
 
+data class SortMenuOptions<SortMenuType>(
+    val sortMenuItems: Collection<Pair<SortMenuType, ImageVector>>,
+    val sortMenuDefaults: SortFilter<SortMenuType>,
+    val onSortMenuChange: OnSortMenuChange<SortMenuType>,
+)
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun <T> SortMenu(
-    menuItems: Collection<Pair<T, ImageVector>>,
-    defaults: SortFilter<T>,
-    onSortMenuChange: OnSortMenuChange<T>,
+    sortMenuOptions: SortMenuOptions<T>,
     labelPrefix: String = "",
 ) {
+
+    val (
+        menuItems,
+        defaults,
+        onSortMenuChange,
+    ) = sortMenuOptions
 
     var sortFilter: SortFilter<T> by remember { mutableStateOf(defaults) }
     var expanded: Boolean by remember { mutableStateOf(false) }

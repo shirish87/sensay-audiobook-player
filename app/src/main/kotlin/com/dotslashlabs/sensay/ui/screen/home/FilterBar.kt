@@ -6,6 +6,7 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Clear
+import androidx.compose.material.icons.outlined.FilterList
 import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -15,25 +16,36 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
 
 typealias OnFilterChange = (filter: String) -> Unit
 typealias OnFilterEnabled = (enabled: Boolean) -> Unit
 
+data class FilterMenuOptions(
+    val isFilterEnabled: Boolean,
+    val onFilterEnabled: OnFilterEnabled,
+    val filter: String,
+    val onFilterChange: OnFilterChange,
+    val filterLabel: String,
+)
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun <SortMenuType> FilterBar(
-    sortMenuItems: Collection<Pair<SortMenuType, ImageVector>>,
-    sortMenuDefaults: SortFilter<SortMenuType>,
-    onSortMenuChange: OnSortMenuChange<SortMenuType>,
-    isFilterEnabled: Boolean,
-    onFilterEnabled: OnFilterEnabled,
-    filter: String,
-    onFilterChange: OnFilterChange,
-    filterLabel: String,
-    modifier: Modifier = Modifier.fillMaxWidth().heightIn(min = 40.dp),
+    sortMenuOptions: SortMenuOptions<SortMenuType>,
+    filterMenuOptions: FilterMenuOptions,
+    modifier: Modifier = Modifier
+        .fillMaxWidth()
+        .heightIn(min = 40.dp),
 ) {
+
+    val (
+        isFilterEnabled,
+        onFilterEnabled,
+        filter,
+        onFilterChange,
+        filterLabel,
+    ) = filterMenuOptions
 
     LazyRow(
         verticalAlignment = Alignment.CenterVertically,
@@ -43,10 +55,23 @@ fun <SortMenuType> FilterBar(
     ) {
 
         item {
+            FilterChip(
+                shape = MaterialTheme.shapes.small,
+                selected = isFilterEnabled,
+                onClick = { onFilterEnabled(!isFilterEnabled) },
+                label = { Text("Authors") },
+                leadingIcon = {
+                    Icon(
+                        Icons.Outlined.FilterList,
+                        contentDescription = null,
+                        Modifier.size(FilterChipDefaults.IconSize),
+                    )
+                },
+            )
+        }
+        item {
             SortMenu(
-                menuItems = sortMenuItems,
-                defaults = sortMenuDefaults,
-                onSortMenuChange = onSortMenuChange,
+                sortMenuOptions = sortMenuOptions,
             )
         }
         item {

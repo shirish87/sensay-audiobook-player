@@ -41,30 +41,32 @@ object LibraryScreen : SensayScreen {
             }
         }
 
+        val sortMenuOptions = SortMenuOptions(
+            state.sortMenuItems,
+            state.sortFilter,
+            onSortMenuChange = viewModel::setSortFilter,
+        )
+
+        val filterMenuOptions = FilterMenuOptions(
+            isFilterEnabled = state.isFilterEnabled,
+            onFilterEnabled = viewModel::setFilterEnabled,
+            filter = state.filter,
+            onFilterChange = viewModel::setFilter,
+            filterLabel = "Book Title or Author",
+        )
+
         SensayFrame {
             when (homeLayout) {
                 HomeLayout.LIST -> BooksList(
                     state.books,
-                    state.sortMenuItems,
-                    state.sortFilter,
-                    onSortMenuChange = viewModel::setSortFilter,
-                    isFilterEnabled = state.isFilterEnabled,
-                    onFilterEnabled = viewModel::setFilterEnabled,
-                    filter = state.filter,
-                    onFilterChange = viewModel::setFilter,
-                    filterLabel = "Book Title or Author",
+                    sortMenuOptions = sortMenuOptions,
+                    filterMenuOptions = filterMenuOptions,
                     onNavToBook = onNavToBook,
                 )
                 HomeLayout.GRID -> BooksGrid(
                     state.books,
-                    state.sortMenuItems,
-                    state.sortFilter,
-                    onSortMenuChange = viewModel::setSortFilter,
-                    isFilterEnabled = state.isFilterEnabled,
-                    onFilterEnabled = viewModel::setFilterEnabled,
-                    filter = state.filter,
-                    onFilterChange = viewModel::setFilter,
-                    filterLabel = "Book Title or Author",
+                    sortMenuOptions = sortMenuOptions,
+                    filterMenuOptions = filterMenuOptions,
                     onNavToBook = onNavToBook,
                 )
             }

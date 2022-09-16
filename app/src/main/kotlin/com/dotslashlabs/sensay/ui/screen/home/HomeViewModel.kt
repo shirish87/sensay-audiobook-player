@@ -60,13 +60,13 @@ class HomeViewModel @AssistedInject constructor(
         onEachThrottled(
             HomeViewState::sortFilter,
             HomeViewState::filter,
-            delayByMillis = { _, filter -> if (filter.length > 1) 200L else 0L },
+            delayByMillis = { _, filter -> if (filter.length > 3) 200L else 50L },
         ) { (sortType, isAscending), filter ->
 
             val filterCondition = if (filter.isNotBlank()) "%${filter.lowercase()}%" else "%"
 
             store.booksProgressWithBookAndChapters(
-                bookCategories, // listOf(BookCategory.NOT_STARTED, BookCategory.FINISHED),
+                bookCategories,
                 filter = filterCondition,
                 orderBy = sortType.columnName,
                 isAscending = isAscending,

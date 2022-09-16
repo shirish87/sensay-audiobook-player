@@ -8,7 +8,6 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.style.TextAlign
@@ -38,14 +37,8 @@ fun resolveAsyncState(
 @Composable
 fun <SortMenuType> BooksList(
     items: Async<List<BookProgressWithBookAndChapters>>,
-    sortMenuItems: Collection<Pair<SortMenuType, ImageVector>>,
-    sortMenuDefaults: SortFilter<SortMenuType>,
-    onSortMenuChange: OnSortMenuChange<SortMenuType>,
-    isFilterEnabled: Boolean,
-    onFilterEnabled: OnFilterEnabled,
-    filter: String,
-    onFilterChange: OnFilterChange,
-    filterLabel: String,
+    sortMenuOptions: SortMenuOptions<SortMenuType>,
+    filterMenuOptions: FilterMenuOptions,
     onNavToBook: OnNavToBook,
 ) {
 
@@ -53,21 +46,15 @@ fun <SortMenuType> BooksList(
     val (isLoading, books) = resolveAsyncState(items)
 
     Column(Modifier.fillMaxSize()) {
-        if (isFilterEnabled || (!isLoading && books.isNotEmpty())) {
+        if (filterMenuOptions.isFilterEnabled || (!isLoading && books.isNotEmpty())) {
             FilterBar(
-                sortMenuItems = sortMenuItems,
-                sortMenuDefaults = sortMenuDefaults,
-                onSortMenuChange = onSortMenuChange,
-                isFilterEnabled = isFilterEnabled,
-                onFilterEnabled = onFilterEnabled,
-                filter = filter,
-                onFilterChange = onFilterChange,
-                filterLabel = filterLabel,
+                sortMenuOptions = sortMenuOptions,
+                filterMenuOptions = filterMenuOptions,
             )
         }
 
         LazyColumn(state = state, modifier = Modifier.weight(1F)) {
-            if (books.isEmpty() && isFilterEnabled) {
+            if (books.isEmpty() && filterMenuOptions.isFilterEnabled) {
                 item {
                     Text(
                         modifier = Modifier.fillMaxWidth().padding(20.dp),
@@ -97,14 +84,8 @@ fun <SortMenuType> BooksList(
 @Composable
 fun <SortMenuType> BooksGrid(
     items: Async<List<BookProgressWithBookAndChapters>>,
-    sortMenuItems: Collection<Pair<SortMenuType, ImageVector>>,
-    sortMenuDefaults: SortFilter<SortMenuType>,
-    onSortMenuChange: OnSortMenuChange<SortMenuType>,
-    isFilterEnabled: Boolean,
-    onFilterEnabled: OnFilterEnabled,
-    filter: String,
-    onFilterChange: OnFilterChange,
-    filterLabel: String,
+    sortMenuOptions: SortMenuOptions<SortMenuType>,
+    filterMenuOptions: FilterMenuOptions,
     onNavToBook: OnNavToBook,
 ) {
     val state: LazyGridState = rememberLazyGridState()
@@ -116,16 +97,10 @@ fun <SortMenuType> BooksGrid(
         books.size - (if (books.size % cellCount == 0) cellCount else books.size % cellCount)
 
     Column(Modifier.fillMaxSize()) {
-        if (isFilterEnabled || (!isLoading && books.isNotEmpty())) {
+        if (filterMenuOptions.isFilterEnabled || (!isLoading && books.isNotEmpty())) {
             FilterBar(
-                sortMenuItems = sortMenuItems,
-                sortMenuDefaults = sortMenuDefaults,
-                onSortMenuChange = onSortMenuChange,
-                isFilterEnabled = isFilterEnabled,
-                onFilterEnabled = onFilterEnabled,
-                filter = filter,
-                onFilterChange = onFilterChange,
-                filterLabel = filterLabel,
+                sortMenuOptions = sortMenuOptions,
+                filterMenuOptions = filterMenuOptions,
             )
         }
 
@@ -136,7 +111,7 @@ fun <SortMenuType> BooksGrid(
                 .fillMaxSize()
                 .weight(1F),
         ) {
-            if (books.isEmpty() && isFilterEnabled) {
+            if (books.isEmpty() && filterMenuOptions.isFilterEnabled) {
                 item(span = { GridItemSpan(cellCount) }) {
                     Text(
                         modifier = Modifier.fillMaxWidth().padding(20.dp),
