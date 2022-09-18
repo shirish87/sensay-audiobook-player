@@ -17,7 +17,7 @@ object Libraries {
     )
 
     object Gradle {
-        private const val version = "7.2.2"
+        private const val version = "7.3.0"
 
         const val gradlePlugin = "com.android.tools.build:gradle:$version"
     }
