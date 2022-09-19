@@ -22,6 +22,7 @@ class SensayStore @Inject constructor(
     private val bookProgressRepository: BookProgressRepository,
     private val sourceRepository: SourceRepository,
     private val bookmarkRepository: BookmarkRepository,
+    private val progressRepository: ProgressRepository,
 ) {
 
     suspend fun createBooksWithChapters(
@@ -151,6 +152,12 @@ class SensayStore @Inject constructor(
     fun bookProgressWithBookAndChapters(bookIds: Collection<BookId>) =
         bookProgressRepository.bookProgressWithBookAndChapters(bookIds)
 
+    fun progressRestorableCount() =
+        progressRepository.progressCount()
+
+    fun progressRestorable() =
+        progressRepository.progressRestorable()
+
     fun booksCount() = bookRepository.booksCount()
 
     fun bookByUri(uri: Uri) = bookRepository.bookByUri(uri)
@@ -191,10 +198,12 @@ class SensayStore @Inject constructor(
 
                 shelfRepository.deleteShelves(bookIds)
                 tagRepository.deleteTags(bookIds)
-                bookProgressRepository.deleteBooksProgress(bookIds)
+
                 chapterRepository.deleteChapters(bookIds)
                 bookmarkRepository.deleteBookmarksForBooks(bookIds)
                 bookRepository.deleteBooks(books)
+
+                bookProgressRepository.deleteOrResetBooksProgress(bookIds)
 
                 true
             }
@@ -212,6 +221,8 @@ class SensayStore @Inject constructor(
         bookmarkRepository.deleteBookmarks(listOf(bookmark))
 
     fun bookmarksWithChapters(bookId: BookId) = bookmarkRepository.bookmarksWithChapters(bookId)
+
+    suspend fun deleteProgress(progress: Progress) = progressRepository.deleteProgress(progress)
 }
 
 @Transaction

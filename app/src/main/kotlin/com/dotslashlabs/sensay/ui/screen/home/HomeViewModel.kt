@@ -35,6 +35,7 @@ enum class HomeSortType(
 data class HomeViewState(
     @PersistState val bookCategories: Collection<BookCategory>,
     val books: Async<List<BookProgressWithBookAndChapters>> = Uninitialized,
+    val progressRestorableCount: Async<Int> = Uninitialized,
 
     val sortMenuItems: Collection<Pair<HomeSortType, ImageVector>> = HomeSortType.values()
         .map { it to it.imageVector },
@@ -84,6 +85,11 @@ class HomeViewModel @AssistedInject constructor(
                 copy(books = it)
             }
         }
+
+        store.progressRestorableCount()
+            .execute(retainValue = HomeViewState::progressRestorableCount) {
+                copy(progressRestorableCount = it)
+            }
     }
 
     fun setSortFilter(sortFilter: SortFilter<HomeSortType>) {

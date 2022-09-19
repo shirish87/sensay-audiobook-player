@@ -6,26 +6,31 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.MoreVert
-import androidx.compose.material.icons.outlined.Delete
-import androidx.compose.material.icons.outlined.Done
-import androidx.compose.material.icons.outlined.NotStarted
-import androidx.compose.material.icons.outlined.Subscriptions
+import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import com.dotslashlabs.sensay.ui.screen.common.ConfirmDialog
+import com.dotslashlabs.sensay.ui.screen.restore.OnNavToRestore
 import data.BookCategory
 import data.entity.BookProgressWithBookAndChapters
+
+data class BookContextMenuConfig(
+    val isEnabled: Boolean = true,
+    val isRestoreBookEnabled: Boolean = false,
+    val onNavToRestore: OnNavToRestore,
+)
 
 @Composable
 fun BookContextMenu(
     @Suppress("UNUSED_PARAMETER") bookProgressWithChapters: BookProgressWithBookAndChapters,
+    config: BookContextMenuConfig,
     modifier: Modifier = Modifier,
 ) {
 
-    if (bookProgressWithChapters.isEmpty) return
+    if (bookProgressWithChapters.isEmpty || !config.isEnabled) return
 
     val bookCategory = bookProgressWithChapters.bookProgress.bookCategory
 
@@ -96,6 +101,22 @@ fun BookContextMenu(
                         },
                     )
                 }
+            }
+
+            if (config.isRestoreBookEnabled && bookProgressWithChapters.bookProgress.bookCategory == BookCategory.NOT_STARTED) {
+                DropdownMenuItem(
+                    text = { Text("Restore Progress") },
+                    onClick = {
+                        expanded = false
+                        config.onNavToRestore(bookProgressWithChapters.bookProgress.bookId)
+                    },
+                    leadingIcon = {
+                        Icon(
+                            Icons.Outlined.RestorePage,
+                            contentDescription = null,
+                        )
+                    },
+                )
             }
 
             Divider()

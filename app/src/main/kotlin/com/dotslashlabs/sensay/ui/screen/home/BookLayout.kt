@@ -37,6 +37,7 @@ fun resolveAsyncState(
 @Composable
 fun <SortMenuType> BooksList(
     items: Async<List<BookProgressWithBookAndChapters>>,
+    config: BookContextMenuConfig,
     sortMenuOptions: SortMenuOptions<SortMenuType>,
     filterMenuOptions: FilterMenuOptions,
     filterListOptions: FilterListOptions<String>,
@@ -72,6 +73,7 @@ fun <SortMenuType> BooksList(
                 books[index].run {
                     BookRow(
                         this,
+                        config,
                         onNavToBook = if (isEmpty) ({}) else onNavToBook,
                         modifier = Modifier,
                     )
@@ -88,6 +90,7 @@ fun <SortMenuType> BooksList(
 @Composable
 fun <SortMenuType> BooksGrid(
     items: Async<List<BookProgressWithBookAndChapters>>,
+    config: BookContextMenuConfig,
     sortMenuOptions: SortMenuOptions<SortMenuType>,
     filterMenuOptions: FilterMenuOptions,
     filterListOptions: FilterListOptions<String>,
@@ -133,6 +136,7 @@ fun <SortMenuType> BooksGrid(
                 books[index].run {
                     BookCell(
                         this,
+                        config,
                         onNavToBook = if (isEmpty) ({}) else onNavToBook,
                         modifier = Modifier.padding(
                             paddingValuesForCell(index + 1, cellCount, lastRowStartCell),

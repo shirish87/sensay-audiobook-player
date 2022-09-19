@@ -31,6 +31,7 @@ import kotlin.time.Duration.Companion.minutes
 @Composable
 fun BookCell(
     bookProgressWithChapters: BookProgressWithBookAndChapters,
+    config: BookContextMenuConfig,
     onNavToBook: OnNavToBook,
     modifier: Modifier = Modifier,
 ) {
@@ -40,7 +41,7 @@ fun BookCell(
     ) {
         Box {
             GridBookView(bookProgressWithChapters)
-            BookContextMenu(bookProgressWithChapters)
+            BookContextMenu(bookProgressWithChapters, config)
         }
     }
 }

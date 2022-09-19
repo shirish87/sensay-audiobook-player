@@ -1,6 +1,5 @@
 package data.dao
 
-import androidx.annotation.Nullable
 import androidx.paging.PagingSource
 import androidx.room.Dao
 import androidx.room.Query
@@ -46,7 +45,7 @@ interface BookProgressDao : BaseDao<BookProgress> {
     fun bookProgressWithBookAndChapters(bookIds: Collection<BookId>): Flow<List<BookProgressWithBookAndChapters>>
 
     @Transaction
-    @Query("SELECT * FROM BookProgress")
+    @Query("SELECT * FROM BookProgress ORDER BY bookAuthor, bookTitle")
     fun booksProgressWithBookAndChapters(): Flow<List<BookProgressWithBookAndChapters>>
 
     @Transaction

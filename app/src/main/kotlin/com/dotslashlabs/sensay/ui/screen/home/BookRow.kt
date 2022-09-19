@@ -27,6 +27,7 @@ import kotlin.time.Duration.Companion.minutes
 @Composable
 fun BookRow(
     bookProgressWithChapters: BookProgressWithBookAndChapters,
+    config: BookContextMenuConfig,
     onNavToBook: OnNavToBook,
     modifier: Modifier = Modifier,
 ) {
@@ -38,36 +39,39 @@ fun BookRow(
     ) {
         Box {
             ListBookView(bookProgressWithChapters)
-            BookContextMenu(bookProgressWithChapters)
+            BookContextMenu(bookProgressWithChapters, config)
         }
     }
 }
 
 @Composable
-private fun ListBookView(
+fun ListBookView(
     bookProgressWithChapters: BookProgressWithBookAndChapters,
     height: Dp = 156.dp,
+    useCoverImage: Boolean = true,
 ) {
 
     Row(
         modifier = Modifier.fillMaxWidth()
             .height(height)
     ) {
-        Column(
-            modifier = Modifier
-                .weight(0.3F),
-        ) {
-            CoverImage(
-                coverUri = bookProgressWithChapters.book.coverUri,
-                modifier = Modifier.fillMaxSize(),
-            )
+        if (useCoverImage) {
+            Column(
+                modifier = Modifier
+                    .weight(0.35F),
+            ) {
+                CoverImage(
+                    coverUri = bookProgressWithChapters.book.coverUri,
+                    modifier = Modifier.fillMaxSize(),
+                )
+            }
         }
 
         val book = bookProgressWithChapters.book
 
         Column(
             modifier = Modifier
-                .weight(0.7F)
+                .weight(if (useCoverImage) 0.65F else 1F)
                 .padding(horizontal = 20.dp, vertical = 12.dp),
         ) {
             Column(

@@ -7,6 +7,7 @@ import com.dotslashlabs.sensay.ui.SensayAppViewModel
 import com.dotslashlabs.sensay.ui.screen.home.HomeViewModel
 import com.dotslashlabs.sensay.ui.screen.home.nowplaying.NowPlayingViewModel
 import com.dotslashlabs.sensay.ui.screen.player.PlayerViewModel
+import com.dotslashlabs.sensay.ui.screen.restore.RestoreViewModel
 import com.dotslashlabs.sensay.ui.screen.sources.SourcesViewModel
 import dagger.Binds
 import dagger.Module
@@ -31,6 +32,11 @@ interface ViewModelModule {
     @IntoMap
     @ViewModelKey(PlayerViewModel::class)
     fun playerViewModelFactory(factory: PlayerViewModel.Factory): AssistedViewModelFactory<*, *>
+
+    @Binds
+    @IntoMap
+    @ViewModelKey(RestoreViewModel::class)
+    fun restoreViewModelFactory(factory: RestoreViewModel.Factory): AssistedViewModelFactory<*, *>
 
     @Binds
     @IntoMap

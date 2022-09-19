@@ -7,6 +7,7 @@ import com.dotslashlabs.sensay.ui.screen.home.CurrentScreen
 import com.dotslashlabs.sensay.ui.screen.home.HomeScreen
 import com.dotslashlabs.sensay.ui.screen.home.LibraryScreen
 import com.dotslashlabs.sensay.ui.screen.player.PlayerScreen
+import com.dotslashlabs.sensay.ui.screen.restore.RestoreScreen
 import com.dotslashlabs.sensay.ui.screen.settings.SettingsScreen
 import com.dotslashlabs.sensay.ui.screen.sources.SourcesScreen
 import java.io.File
@@ -26,7 +27,7 @@ abstract class Destination(vararg routeSegments: String) {
         override val screen: SensayScreen? = null
         override val arguments: List<NamedNavArgument> = emptyList()
 
-        override val children: List<Destination> = listOf(Home, Player, Sources, Settings)
+        override val children: List<Destination> = listOf(Home, Player, Restore, Sources, Settings)
         override val defaultChild: Destination = Home
     }
 
@@ -54,8 +55,23 @@ abstract class Destination(vararg routeSegments: String) {
         }
     }
 
-    object Player : Destination("player", "books", "{bookId}") {
+    object Player : Destination("books", "{bookId}", "player") {
         override val screen: SensayScreen = PlayerScreen
+        override val arguments: List<NamedNavArgument> = listOf(
+            navArgument("bookId") {
+                type = NavType.LongType
+                nullable = false
+            }
+        )
+
+        override val children: List<Destination> = emptyList()
+        override val defaultChild: Destination? = null
+
+        fun useRoute(bookId: Long) = this.route.replace("{bookId}", "$bookId")
+    }
+
+    object Restore : Destination("books", "{bookId}", "restore") {
+        override val screen: SensayScreen = RestoreScreen
         override val arguments: List<NamedNavArgument> = listOf(
             navArgument("bookId") {
                 type = NavType.LongType

@@ -44,6 +44,9 @@ object DatabaseModule {
     @Provides
     fun provideBookmarkDao(database: SensayDatabase) = database.bookmarkDao()
 
+    @Provides
+    fun provideProgressDao(database: SensayDatabase) = database.progressDao()
+
     @Singleton
     @Provides
     fun provideSensayStore(
@@ -54,6 +57,7 @@ object DatabaseModule {
         bookProgressRepository: BookProgressRepository,
         sourceRepository: SourceRepository,
         bookmarkRepository: BookmarkRepository,
+        progressRepository: ProgressRepository,
     ) = SensayStore(
         bookRepository,
         chapterRepository,
@@ -62,5 +66,6 @@ object DatabaseModule {
         bookProgressRepository,
         sourceRepository,
         bookmarkRepository,
+        progressRepository,
     )
 }

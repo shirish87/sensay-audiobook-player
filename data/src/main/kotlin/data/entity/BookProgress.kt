@@ -37,6 +37,10 @@ data class BookProgress(
     val lastUpdatedAt: Instant = Instant.now(),
 ) : Parcelable {
 
+    @IgnoredOnParcel
+    @Ignore
+    val bookDuration: ContentDuration = ContentDuration.ms(bookProgress.ms + bookRemaining.ms)
+
     companion object {
         fun empty() = BookProgress(
             bookId = 0L,

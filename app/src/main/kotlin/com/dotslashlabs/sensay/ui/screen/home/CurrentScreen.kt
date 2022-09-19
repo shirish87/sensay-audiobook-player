@@ -67,10 +67,20 @@ object CurrentScreen : SensayScreen {
             },
         )
 
+        val bookContextMenuConfig = BookContextMenuConfig(
+            isRestoreBookEnabled = (state.progressRestorableCount() ?: 0) > 0,
+            onNavToRestore = { bookId ->
+                if (backStackEntry.isLifecycleResumed()) {
+                    navHostController.navigate(Destination.Restore.useRoute(bookId))
+                }
+            },
+        )
+
         SensayFrame {
             when (homeLayout) {
                 HomeLayout.LIST -> BooksList(
                     state.books,
+                    bookContextMenuConfig,
                     sortMenuOptions,
                     filterMenuOptions,
                     filterListOptions,
@@ -78,6 +88,7 @@ object CurrentScreen : SensayScreen {
                 )
                 HomeLayout.GRID -> BooksGrid(
                     state.books,
+                    bookContextMenuConfig,
                     sortMenuOptions,
                     filterMenuOptions,
                     filterListOptions,
