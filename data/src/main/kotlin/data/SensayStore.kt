@@ -196,14 +196,14 @@ class SensayStore @Inject constructor(
             runInTransaction {
                 val bookIds = books.map { it.bookId }
 
+                bookProgressRepository.deleteOrResetBooksProgress(bookIds)
+
                 shelfRepository.deleteShelves(bookIds)
                 tagRepository.deleteTags(bookIds)
 
                 chapterRepository.deleteChapters(bookIds)
                 bookmarkRepository.deleteBookmarksForBooks(bookIds)
                 bookRepository.deleteBooks(books)
-
-                bookProgressRepository.deleteOrResetBooksProgress(bookIds)
 
                 true
             }
