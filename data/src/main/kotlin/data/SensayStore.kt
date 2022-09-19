@@ -215,6 +215,9 @@ class SensayStore @Inject constructor(
     suspend fun updateBookProgress(bookProgressUpdate: BookProgressUpdate) =
         bookProgressRepository.update(bookProgressUpdate)
 
+    suspend fun updateBookProgress(bookProgressVisibility: BookProgressVisibility) =
+        bookProgressRepository.update(bookProgressVisibility)
+
     suspend fun createBookmark(bookmark: Bookmark) = bookmarkRepository.createBookmark(bookmark)
 
     suspend fun deleteBookmark(bookmark: Bookmark) =

@@ -2,6 +2,7 @@ package data.repository
 
 import data.BookCategory
 import data.BookProgressUpdate
+import data.BookProgressVisibility
 import data.dao.BookProgressDao
 import data.dao.ProgressDao
 import data.dao.insertOrUpdate
@@ -76,4 +77,7 @@ class BookProgressRepository @Inject constructor(
 
     suspend fun update(bookProgressUpdate: BookProgressUpdate) =
         bookProgressDao.update(bookProgressUpdate)
+
+    suspend fun update(bookProgressVisibility: BookProgressVisibility) =
+        bookProgressDao.update(bookProgressVisibility)
 }

@@ -19,10 +19,14 @@ import data.entity.BookProgressWithBookAndChapters
 
 typealias OnSetBookCategory = (BookProgressWithBookAndChapters, BookCategory) -> Unit
 
+typealias OnBookVisibilityChange = (BookProgressWithBookAndChapters, Boolean) -> Unit
+
 data class BookContextMenuConfig(
     val isEnabled: Boolean = true,
     val isRestoreBookEnabled: Boolean = false,
+    val isVisibilityChangeEnabled: Boolean = false,
     val onSetBookCategory: OnSetBookCategory,
+    val onBookVisibilityChange: OnBookVisibilityChange,
     val onNavToRestore: OnNavToRestore,
 )
 
@@ -47,22 +51,30 @@ fun BookContextMenu(
 
     val context = LocalContext.current
 
-    val deleteData: MutableState<BookProgressWithBookAndChapters?> =
+    val hideData: MutableState<BookProgressWithBookAndChapters?> =
         remember { mutableStateOf(null) }
 
     ConfirmDialog(
-        deleteData,
-        title = { "Delete Book" },
+        hideData,
+        title = { "Hide Book" },
         message = { d ->
-            "Are you sure you want to delete ${d?.book?.title ?: "this"} book?"
+            "Are you sure you want to hide ${d?.book?.title ?: "this"} book?"
         },
-        confirmLabel = "Delete",
+        confirmLabel = "Hide",
         cancelLabel = "Cancel",
-    ) {
-        val book = it?.book ?: return@ConfirmDialog
+    ) { arg ->
 
-        // TODO: actually hide selected book
-        Toast.makeText(context, "Deleted book '${book.title}'", Toast.LENGTH_SHORT).show()
+        if (arg != null) {
+            val book = arg.book
+
+            config.onBookVisibilityChange(arg, false)
+
+            Toast.makeText(
+                context,
+                "Book '${book.title}' has been hidden from view.",
+                Toast.LENGTH_SHORT,
+            ).show()
+        }
     }
 
     val changeCategoryData: MutableState<Pair<BookProgressWithBookAndChapters, BookCategory>?> =
@@ -76,7 +88,11 @@ fun BookContextMenu(
             arg?.first?.book?.title ?: ""
             }' book as '${
             arg?.second?.label ?: ""
-            }'? You will lose any associated progress information."
+            }'?${
+            if (arg?.second != BookCategory.CURRENT)
+                " You will lose any associated progress information."
+            else ""
+            }"
         },
         confirmLabel = "Confirm",
         cancelLabel = "Cancel",
@@ -87,8 +103,6 @@ fun BookContextMenu(
                 bookProgressWithChapters,
                 arg.second,
             )
-
-            changeCategoryData.value = null
 
             Toast.makeText(
                 context,
@@ -147,21 +161,23 @@ fun BookContextMenu(
                 )
             }
 
-            Divider()
+            if (config.isVisibilityChangeEnabled) {
+                Divider()
 
-            DropdownMenuItem(
-                text = { Text("Delete Book") },
-                onClick = {
-                    deleteData.value = bookProgressWithChapters
-                    expanded = false
-                },
-                leadingIcon = {
-                    Icon(
-                        Icons.Outlined.Delete,
-                        contentDescription = null,
-                    )
-                },
-            )
+                DropdownMenuItem(
+                    text = { Text("Hide Book") },
+                    onClick = {
+                        hideData.value = bookProgressWithChapters
+                        expanded = false
+                    },
+                    leadingIcon = {
+                        Icon(
+                            Icons.Outlined.VisibilityOff,
+                            contentDescription = null,
+                        )
+                    },
+                )
+            }
         }
     }
 }

@@ -13,6 +13,7 @@ import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import data.BookCategory
 import data.BookProgressUpdate
+import data.BookProgressVisibility
 import data.SensayStore
 import data.entity.BookProgressWithBookAndChapters
 import data.util.ContentDuration
@@ -161,6 +162,19 @@ class HomeViewModel @AssistedInject constructor(
         )
 
         store.updateBookProgress(update)
+    }
+
+    fun setBookVisibility(
+        bookProgressWithChapters: BookProgressWithBookAndChapters,
+        isVisible: Boolean,
+    ) = viewModelScope.launch(Dispatchers.IO) {
+
+        store.updateBookProgress(
+            BookProgressVisibility(
+                bookProgressId = bookProgressWithChapters.bookProgress.bookProgressId,
+                isVisible = isVisible,
+            )
+        )
     }
 
     @AssistedFactory

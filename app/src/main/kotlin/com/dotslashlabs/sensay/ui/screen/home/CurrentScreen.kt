@@ -69,12 +69,14 @@ object CurrentScreen : SensayScreen {
 
         val bookContextMenuConfig = BookContextMenuConfig(
             isRestoreBookEnabled = (state.progressRestorableCount() ?: 0) > 0,
+            isVisibilityChangeEnabled = false,
             onNavToRestore = { bookId ->
                 if (backStackEntry.isLifecycleResumed()) {
                     navHostController.navigate(Destination.Restore.useRoute(bookId))
                 }
             },
             onSetBookCategory = viewModel::setBookCategory,
+            onBookVisibilityChange = viewModel::setBookVisibility,
         )
 
         SensayFrame {

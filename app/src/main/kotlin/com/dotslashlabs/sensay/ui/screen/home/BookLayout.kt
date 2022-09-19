@@ -44,12 +44,12 @@ fun <SortMenuType> BooksList(
 ) {
 
     val state: LazyListState = rememberLazyListState()
-    val (isLoading, books) = resolveAsyncState(items)
+    val (isLoading, results) = resolveAsyncState(items)
 
     val isFilterEnabled = filterMenuOptions.isFilterEnabled || filterListOptions.isFilterEnabled
 
     Column(Modifier.fillMaxSize()) {
-        if (isFilterEnabled || (!isLoading && books.isNotEmpty())) {
+        if (isFilterEnabled || (!isLoading && results.isNotEmpty())) {
             FilterBar(
                 sortMenuOptions = sortMenuOptions,
                 filterMenuOptions = filterMenuOptions,
@@ -58,7 +58,7 @@ fun <SortMenuType> BooksList(
         }
 
         LazyColumn(state = state, modifier = Modifier.weight(1F)) {
-            if (books.isEmpty() && isFilterEnabled) {
+            if (results.isEmpty() && isFilterEnabled) {
                 item {
                     Text(
                         modifier = Modifier.fillMaxWidth().padding(20.dp),
@@ -68,6 +68,8 @@ fun <SortMenuType> BooksList(
                 }
             }
 
+            val (books, hiddenBooks) = results.partition { it.bookProgress.isVisible }
+
             items(count = books.size) { index ->
                 books[index].run {
                     BookRow(
@@ -75,6 +77,16 @@ fun <SortMenuType> BooksList(
                         config,
                         onNavToBook = if (isEmpty) ({}) else onNavToBook,
                         modifier = Modifier,
+                    )
+                }
+            }
+
+            if (hiddenBooks.isNotEmpty()) {
+                item {
+                    Text(
+                        modifier = Modifier.fillMaxWidth().padding(20.dp),
+                        textAlign = TextAlign.Center,
+                        text = "${hiddenBooks.size} books are hidden.",
                     )
                 }
             }
@@ -98,15 +110,15 @@ fun <SortMenuType> BooksGrid(
     val state: LazyGridState = rememberLazyGridState()
     val cellCount = gridColumnCount()
 
-    val (isLoading, books) = resolveAsyncState(items)
+    val (isLoading, results) = resolveAsyncState(items)
 
     val lastRowStartCell =
-        books.size - (if (books.size % cellCount == 0) cellCount else books.size % cellCount)
+        results.size - (if (results.size % cellCount == 0) cellCount else results.size % cellCount)
 
     val isFilterEnabled = filterMenuOptions.isFilterEnabled || filterListOptions.isFilterEnabled
 
     Column(Modifier.fillMaxSize()) {
-        if (isFilterEnabled || (!isLoading && books.isNotEmpty())) {
+        if (isFilterEnabled || (!isLoading && results.isNotEmpty())) {
             FilterBar(
                 sortMenuOptions = sortMenuOptions,
                 filterMenuOptions = filterMenuOptions,
@@ -121,7 +133,7 @@ fun <SortMenuType> BooksGrid(
                 .fillMaxSize()
                 .weight(1F),
         ) {
-            if (books.isEmpty() && isFilterEnabled) {
+            if (results.isEmpty() && isFilterEnabled) {
                 item(span = { GridItemSpan(cellCount) }) {
                     Text(
                         modifier = Modifier.fillMaxWidth().padding(20.dp),
@@ -130,6 +142,8 @@ fun <SortMenuType> BooksGrid(
                     )
                 }
             }
+
+            val (books, hiddenBooks) = results.partition { it.bookProgress.isVisible }
 
             items(count = books.size) { index ->
                 books[index].run {
@@ -140,6 +154,16 @@ fun <SortMenuType> BooksGrid(
                         modifier = Modifier.padding(
                             paddingValuesForCell(index + 1, cellCount, lastRowStartCell),
                         ),
+                    )
+                }
+            }
+
+            if (hiddenBooks.isNotEmpty()) {
+                item(span = { GridItemSpan(cellCount) }) {
+                    Text(
+                        modifier = Modifier.fillMaxWidth().padding(20.dp),
+                        textAlign = TextAlign.Center,
+                        text = "${hiddenBooks.size} books are hidden.",
                     )
                 }
             }

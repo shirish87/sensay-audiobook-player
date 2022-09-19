@@ -7,6 +7,7 @@ import androidx.room.Transaction
 import androidx.room.Update
 import data.BookCategory
 import data.BookProgressUpdate
+import data.BookProgressVisibility
 import data.entity.BookId
 import data.entity.BookProgress
 import data.entity.BookProgressWithBookAndChapters
@@ -147,4 +148,7 @@ interface BookProgressDao : BaseDao<BookProgress> {
 
     @Update(entity = BookProgress::class)
     suspend fun update(bookProgressUpdate: BookProgressUpdate): Int
+
+    @Update(entity = BookProgress::class)
+    suspend fun update(bookProgressVisibility: BookProgressVisibility): Int
 }

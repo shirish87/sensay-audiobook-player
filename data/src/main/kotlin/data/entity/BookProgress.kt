@@ -33,6 +33,7 @@ data class BookProgress(
     val bookRemaining: ContentDuration = ContentDuration.ZERO,
     val chapterProgress: ContentDuration = ContentDuration.ZERO,
     val bookCategory: BookCategory = BookCategory.NOT_STARTED,
+    val isVisible: Boolean = true,
     val createdAt: Instant = Instant.now(),
     val lastUpdatedAt: Instant = Instant.now(),
 ) : Parcelable {
