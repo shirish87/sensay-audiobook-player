@@ -58,7 +58,11 @@ class PlaybackService : MediaSessionService() {
         val chapterPosition = playerState.position ?: return
         val mediaProgress = mediaSessionQueue.getMedia(mediaId) ?: return
 
-        val bookProgressUpdate = mediaProgress.toBookProgressUpdate(chapterPosition)
+        val bookProgressUpdate = mediaProgress.toBookProgressUpdate(
+            mediaProgress.chapterId,
+            chapterPosition,
+        )
+
         if (bookProgressUpdate.chapterProgress > mediaProgress.chapterDuration) return
         if (bookProgressUpdate.bookProgress > mediaProgress.bookDuration) return
 

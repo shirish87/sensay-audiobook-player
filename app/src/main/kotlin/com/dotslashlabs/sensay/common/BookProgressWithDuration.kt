@@ -73,11 +73,15 @@ data class BookProgressWithDuration(
     val bookProgress: ContentDuration =
         ContentDuration.ms(minOf(bookDuration.ms, bookChapterStart.ms + chapterProgress.ms))
 
-    fun toBookProgressUpdate(chapterPosition: Long): BookProgressUpdate {
+    fun toBookProgressUpdate(
+        chapterId: ChapterId,
+        chapterPosition: Long,
+    ): BookProgressUpdate {
         val bookProgressMs = minOf(bookDuration.ms, bookChapterStart.ms + chapterPosition)
 
         return BookProgressUpdate(
             bookProgressId = bookProgressId,
+            chapterId = chapterId,
 
             currentChapter = currentChapter,
             chapterProgress = ContentDuration.ms(chapterPosition),

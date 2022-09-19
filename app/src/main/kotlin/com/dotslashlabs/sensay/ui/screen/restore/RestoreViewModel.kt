@@ -64,6 +64,7 @@ class RestoreViewModel @AssistedInject constructor(
         store.updateBookProgress(
             BookProgressUpdate(
                 bookProgressId = bookProgressWithChapters.bookProgress.bookProgressId,
+                chapterId = currentChapter.chapterId,
                 currentChapter = progress.currentChapter,
                 chapterProgress = progress.chapterProgress,
                 chapterTitle = currentChapter.title,

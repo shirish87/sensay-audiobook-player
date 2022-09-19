@@ -12,8 +12,12 @@ import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import data.BookCategory
+import data.BookProgressUpdate
 import data.SensayStore
 import data.entity.BookProgressWithBookAndChapters
+import data.util.ContentDuration
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 enum class HomeSortType(
     private val displayName: String,
@@ -120,6 +124,43 @@ class HomeViewModel @AssistedInject constructor(
 
     fun setAuthorsFilter(authorsFilter: List<String>) {
         setState { copy(authorsFilter = authorsFilter) }
+    }
+
+    fun setBookCategory(
+        bookProgressWithChapters: BookProgressWithBookAndChapters,
+        bookCategory: BookCategory,
+    ) = viewModelScope.launch(Dispatchers.IO) {
+
+        val chapters = bookProgressWithChapters.chapters.sortedBy { it.trackId }
+
+        val chapter = chapters.run {
+            if (bookCategory == BookCategory.FINISHED) {
+                last()
+            } else {
+                first()
+            }
+        }
+
+        val bookProgress = if (bookCategory == BookCategory.FINISHED)
+            bookProgressWithChapters.book.duration
+        else chapter.start
+
+        val update = BookProgressUpdate(
+            bookProgressId = bookProgressWithChapters.bookProgress.bookProgressId,
+            bookCategory = bookCategory,
+            chapterId = chapter.chapterId,
+            currentChapter = if (bookCategory == BookCategory.FINISHED)
+                bookProgressWithChapters.bookProgress.totalChapters else 0,
+            chapterProgress = if (bookCategory == BookCategory.FINISHED)
+                chapter.duration else ContentDuration.ZERO,
+            chapterTitle = chapter.title,
+            bookProgress = bookProgress,
+            bookRemaining = ContentDuration.ms(
+                bookProgressWithChapters.durationMs - bookProgress.ms
+            ),
+        )
+
+        store.updateBookProgress(update)
     }
 
     @AssistedFactory

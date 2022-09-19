@@ -17,15 +17,18 @@ import com.dotslashlabs.sensay.ui.screen.restore.OnNavToRestore
 import data.BookCategory
 import data.entity.BookProgressWithBookAndChapters
 
+typealias OnSetBookCategory = (BookProgressWithBookAndChapters, BookCategory) -> Unit
+
 data class BookContextMenuConfig(
     val isEnabled: Boolean = true,
     val isRestoreBookEnabled: Boolean = false,
+    val onSetBookCategory: OnSetBookCategory,
     val onNavToRestore: OnNavToRestore,
 )
 
 @Composable
 fun BookContextMenu(
-    @Suppress("UNUSED_PARAMETER") bookProgressWithChapters: BookProgressWithBookAndChapters,
+    bookProgressWithChapters: BookProgressWithBookAndChapters,
     config: BookContextMenuConfig,
     modifier: Modifier = Modifier,
 ) {
@@ -34,18 +37,24 @@ fun BookContextMenu(
 
     val bookCategory = bookProgressWithChapters.bookProgress.bookCategory
 
+    val categoryMenuItems = listOf(
+        BookCategory.NOT_STARTED to Icons.Outlined.NotStarted,
+        BookCategory.CURRENT to Icons.Outlined.Subscriptions,
+        BookCategory.FINISHED to Icons.Outlined.Done,
+    ).filterNot { it.first == bookCategory }
+
     var expanded by remember { mutableStateOf(false) }
 
     val context = LocalContext.current
-    val data: MutableState<BookProgressWithBookAndChapters?> = remember { mutableStateOf(null) }
+
+    val deleteData: MutableState<BookProgressWithBookAndChapters?> =
+        remember { mutableStateOf(null) }
 
     ConfirmDialog(
-        data,
-        title = { _ -> "Delete Book" },
+        deleteData,
+        title = { "Delete Book" },
         message = { d ->
-            "Are you sure you want to delete ${
-            d?.book?.title?.let { "'$it'" } ?: "this"
-            } book?"
+            "Are you sure you want to delete ${d?.book?.title ?: "this"} book?"
         },
         confirmLabel = "Delete",
         cancelLabel = "Cancel",
@@ -54,6 +63,39 @@ fun BookContextMenu(
 
         // TODO: actually hide selected book
         Toast.makeText(context, "Deleted book '${book.title}'", Toast.LENGTH_SHORT).show()
+    }
+
+    val changeCategoryData: MutableState<Pair<BookProgressWithBookAndChapters, BookCategory>?> =
+        remember { mutableStateOf(null) }
+
+    ConfirmDialog(
+        changeCategoryData,
+        title = { arg -> "Mark as ${arg?.second?.label ?: ""}" },
+        message = { arg ->
+            "Are you sure you want to mark '${
+            arg?.first?.book?.title ?: ""
+            }' book as '${
+            arg?.second?.label ?: ""
+            }'? You will lose any associated progress information."
+        },
+        confirmLabel = "Confirm",
+        cancelLabel = "Cancel",
+    ) { arg ->
+
+        if (arg != null) {
+            config.onSetBookCategory(
+                bookProgressWithChapters,
+                arg.second,
+            )
+
+            changeCategoryData.value = null
+
+            Toast.makeText(
+                context,
+                "Book '${arg.first.book.title}' set to ${arg.second.label}",
+                Toast.LENGTH_SHORT,
+            ).show()
+        }
     }
 
     Box(
@@ -70,41 +112,20 @@ fun BookContextMenu(
             onDismissRequest = { expanded = false }
         ) {
 
-            when (bookCategory) {
-                BookCategory.CURRENT -> {
-                    DropdownMenuItem(
-                        text = { Text("Mark as Not Started") },
-                        onClick = { /* Handle settings! */ },
-                        leadingIcon = {
-                            Icon(
-                                Icons.Outlined.NotStarted,
-                                contentDescription = null
-                            )
-                        },
-                    )
-                    DropdownMenuItem(
-                        text = { Text("Mark as Completed") },
-                        onClick = { /* Handle settings! */ },
-                        leadingIcon = {
-                            Icon(
-                                Icons.Outlined.Done,
-                                contentDescription = null
-                            )
-                        },
-                    )
-                }
-                else -> {
-                    DropdownMenuItem(
-                        text = { Text("Mark as Current") },
-                        onClick = { /* Handle settings! */ },
-                        leadingIcon = {
-                            Icon(
-                                Icons.Outlined.Subscriptions,
-                                contentDescription = null
-                            )
-                        },
-                    )
-                }
+            categoryMenuItems.forEach { (category, imageVector) ->
+                DropdownMenuItem(
+                    text = { Text("Mark as ${category.label}") },
+                    onClick = {
+                        changeCategoryData.value = bookProgressWithChapters to category
+                        expanded = false
+                    },
+                    leadingIcon = {
+                        Icon(
+                            imageVector,
+                            contentDescription = null,
+                        )
+                    },
+                )
             }
 
             if (config.isRestoreBookEnabled &&
@@ -131,7 +152,7 @@ fun BookContextMenu(
             DropdownMenuItem(
                 text = { Text("Delete Book") },
                 onClick = {
-                    data.value = bookProgressWithChapters
+                    deleteData.value = bookProgressWithChapters
                     expanded = false
                 },
                 leadingIcon = {

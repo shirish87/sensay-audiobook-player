@@ -76,6 +76,7 @@ object LibraryScreen : SensayScreen {
                     navHostController.navigate(Destination.Restore.useRoute(bookId))
                 }
             },
+            onSetBookCategory = viewModel::setBookCategory,
         )
 
         SensayFrame {
