@@ -13,7 +13,6 @@ import data.entity.BookProgressWithBookAndChapters
 import data.entity.BookProgressWithBookAndShelves
 import kotlinx.coroutines.flow.Flow
 
-
 @Dao
 interface BookProgressDao : BaseDao<BookProgress> {
     @Query("SELECT COUNT(*) FROM BookProgress")
@@ -34,7 +33,9 @@ interface BookProgressDao : BaseDao<BookProgress> {
 
     @Transaction
     @Query("SELECT * FROM BookProgress WHERE bookId = :bookId")
-    fun bookProgressWithBookAndShelvesPaged(bookId: BookId): PagingSource<Int, BookProgressWithBookAndShelves>
+    fun bookProgressWithBookAndShelvesPaged(
+        bookId: BookId,
+    ): PagingSource<Int, BookProgressWithBookAndShelves>
 
     @Transaction
     @Query("SELECT * FROM BookProgress WHERE bookId = :bookId")
@@ -42,7 +43,9 @@ interface BookProgressDao : BaseDao<BookProgress> {
 
     @Transaction
     @Query("SELECT * FROM BookProgress WHERE bookId IN (:bookIds)")
-    fun bookProgressWithBookAndChapters(bookIds: Collection<BookId>): Flow<List<BookProgressWithBookAndChapters>>
+    fun bookProgressWithBookAndChapters(
+        bookIds: Collection<BookId>,
+    ): Flow<List<BookProgressWithBookAndChapters>>
 
     @Transaction
     @Query("SELECT * FROM BookProgress ORDER BY bookAuthor, bookTitle")
@@ -50,10 +53,13 @@ interface BookProgressDao : BaseDao<BookProgress> {
 
     @Transaction
     @Query("SELECT * FROM BookProgress WHERE bookCategory IN (:bookCategories)")
-    fun booksProgressWithBookAndChapters(bookCategories: Collection<BookCategory>): Flow<List<BookProgressWithBookAndChapters>>
+    fun booksProgressWithBookAndChapters(
+        bookCategories: Collection<BookCategory>,
+    ): Flow<List<BookProgressWithBookAndChapters>>
 
     @Transaction
-    @Query("""
+    @Query(
+        """
         SELECT *
         FROM BookProgress
         WHERE
@@ -83,7 +89,8 @@ interface BookProgressDao : BaseDao<BookProgress> {
 
             CASE WHEN lower(:orderBy) = lower('lastUpdatedAt') AND :isAscending THEN lastUpdatedAt END ASC,
             CASE WHEN lower(:orderBy) = lower('lastUpdatedAt') AND NOT :isAscending THEN lastUpdatedAt END DESC
-    """)
+    """
+    )
     fun booksProgressWithBookAndChapters(
         bookCategories: Collection<BookCategory>,
         filter: String,
@@ -92,7 +99,8 @@ interface BookProgressDao : BaseDao<BookProgress> {
     ): Flow<List<BookProgressWithBookAndChapters>>
 
     @Transaction
-    @Query("""
+    @Query(
+        """
         SELECT *
         FROM BookProgress
         WHERE
@@ -123,7 +131,8 @@ interface BookProgressDao : BaseDao<BookProgress> {
 
             CASE WHEN lower(:orderBy) = lower('lastUpdatedAt') AND :isAscending THEN lastUpdatedAt END ASC,
             CASE WHEN lower(:orderBy) = lower('lastUpdatedAt') AND NOT :isAscending THEN lastUpdatedAt END DESC
-    """)
+    """
+    )
     fun booksProgressWithBookAndChapters(
         bookCategories: Collection<BookCategory>,
         filter: String,

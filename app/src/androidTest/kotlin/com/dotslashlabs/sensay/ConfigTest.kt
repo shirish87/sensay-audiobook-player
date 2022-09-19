@@ -3,11 +3,11 @@ package com.dotslashlabs.sensay
 import config.ConfigStore
 import config.HomeLayout
 import dagger.hilt.android.testing.HiltAndroidTest
+import javax.inject.Inject
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Test
-import javax.inject.Inject
 
 @HiltAndroidTest
 class ConfigTest : BaseTest() {

@@ -19,7 +19,6 @@ import data.util.ContentDuration
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
-
 data class RestoreViewState(
     @PersistState val bookId: BookId,
 

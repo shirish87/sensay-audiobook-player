@@ -5,7 +5,6 @@ import androidx.room.Query
 import data.entity.Progress
 import kotlinx.coroutines.flow.Flow
 
-
 @Dao
 interface ProgressDao : BaseDao<Progress> {
 

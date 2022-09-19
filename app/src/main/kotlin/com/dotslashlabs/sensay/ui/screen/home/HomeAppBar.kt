@@ -17,7 +17,6 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import com.dotslashlabs.sensay.ui.screen.Destination
 import config.HomeLayout
 
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeAppBar(

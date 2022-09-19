@@ -5,9 +5,9 @@ import androidx.room.*
 import data.util.ContentDuration
 import data.util.ContentDurationOptParceler
 import data.util.ContentDurationParceler
+import java.time.Instant
 import kotlinx.parcelize.Parcelize
 import kotlinx.parcelize.TypeParceler
-import java.time.Instant
 
 typealias BookmarkId = Long
 

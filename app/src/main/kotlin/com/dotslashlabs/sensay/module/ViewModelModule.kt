@@ -21,7 +21,9 @@ interface ViewModelModule {
     @Binds
     @IntoMap
     @ViewModelKey(SensayAppViewModel::class)
-    fun sensayAppViewModelFactory(factory: SensayAppViewModel.Factory): AssistedViewModelFactory<*, *>
+    fun sensayAppViewModelFactory(
+        factory: SensayAppViewModel.Factory
+    ): AssistedViewModelFactory<*, *>
 
     @Binds
     @IntoMap
@@ -46,5 +48,7 @@ interface ViewModelModule {
     @Binds
     @IntoMap
     @ViewModelKey(NowPlayingViewModel::class)
-    fun nowPlayingViewModelFactory(factory: NowPlayingViewModel.Factory): AssistedViewModelFactory<*, *>
+    fun nowPlayingViewModelFactory(
+        factory: NowPlayingViewModel.Factory
+    ): AssistedViewModelFactory<*, *>
 }

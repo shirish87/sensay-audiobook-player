@@ -24,14 +24,14 @@ import data.entity.Bookmark
 import data.entity.BookmarkType
 import data.entity.BookmarkWithChapter
 import data.util.ContentDuration
+import kotlin.math.absoluteValue
+import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.launch
 import logcat.logcat
-import kotlin.math.absoluteValue
-import kotlin.time.Duration.Companion.milliseconds
 
 typealias Media = BookProgressWithDuration
 
@@ -57,7 +57,7 @@ data class PlayerViewState(
     companion object {
         const val DURATION_ZERO: String = "00:00:00"
 
-        fun getMediaId(bookId: Long, chapterId: Long) = "books/${bookId}/chapters/${chapterId}"
+        fun getMediaId(bookId: Long, chapterId: Long) = "books/$bookId/chapters/$chapterId"
 
         fun getSliderPosition(positionMs: Long?, durationMs: Long?): Float =
             if ((positionMs ?: 0) > 0 && (durationMs ?: 0) > 0)
@@ -317,7 +317,7 @@ class PlayerViewModel @AssistedInject constructor(
         val chapterPosition = positionMs ?: return@withState
         val chapterDuration = durationMs ?: return@withState
 
-        viewModelScope.launch (Dispatchers.IO) {
+        viewModelScope.launch(Dispatchers.IO) {
             store.createBookmark(
                 Bookmark(
                     bookmarkType = BookmarkType.USER,
@@ -332,7 +332,7 @@ class PlayerViewModel @AssistedInject constructor(
     }
 
     override fun deleteBookmark(bookmark: Bookmark) {
-        viewModelScope.launch (Dispatchers.IO) {
+        viewModelScope.launch(Dispatchers.IO) {
             store.deleteBookmark(bookmark)
         }
     }
@@ -408,7 +408,6 @@ class PlayerViewModel @AssistedInject constructor(
     companion object : MavericksViewModelFactory<PlayerViewModel, PlayerViewState>
     by hiltMavericksViewModelFactory()
 }
-
 
 data class PlayerViewArgs(
     val bookId: Long,

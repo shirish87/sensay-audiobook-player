@@ -6,12 +6,12 @@ import androidx.compose.ui.graphics.luminance
 import kotlin.math.max
 import kotlin.math.min
 
-//val Purple200 = Color(0xFFBB86FC)
-//val Purple500 = Color(0xFF6200EE)
-//val Purple700 = Color(0xFF3700B3)
-//val Teal200 = Color(0xFF03DAC5)
+// val Purple200 = Color(0xFFBB86FC)
+// val Purple500 = Color(0xFF6200EE)
+// val Purple700 = Color(0xFF3700B3)
+// val Teal200 = Color(0xFF03DAC5)
 //
-//val PrimaryBlue = Color(0xFF1976D2)
+// val PrimaryBlue = Color(0xFF1976D2)
 
 /**
  * This is the minimum amount of calculated contrast for a color to be used on top of the
@@ -28,4 +28,3 @@ fun Color.contrastAgainst(background: Color): Float {
 
     return max(fgLuminance, bgLuminance) / min(fgLuminance, bgLuminance)
 }
-

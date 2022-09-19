@@ -18,7 +18,6 @@ import com.airbnb.mvrx.Success
 import data.entity.BookProgressWithBookAndChapters
 import kotlin.math.roundToInt
 
-
 fun resolveAsyncState(
     items: Async<List<BookProgressWithBookAndChapters>>,
     emptyListItemsCount: Int = 12,

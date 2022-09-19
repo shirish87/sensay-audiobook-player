@@ -1,11 +1,11 @@
 package scanner
 
-import kotlinx.serialization.SerialName
-import kotlinx.serialization.Serializable
 import java.lang.Double.max
 import java.util.*
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
+import kotlinx.serialization.SerialName
+import kotlinx.serialization.Serializable
 
 @Serializable
 data class MetaDataScanResult(

@@ -20,11 +20,11 @@ import dagger.assisted.AssistedInject
 import data.SensayStore
 import data.entity.BookProgressWithBookAndChapters
 import data.entity.SourceId
+import java.time.Instant
+import java.util.*
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
-import java.time.Instant
-import java.util.*
 
 val DEFAULT_HOME_LAYOUT = HomeLayout.LIST
 
@@ -49,7 +49,7 @@ class SensayAppViewModel @AssistedInject constructor(
     private val configStore: ConfigStore,
 ) : MavericksViewModel<SensayAppState>(state) {
 
-    private var scannerLiveData : LiveData<WorkInfo>? = null
+    private var scannerLiveData: LiveData<WorkInfo>? = null
     private var workRequestId: UUID? = null
 
     init {

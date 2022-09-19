@@ -1,6 +1,5 @@
 package com.dotslashlabs.sensay.ui.screen.home.nowplaying
 
-
 import android.content.Context
 import com.airbnb.mvrx.*
 import com.airbnb.mvrx.hilt.AssistedViewModelFactory

@@ -7,12 +7,12 @@ import data.entity.Book
 import data.entity.BookWithChapters
 import data.entity.Chapter
 import data.util.ContentDuration
+import javax.inject.Inject
+import kotlin.time.Duration.Companion.hours
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Test
-import javax.inject.Inject
-import kotlin.time.Duration.Companion.hours
 
 @HiltAndroidTest
 class SensayStoreTest : BaseTest() {

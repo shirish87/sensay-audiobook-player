@@ -95,4 +95,3 @@ data class BookProgressWithDuration(
         )
     }
 }
-

@@ -2,6 +2,7 @@ package com.dotslashlabs.sensay
 
 import com.airbnb.mvrx.test.MvRxTestRule
 import dagger.hilt.android.testing.HiltAndroidRule
+import java.util.concurrent.TimeUnit
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -14,7 +15,6 @@ import org.junit.Rule
 import org.junit.rules.TestWatcher
 import org.junit.runner.Description
 import org.junit.runners.model.TestTimedOutException
-import java.util.concurrent.TimeUnit
 
 // Reusable JUnit4 TestRule to override the Main dispatcher
 class MainDispatcherRule(

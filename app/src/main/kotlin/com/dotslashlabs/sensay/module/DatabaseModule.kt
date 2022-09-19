@@ -21,7 +21,8 @@ object DatabaseModule {
 
     @Singleton
     @Provides
-    fun provideSensayDatabase(@ApplicationContext context: Context) = SensayDatabase.instance(context)
+    fun provideSensayDatabase(@ApplicationContext context: Context) =
+        SensayDatabase.instance(context)
 
     @Provides
     fun provideBookDao(database: SensayDatabase) = database.bookDao()

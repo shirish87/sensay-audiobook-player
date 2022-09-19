@@ -29,7 +29,6 @@ class MainActivity : ComponentActivity() {
             val windowSize = calculateWindowSizeClass(this)
             val devicePosture by devicePostureFlow.collectAsState()
 
-
             SensayApp(windowSize, devicePosture, (intent.action == Intent.ACTION_VIEW))
             // reset action to default
             intent.action = Intent.ACTION_MAIN

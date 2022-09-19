@@ -15,7 +15,6 @@ import com.google.accompanist.navigation.animation.AnimatedNavHost
 import com.google.accompanist.navigation.animation.rememberAnimatedNavController
 import logcat.logcat
 
-
 @OptIn(ExperimentalAnimationApi::class)
 @Composable
 fun SensayApp(

@@ -18,7 +18,6 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import com.google.accompanist.flowlayout.FlowRow
 
-
 typealias OnAdd<T> = (item: T) -> Unit
 typealias OnDelete<T> = (item: T) -> Unit
 
@@ -92,8 +91,9 @@ fun <T> FilterList(
                 onValueChange = {
                     inputText = it
                     expanded = if (filteredItems.firstOrNull()?.let { f ->
-                            "$f".contentEquals(it, ignoreCase = true)
-                        } == true) {
+                        "$f".contentEquals(it, ignoreCase = true)
+                    } == true
+                    ) {
                         false
                     } else {
                         filteredItems.isNotEmpty()

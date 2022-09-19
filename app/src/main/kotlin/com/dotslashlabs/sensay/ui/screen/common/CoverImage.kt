@@ -21,7 +21,11 @@ fun CoverImage(
         placeholder = painterResource(drawableResId),
         fallback = painterResource(drawableResId),
         onError = { error ->
-            logcat("AsyncImage") { "Error loading cover image $coverUri: ${error.result.throwable.asLog()}" }
+            logcat("AsyncImage") {
+                "Error loading cover image $coverUri: ${
+                error.result.throwable.asLog()
+                }"
+            }
         },
         contentDescription = null,
         contentScale = ContentScale.Crop,

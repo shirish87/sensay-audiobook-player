@@ -23,7 +23,8 @@ import com.dotslashlabs.sensay.ui.screen.common.ConfirmDialog
 import data.entity.Bookmark
 import kotlinx.coroutines.launch
 
-@OptIn(ExperimentalMaterialApi::class, ExperimentalMaterial3Api::class,
+@OptIn(
+    ExperimentalMaterialApi::class, ExperimentalMaterial3Api::class,
     ExperimentalFoundationApi::class
 )
 @Composable
@@ -46,7 +47,11 @@ fun PlayerBottomSheet(
     ConfirmDialog(
         data,
         title = { _ -> "Delete Bookmark" },
-        message = { d -> "Are you sure you want to delete ${d?.title?.let { "'$it'" } ?: "this"} bookmark?" },
+        message = { d ->
+            "Are you sure you want to delete ${
+            d?.title?.let { "'$it'" } ?: "this"
+            } bookmark?"
+        },
         confirmLabel = "Delete",
         cancelLabel = "Cancel",
     ) {
@@ -100,9 +105,9 @@ fun PlayerBottomSheet(
                         supportingText = {
                             Text(
                                 "at ${
-                                    bookmark.chapterPosition.format()
+                                bookmark.chapterPosition.format()
                                 } of ${
-                                    bookmark.chapterDuration.format()
+                                bookmark.chapterDuration.format()
                                 }"
                             )
                         },

@@ -109,15 +109,14 @@ private fun GridBookView(
     }
 }
 
-
 @Composable
 @Preview(showBackground = true)
 private fun GridBookViewPreview() {
     GridBookView(
         bookProgressWithChapters = BookProgressWithBookAndChapters(
             book = Book.empty().copy(
-                title = "Book Title Book Title Book Title Book Title Book Title Book Title Book Title Book Title Book Title Book Title Book Title Book Title Book Title Book Title Book Title Book Title Book Title Book Title",
-                author = "Author Author Author Author Author Author Author Author Author Author Author Author Author Author Author Author Author Author Author Author Author Author Author Author Author Author Author",
+                title = List(1024) { "Book Title" }.joinToString(" "),
+                author = List(1024) { "Author" }.joinToString(" "),
                 duration = ContentDuration(120.hours + 55.minutes),
             ),
             chapter = Chapter.empty().copy(

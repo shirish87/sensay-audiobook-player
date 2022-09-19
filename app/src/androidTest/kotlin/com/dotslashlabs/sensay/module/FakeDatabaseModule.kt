@@ -16,11 +16,11 @@ import dagger.hilt.testing.TestInstallIn
 import data.SensayDatabase
 import data.SensayStore
 import data.repository.*
+import javax.inject.Singleton
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestDispatcher
 import kotlinx.coroutines.test.TestScope
-import javax.inject.Singleton
 
 @TestInstallIn(
     components = [SingletonComponent::class],

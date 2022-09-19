@@ -6,13 +6,13 @@ import com.dotslashlabs.sensay.util.PlayerState
 import com.dotslashlabs.sensay.util.mediaId
 import com.dotslashlabs.sensay.util.mediaIds
 import com.dotslashlabs.sensay.util.state
-import kotlinx.coroutines.*
-import kotlinx.coroutines.flow.*
-import logcat.logcat
 import java.time.Instant
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.seconds
+import kotlinx.coroutines.*
+import kotlinx.coroutines.flow.*
+import logcat.logcat
 
 class SensayPlayer(internal val player: Player) {
 
@@ -154,9 +154,7 @@ class SensayPlayer(internal val player: Player) {
     )
 }
 
-
 fun SensayPlayer?.toPlaybackConnectionState() =
     this?.toPlaybackConnectionState() ?: PlaybackConnectionState()
-
 
 fun Player.Events.eventsString() = (0 until size()).joinToString { get(it).toString() }

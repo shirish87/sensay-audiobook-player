@@ -4,10 +4,10 @@ import android.net.Uri
 import androidx.room.Transaction
 import data.entity.*
 import data.repository.*
-import kotlinx.coroutines.flow.firstOrNull
-import logcat.logcat
 import java.time.Instant
 import javax.inject.Inject
+import kotlinx.coroutines.flow.firstOrNull
+import logcat.logcat
 
 data class BookWithChaptersAndTags(
     val booksWithChapters: BookWithChapters,
@@ -38,9 +38,9 @@ class SensayStore @Inject constructor(
             if (chapters.isEmpty() || chapters.any { c -> c.isInvalid() }) {
                 logcat {
                     "Invalid chapters in book '${book.title}': ${
-                        chapters.joinToString(" ") { c ->
-                            "(${c.trackId}) ${c.title} [${c.start.format()} => ${c.end.format()}]"
-                        }
+                    chapters.joinToString(" ") { c ->
+                        "(${c.trackId}) ${c.title} [${c.start.format()} => ${c.end.format()}]"
+                    }
                     }"
                 }
 

@@ -24,7 +24,8 @@ object SettingsScreen : SensayScreen {
     ) = SettingsContent(
         destination,
         backStackEntry,
-        onBackPress = { navHostController.popBackStack() })
+        onBackPress = { navHostController.popBackStack() }
+    )
 }
 
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")

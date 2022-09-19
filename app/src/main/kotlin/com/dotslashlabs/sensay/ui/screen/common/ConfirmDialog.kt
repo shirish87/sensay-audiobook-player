@@ -8,7 +8,6 @@ import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 
-
 @Composable
 fun <T> ConfirmDialog(
     data: MutableState<T?> = remember { mutableStateOf(null) },

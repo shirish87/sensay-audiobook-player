@@ -49,7 +49,9 @@ fun PlayerAppBar(
                     playerActions.createBookmark()
                     Toast.makeText(context, "Saved bookmark", Toast.LENGTH_SHORT).show()
                 },
-                modifier = Modifier.alpha(if (!state.isBookmarkEnabled) ContentAlpha.disabled else 1F),
+                modifier = Modifier.alpha(
+                    if (!state.isBookmarkEnabled) ContentAlpha.disabled else 1F,
+                ),
             ) {
                 Icon(
                     imageVector = Icons.Default.BookmarkAdd,

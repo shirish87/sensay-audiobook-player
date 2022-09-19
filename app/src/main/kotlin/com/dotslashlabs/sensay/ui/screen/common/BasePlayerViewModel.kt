@@ -21,7 +21,6 @@ abstract class BasePlayerViewModel<S : MavericksState>(
 
     protected var player: SensayPlayer? = null
 
-
     protected fun attach(
         context: Context,
         withPlayer: (

@@ -44,7 +44,8 @@ object SourcesScreen : SensayScreen {
         destination,
         navHostController,
         backStackEntry,
-        onBackPress = { navHostController.popBackStack() })
+        onBackPress = { navHostController.popBackStack() }
+    )
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -84,7 +85,11 @@ fun SourcesContent(
     ConfirmDialog(
         data,
         title = { _ -> "Delete Source" },
-        message = { d -> "Are you sure you want to delete ${d?.displayName?.let { "'$it'" } ?: "this"} source?" },
+        message = { d ->
+            "Are you sure you want to delete ${
+            d?.displayName?.let { "'$it'" } ?: "this"
+            } source?"
+        },
         confirmLabel = "Delete",
         cancelLabel = "Cancel",
     ) {
@@ -105,7 +110,9 @@ fun SourcesContent(
             modifier = Modifier.align(Alignment.Center),
             topBar = {
                 SmallTopAppBar(
-                    colors = TopAppBarDefaults.smallTopAppBarColors(containerColor = Color.Transparent),
+                    colors = TopAppBarDefaults.smallTopAppBarColors(
+                        containerColor = Color.Transparent,
+                    ),
                     title = { Text("Sources") },
                     navigationIcon = {
                         IconButton(onClick = onBackPress) {
@@ -116,7 +123,6 @@ fun SourcesContent(
                         }
                     },
                     actions = {
-
 
                         IconButton(
                             enabled = !isScanningFolders,

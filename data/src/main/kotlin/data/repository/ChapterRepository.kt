@@ -5,8 +5,8 @@ import data.dao.ChapterDao
 import data.entity.BookChapterCrossRef
 import data.entity.BookId
 import data.entity.Chapter
-import kotlinx.coroutines.flow.firstOrNull
 import javax.inject.Inject
+import kotlinx.coroutines.flow.firstOrNull
 
 class ChapterRepository @Inject constructor(
     private val chapterDao: ChapterDao,

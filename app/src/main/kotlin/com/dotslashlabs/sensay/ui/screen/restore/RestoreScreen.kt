@@ -43,7 +43,8 @@ object RestoreScreen : SensayScreen {
         destination,
         navHostController,
         backStackEntry,
-        onBackPress = { navHostController.popBackStack() })
+        onBackPress = { navHostController.popBackStack() }
+    )
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -68,7 +69,7 @@ fun RestoreContent(
     val conditions: List<Pair<String, (Progress) -> Boolean>> = listOf(
         "Matching Duration and Chapter Count" to { p ->
             p.bookDuration.ms == bookProgressWithChapters.book.duration.ms &&
-                    p.totalChapters == bookProgressWithChapters.chapters.size
+                p.totalChapters == bookProgressWithChapters.chapters.size
         },
         "Matching Chapter Count" to { p ->
             p.totalChapters == bookProgressWithChapters.chapters.size
@@ -84,7 +85,11 @@ fun RestoreContent(
     ConfirmDialog(
         deleteData,
         title = { _ -> "Delete Progress" },
-        message = { d -> "Are you sure you want to delete ${d?.bookTitle?.let { "'$it'" } ?: "this"} progress?" },
+        message = { d ->
+            "Are you sure you want to delete ${
+            d?.bookTitle?.let { "'$it'" } ?: "this"
+            } progress?"
+        },
         confirmLabel = "Delete",
         cancelLabel = "Cancel",
     ) {
@@ -106,7 +111,11 @@ fun RestoreContent(
     ConfirmDialog(
         restoreData,
         title = { _ -> "Restore Progress" },
-        message = { _ -> "Are you sure you want to restore progress for book '${bookProgressWithChapters.book.title}'?" },
+        message = { _ ->
+            "Are you sure you want to restore progress for book '${
+            bookProgressWithChapters.book.title
+            }'?"
+        },
         confirmLabel = "Restore",
         cancelLabel = "Cancel",
     ) {
@@ -130,7 +139,9 @@ fun RestoreContent(
             modifier = Modifier.align(Alignment.Center),
             topBar = {
                 SmallTopAppBar(
-                    colors = TopAppBarDefaults.smallTopAppBarColors(containerColor = Color.Transparent),
+                    colors = TopAppBarDefaults.smallTopAppBarColors(
+                        containerColor = Color.Transparent,
+                    ),
                     title = { Text("Restore Progress") },
                     navigationIcon = {
                         IconButton(onClick = onBackPress) {

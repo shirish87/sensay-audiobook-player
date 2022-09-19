@@ -3,8 +3,8 @@ package data.repository
 import data.dao.ShelfDao
 import data.entity.BookId
 import data.entity.BookShelfCrossRef
-import kotlinx.coroutines.flow.firstOrNull
 import javax.inject.Inject
+import kotlinx.coroutines.flow.firstOrNull
 
 class ShelfRepository @Inject constructor(
     private val shelfDao: ShelfDao,

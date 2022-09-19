@@ -5,8 +5,8 @@ import data.dao.SourceDao
 import data.entity.Source
 import data.entity.SourceBookCrossRef
 import data.entity.SourceId
-import kotlinx.coroutines.flow.firstOrNull
 import javax.inject.Inject
+import kotlinx.coroutines.flow.firstOrNull
 
 class SourceRepository @Inject constructor(
     private val sourceDao: SourceDao,

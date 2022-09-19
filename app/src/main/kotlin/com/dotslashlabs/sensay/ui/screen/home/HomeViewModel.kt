@@ -15,7 +15,6 @@ import data.BookCategory
 import data.SensayStore
 import data.entity.BookProgressWithBookAndChapters
 
-
 enum class HomeSortType(
     private val displayName: String,
     val imageVector: ImageVector,
@@ -56,7 +55,6 @@ data class HomeViewState(
         acc
     }?.sorted() ?: emptyList()
 }
-
 
 class HomeViewModel @AssistedInject constructor(
     @Assisted state: HomeViewState,

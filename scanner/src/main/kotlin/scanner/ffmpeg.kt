@@ -4,11 +4,11 @@ import android.content.Context
 import android.net.Uri
 import androidx.core.net.toFile
 import com.arthenica.ffmpegkit.*
+import kotlin.coroutines.resume
+import kotlin.coroutines.resumeWithException
 import kotlinx.coroutines.suspendCancellableCoroutine
 import logcat.asLog
 import logcat.logcat
-import kotlin.coroutines.resume
-import kotlin.coroutines.resumeWithException
 
 class FfmpegException(message: String) : Exception(message)
 
@@ -16,7 +16,9 @@ suspend fun ffprobe(input: Uri, context: Context, command: List<String>): String
     FFmpegKitConfig.setLogRedirectionStrategy(LogRedirectionStrategy.NEVER_PRINT_LOGS)
     val fullCommand = fullCommand(input, context, command) ?: return null
     return suspendCancellableCoroutine { cont ->
-        val probeSession = FFprobeKit.executeWithArgumentsAsync(fullCommand.toTypedArray()) { session ->
+        val probeSession = FFprobeKit.executeWithArgumentsAsync(
+            fullCommand.toTypedArray(),
+        ) { session ->
             when (session.state) {
                 SessionState.COMPLETED -> {
                     cont.resume(session.output)
@@ -35,13 +37,17 @@ suspend fun ffmpeg(input: Uri, context: Context, command: List<String>): String?
     FFmpegKitConfig.setLogRedirectionStrategy(LogRedirectionStrategy.NEVER_PRINT_LOGS)
     val fullCommand = fullCommand(input, context, command) ?: return null
     return suspendCancellableCoroutine { cont ->
-        val probeSession = FFmpegKit.executeWithArgumentsAsync(fullCommand.toTypedArray()) { session ->
+        val probeSession = FFmpegKit.executeWithArgumentsAsync(
+            fullCommand.toTypedArray(),
+        ) { session ->
             when (session.state) {
                 SessionState.COMPLETED -> {
-                    cont.resume("""
-                        |${fullCommand}
+                    cont.resume(
+                        """
+                        |$fullCommand
                         |${session.output}
-                    """.trimMargin())
+                        """.trimMargin()
+                    )
                 }
                 SessionState.FAILED -> {
                     cont.resumeWithException(FfmpegException(session.failStackTrace))

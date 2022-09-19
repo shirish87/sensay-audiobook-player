@@ -8,8 +8,8 @@ import data.dao.insertOrUpdate
 import data.entity.BookId
 import data.entity.BookProgress
 import data.entity.Progress
-import kotlinx.coroutines.flow.firstOrNull
 import javax.inject.Inject
+import kotlinx.coroutines.flow.firstOrNull
 
 class BookProgressRepository @Inject constructor(
     private val bookProgressDao: BookProgressDao,

@@ -9,10 +9,10 @@ import dagger.assisted.Assisted
 import dagger.assisted.AssistedInject
 import data.BookWithChaptersAndTags
 import data.SensayStore
+import java.util.regex.Pattern
 import kotlinx.coroutines.flow.firstOrNull
 import scanner.CoverScanner
 import scanner.MediaScanner
-import java.util.regex.Pattern
 
 @HiltWorker
 class BookScannerWorker @AssistedInject constructor(

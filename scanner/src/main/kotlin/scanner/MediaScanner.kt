@@ -3,13 +3,13 @@ package scanner
 import android.content.Context
 import android.net.Uri
 import androidx.documentfile.provider.DocumentFile
-import kotlinx.coroutines.flow.flow
-import logcat.logcat
 import java.time.Instant
 import javax.inject.Inject
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.DurationUnit
+import kotlinx.coroutines.flow.flow
+import logcat.logcat
 
 data class MediaScannerChapter(
     val uri: Uri,
@@ -62,7 +62,7 @@ class MediaScanner @Inject constructor(private val mediaAnalyzer: MediaAnalyzer)
     private val singleFileExtensions = listOf("m4a", "m4b", "mp4")
 
     private val supportedExtensions = singleFileExtensions +
-            listOf("mp3", "mp2", "mp1", "ogg", "wav")
+        listOf("mp3", "mp2", "mp1", "ogg", "wav")
 
     private val validSupportedFileExtension = supportedExtensions.run {
         ".*\\.(${joinToString("|")})$".toRegex(RegexOption.IGNORE_CASE)
@@ -78,8 +78,10 @@ class MediaScanner @Inject constructor(private val mediaAnalyzer: MediaAnalyzer)
 
     private val audioFileFilter = { f: DocumentFile ->
         f.isFile && f.canRead() && f.isNonEmptyFile() &&
-                (f.type?.startsWith("audio/", true) == true ||
-                        validSupportedFileExtension.matches(f.name!!))
+            (
+                f.type?.startsWith("audio/", true) == true ||
+                    validSupportedFileExtension.matches(f.name!!)
+                )
     }
 
 //    private val singleFileFilter = { f: DocumentFile ->
@@ -139,7 +141,11 @@ class MediaScanner @Inject constructor(private val mediaAnalyzer: MediaAnalyzer)
         }.first.values.toList()
 
         levels.flatMap { (level, pendingFiles, levelDirs) ->
-            logcat { "level=$level levelDirs=${levelDirs.joinToString { it.name ?: "" }} pendingFiles=${pendingFiles.size}" }
+            logcat {
+                "level=$level levelDirs=${
+                levelDirs.joinToString { it.name ?: "" }
+                } pendingFiles=${pendingFiles.size}"
+            }
 
             if (levelDirs.isEmpty() && pendingFiles.isEmpty()) return@flatMap emptyList()
 
@@ -159,9 +165,9 @@ class MediaScanner @Inject constructor(private val mediaAnalyzer: MediaAnalyzer)
             .also {
                 logcat {
                     "levels processed books=${
-                        it.joinToString { m ->
-                            m.metadata.title ?: ""
-                        }
+                    it.joinToString { m ->
+                        m.metadata.title ?: ""
+                    }
                     } (${it.size})"
                 }
             }
@@ -226,7 +232,12 @@ class MediaScanner @Inject constructor(private val mediaAnalyzer: MediaAnalyzer)
         val root = baseBook.root.parentFile!!
         val coverUri = chapters.firstOrNull { it.coverUri != null }?.coverUri
 
-        logcat { "level consolidated-singles: book=${root.name} chapters=${chapters.size} $chapters" }
+        logcat {
+            "level consolidated-singles: book=${root.name} chapters=${
+            chapters.size
+            } $chapters"
+        }
+
         return MediaScannerResult(
             root = root,
             coverUri = coverUri,
@@ -269,7 +280,8 @@ class MediaScanner @Inject constructor(private val mediaAnalyzer: MediaAnalyzer)
                                 chapter = c.chapter.copy(
                                     id = sequenceId + c.chapter.id,
                                     startTime = startTime.toDouble(DurationUnit.SECONDS),
-                                    endTime = (startTime + c.chapter.duration).toDouble(DurationUnit.SECONDS),
+                                    endTime = (startTime + c.chapter.duration)
+                                        .toDouble(DurationUnit.SECONDS),
                                     tags = c.chapter.titleTag?.let { titleTag ->
                                         c.chapter.tags!! + mapOf(
                                             titleTag to listOfNotNull(
@@ -307,7 +319,12 @@ class MediaScanner @Inject constructor(private val mediaAnalyzer: MediaAnalyzer)
             ),
         )
 
-        logcat { "level consolidated-chapterized: book=${metadata.title} chapters=${chapters.size} $chapters" }
+        logcat {
+            "level consolidated-chapterized: book=${metadata.title} chapters=${
+            chapters.size
+            } $chapters"
+        }
+
         return MediaScannerResult(
             root = root,
             coverUri = coverUri,
@@ -316,7 +333,10 @@ class MediaScanner @Inject constructor(private val mediaAnalyzer: MediaAnalyzer)
         )
     }
 
-    private fun consolidateMediaScannerResults(results: Collection<MediaScannerResult>): MediaScannerResult? {
+    private fun consolidateMediaScannerResults(
+        results: Collection<MediaScannerResult>,
+    ): MediaScannerResult? {
+
         if (results.isEmpty()) return null
 
         // prefer using chapterized files (m4b) with at least 1 chapter per file
@@ -377,14 +397,18 @@ fun Collection<MediaScannerResult>.consolidate(
 
             if (chapterized != null) {
                 // if chapterized files exists, use file with most the chapters and ignore all others
-                logcat { "FOUND level book=${k} USED CHAPTERIZED chapters=${chapterized.chapters.size}" }
+                logcat {
+                    "FOUND level book=$k USED CHAPTERIZED chapters=${
+                    chapterized.chapters.size
+                    }"
+                }
+
                 return@flatMap listOf(chapterized)
             }
 
             return@flatMap listOfNotNull(consolidator(grp))
         }
 }
-
 
 fun DocumentFile.parentNames(max: Int = 4) = sequence {
     var d: DocumentFile? = parentFile

@@ -4,11 +4,11 @@ import android.content.Context
 import android.net.Uri
 import androidx.core.content.FileProvider
 import androidx.documentfile.provider.DocumentFile
+import java.io.File
+import javax.inject.Inject
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import logcat.logcat
-import java.io.File
-import javax.inject.Inject
 
 fun DocumentFile.isNonEmptyFile() = (isFile && exists() && canRead() && length() > 0)
 fun DocumentFile.isImage() = type?.startsWith("image/") == true
@@ -83,7 +83,7 @@ class CoverScanner @Inject constructor() {
     private suspend fun newBookCoverFile(
         context: Context,
         coverFileId: String,
-        coverFile: String = "${coverFileId}.png",
+        coverFile: String = "$coverFileId.png",
     ): File = withContext(Dispatchers.IO) {
         val coversFolder = File(context.cacheDir, "covers")
         if (!coversFolder.exists()) {

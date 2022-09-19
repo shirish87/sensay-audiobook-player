@@ -381,8 +381,8 @@ private fun PlayerButtons(
 
         OutlinedIconButton(
             enabled = state.isActiveMedia &&
-                    !state.isLoading &&
-                    state.hasPreviousChapter,
+                !state.isLoading &&
+                state.hasPreviousChapter,
             onClick = { playerActions.previousChapter() },
             modifier = buttonsModifier,
         ) {
@@ -440,8 +440,8 @@ private fun PlayerButtons(
 
         OutlinedIconButton(
             enabled = state.isActiveMedia &&
-                    !state.isLoading &&
-                    state.hasNextChapter,
+                !state.isLoading &&
+                state.hasNextChapter,
             onClick = { playerActions.nextChapter() },
             modifier = buttonsModifier,
         ) {
@@ -585,7 +585,6 @@ fun ExposedDropdownMenuDefaults.disabledTextFieldColors(): TextFieldColors {
         disabledPlaceholderColor = MaterialTheme.colorScheme.onSurfaceVariant,
     )
 }
-
 
 @OptIn(ExperimentalMaterialApi::class)
 @Preview(showBackground = true)

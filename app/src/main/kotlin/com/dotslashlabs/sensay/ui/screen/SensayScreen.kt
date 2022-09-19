@@ -24,9 +24,11 @@ interface SensayScreen {
     ) = navGraphBuilder.composable(
         route = destination.route,
         arguments = destination.arguments,
-        deepLinks = listOf(navDeepLink {
-            uriPattern = getUriString(destination.route)
-        }),
+        deepLinks = listOf(
+            navDeepLink {
+                uriPattern = getUriString(destination.route)
+            }
+        ),
     ) {
         Content(
             destination,

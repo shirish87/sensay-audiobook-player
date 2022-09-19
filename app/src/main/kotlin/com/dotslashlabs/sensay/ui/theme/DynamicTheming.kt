@@ -38,7 +38,6 @@ import coil.size.Scale
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
-
 @Composable
 fun rememberDominantColorState(
     context: Context = LocalContext.current,

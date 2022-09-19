@@ -159,7 +159,7 @@ fun NowPlayingViewContentPreview() {
             override fun detachPlayer() {
                 TODO("Not yet implemented")
             }
-         },
+        },
         state = NowPlayingViewState(
             data = Success(
                 BookProgressWithDuration(

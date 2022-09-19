@@ -42,7 +42,11 @@ fun BookContextMenu(
     ConfirmDialog(
         data,
         title = { _ -> "Delete Book" },
-        message = { d -> "Are you sure you want to delete ${d?.book?.title?.let { "'$it'" } ?: "this"} book?" },
+        message = { d ->
+            "Are you sure you want to delete ${
+            d?.book?.title?.let { "'$it'" } ?: "this"
+            } book?"
+        },
         confirmLabel = "Delete",
         cancelLabel = "Cancel",
     ) {
@@ -103,7 +107,10 @@ fun BookContextMenu(
                 }
             }
 
-            if (config.isRestoreBookEnabled && bookProgressWithChapters.bookProgress.bookCategory == BookCategory.NOT_STARTED) {
+            if (config.isRestoreBookEnabled &&
+                bookProgressWithChapters.bookProgress.bookCategory == BookCategory.NOT_STARTED
+            ) {
+
                 DropdownMenuItem(
                     text = { Text("Restore Progress") },
                     onClick = {
