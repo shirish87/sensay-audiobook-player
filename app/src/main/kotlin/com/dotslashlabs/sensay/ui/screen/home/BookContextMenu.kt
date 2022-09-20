@@ -51,27 +51,32 @@ fun BookContextMenu(
 
     val context = LocalContext.current
 
-    val hideData: MutableState<BookProgressWithBookAndChapters?> =
+    val visibilityData: MutableState<Pair<BookProgressWithBookAndChapters, Boolean>?> =
         remember { mutableStateOf(null) }
 
     ConfirmDialog(
-        hideData,
-        title = { "Hide Book" },
+        visibilityData,
+        title = { d -> "${if (d?.second == true) "Hide" else "Show"} Book" },
         message = { d ->
-            "Are you sure you want to hide ${d?.book?.title ?: "this"} book?"
+            val action = if (d?.second == true) "hide" else "show"
+            "Are you sure you want to $action ${d?.first?.book?.title ?: "this"} book?"
         },
-        confirmLabel = "Hide",
+        confirmLabel = "Confirm",
         cancelLabel = "Cancel",
     ) { arg ->
 
         if (arg != null) {
-            val book = arg.book
+            val book = arg.first.book
 
-            config.onBookVisibilityChange(arg, false)
+            config.onBookVisibilityChange(arg.first, !arg.second)
 
             Toast.makeText(
                 context,
-                "Book '${book.title}' has been hidden from view.",
+                "Book '${book.title}' ${
+                if (!arg.second)
+                    "is now visible."
+                else "has been hidden from view."
+                }",
                 Toast.LENGTH_SHORT,
             ).show()
         }
@@ -161,18 +166,22 @@ fun BookContextMenu(
                 )
             }
 
-            if (config.isVisibilityChangeEnabled) {
+            val isBookVisible = bookProgressWithChapters.bookProgress.isVisible
+
+            if (config.isVisibilityChangeEnabled || !isBookVisible) {
                 Divider()
 
                 DropdownMenuItem(
-                    text = { Text("Hide Book") },
+                    text = { Text("${if (isBookVisible) "Hide" else "Show"} Book") },
                     onClick = {
-                        hideData.value = bookProgressWithChapters
+                        visibilityData.value = bookProgressWithChapters to isBookVisible
                         expanded = false
                     },
                     leadingIcon = {
                         Icon(
-                            Icons.Outlined.VisibilityOff,
+                            if (isBookVisible)
+                                Icons.Outlined.VisibilityOff
+                            else Icons.Outlined.Visibility,
                             contentDescription = null,
                         )
                     },

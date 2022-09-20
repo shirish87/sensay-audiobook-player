@@ -5,8 +5,14 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.grid.*
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.ExpandLess
+import androidx.compose.material.icons.outlined.ExpandMore
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
@@ -48,6 +54,9 @@ fun <SortMenuType> BooksList(
 
     val isFilterEnabled = filterMenuOptions.isFilterEnabled || filterListOptions.isFilterEnabled
 
+    var expandedHiddenBooks by remember { mutableStateOf(false) }
+    val (books, hiddenBooks) = results.partition { it.bookProgress.isVisible }
+
     Column(Modifier.fillMaxSize()) {
         if (isFilterEnabled || (!isLoading && results.isNotEmpty())) {
             FilterBar(
@@ -58,17 +67,17 @@ fun <SortMenuType> BooksList(
         }
 
         LazyColumn(state = state, modifier = Modifier.weight(1F)) {
-            if (results.isEmpty() && isFilterEnabled) {
+            if (books.isEmpty() && isFilterEnabled) {
                 item {
                     Text(
-                        modifier = Modifier.fillMaxWidth().padding(20.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(20.dp),
                         textAlign = TextAlign.Center,
                         text = "Nothing found.",
                     )
                 }
             }
-
-            val (books, hiddenBooks) = results.partition { it.bookProgress.isVisible }
 
             items(count = books.size) { index ->
                 books[index].run {
@@ -83,16 +92,20 @@ fun <SortMenuType> BooksList(
 
             if (hiddenBooks.isNotEmpty()) {
                 item {
-                    Text(
-                        modifier = Modifier.fillMaxWidth().padding(20.dp),
-                        textAlign = TextAlign.Center,
-                        text = "${hiddenBooks.size} books are hidden.",
-                    )
+                    hiddenBooksSummaryView(hiddenBooks, expandedHiddenBooks) {
+                        expandedHiddenBooks = it
+                    }
                 }
             }
 
             item {
                 Spacer(modifier = Modifier.height(36.dp))
+            }
+        }
+
+        if (expandedHiddenBooks) {
+            hiddenBooksListView(books = hiddenBooks, config = config) {
+                expandedHiddenBooks = it
             }
         }
     }
@@ -117,6 +130,9 @@ fun <SortMenuType> BooksGrid(
 
     val isFilterEnabled = filterMenuOptions.isFilterEnabled || filterListOptions.isFilterEnabled
 
+    var expandedHiddenBooks by remember { mutableStateOf(false) }
+    val (books, hiddenBooks) = results.partition { it.bookProgress.isVisible }
+
     Column(Modifier.fillMaxSize()) {
         if (isFilterEnabled || (!isLoading && results.isNotEmpty())) {
             FilterBar(
@@ -133,17 +149,17 @@ fun <SortMenuType> BooksGrid(
                 .fillMaxSize()
                 .weight(1F),
         ) {
-            if (results.isEmpty() && isFilterEnabled) {
+            if (books.isEmpty() && isFilterEnabled) {
                 item(span = { GridItemSpan(cellCount) }) {
                     Text(
-                        modifier = Modifier.fillMaxWidth().padding(20.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(20.dp),
                         textAlign = TextAlign.Center,
                         text = "Nothing found.",
                     )
                 }
             }
-
-            val (books, hiddenBooks) = results.partition { it.bookProgress.isVisible }
 
             items(count = books.size) { index ->
                 books[index].run {
@@ -160,12 +176,16 @@ fun <SortMenuType> BooksGrid(
 
             if (hiddenBooks.isNotEmpty()) {
                 item(span = { GridItemSpan(cellCount) }) {
-                    Text(
-                        modifier = Modifier.fillMaxWidth().padding(20.dp),
-                        textAlign = TextAlign.Center,
-                        text = "${hiddenBooks.size} books are hidden.",
-                    )
+                    hiddenBooksSummaryView(hiddenBooks, expandedHiddenBooks) {
+                        expandedHiddenBooks = it
+                    }
                 }
+            }
+        }
+
+        if (expandedHiddenBooks) {
+            hiddenBooksGridView(books = hiddenBooks, config = config, cellCount = cellCount) {
+                expandedHiddenBooks = it
             }
         }
     }
@@ -194,4 +214,118 @@ private fun gridColumnCount(): Int {
     }
     val columns = (widthPx / desiredPx).roundToInt()
     return columns.coerceAtLeast(2)
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun hiddenBooksSummaryView(
+    hiddenBooks: List<BookProgressWithBookAndChapters>,
+    expanded: Boolean,
+    setExpanded: (Boolean) -> Unit,
+) {
+
+    OutlinedCard(
+        onClick = { setExpanded(!expanded) },
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(20.dp),
+    ) {
+
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            horizontalArrangement = Arrangement.Center,
+        ) {
+            Text(
+                text = "${hiddenBooks.size} ${
+                if (hiddenBooks.size == 1)
+                    "book is"
+                else "books are"
+                } hidden.",
+            )
+            Spacer(modifier = Modifier.width(6.dp))
+            Icon(
+                imageVector = if (expanded)
+                    Icons.Outlined.ExpandLess
+                else
+                    Icons.Outlined.ExpandMore,
+                contentDescription = null,
+            )
+        }
+    }
+}
+
+@Composable
+private fun hiddenBooksListView(
+    books: List<BookProgressWithBookAndChapters>,
+    config: BookContextMenuConfig,
+    modifier: Modifier = Modifier,
+    setExpanded: (Boolean) -> Unit,
+) {
+
+    val state: LazyListState = rememberLazyListState()
+
+    LazyColumn(
+        state = state,
+        modifier = modifier.fillMaxSize(),
+    ) {
+
+        item {
+            hiddenBooksSummaryView(books, true, setExpanded)
+        }
+
+        items(count = books.size) { index ->
+            books[index].run {
+                BookRow(
+                    this,
+                    config,
+                    onNavToBook = {},
+                )
+            }
+        }
+
+        item {
+            Spacer(modifier = Modifier.height(36.dp))
+        }
+    }
+}
+
+@Composable
+private fun hiddenBooksGridView(
+    books: List<BookProgressWithBookAndChapters>,
+    cellCount: Int,
+    config: BookContextMenuConfig,
+    modifier: Modifier = Modifier,
+    setExpanded: (Boolean) -> Unit,
+) {
+
+    val lastRowStartCell =
+        books.size - (if (books.size % cellCount == 0) cellCount else books.size % cellCount)
+
+    val state: LazyGridState = rememberLazyGridState()
+
+    LazyVerticalGrid(
+        state = state,
+        columns = GridCells.Fixed(cellCount),
+        modifier = modifier.fillMaxSize(),
+    ) {
+
+        item(span = { GridItemSpan(cellCount) }) {
+            hiddenBooksSummaryView(books, true, setExpanded)
+        }
+
+        items(count = books.size) { index ->
+            books[index].run {
+                BookCell(
+                    this,
+                    config,
+                    onNavToBook = {},
+                    modifier = Modifier.padding(
+                        paddingValuesForCell(index + 1, cellCount, lastRowStartCell),
+                    ),
+                )
+            }
+        }
+    }
 }
