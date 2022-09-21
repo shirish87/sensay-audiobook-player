@@ -5,19 +5,18 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.em
 import com.dotslashlabs.sensay.ui.screen.common.BookChaptersDurationInfoRow
 import com.dotslashlabs.sensay.ui.screen.common.CoverImage
+import com.dotslashlabs.sensay.ui.screen.home.nowplaying.BookAuthorAndSeries
+import com.dotslashlabs.sensay.ui.screen.home.nowplaying.BookTitleAndChapter
+import com.google.accompanist.flowlayout.FlowMainAxisAlignment
 import data.BookCategory
 import data.entity.Book
 import data.entity.BookProgress
@@ -60,50 +59,49 @@ private fun GridBookView(
         val book = bookProgressWithChapters.book
 
         Box(
-            modifier = Modifier.weight(0.5F),
+            modifier = Modifier.weight(0.45F),
         ) {
             CoverImage(
                 coverUri = bookProgressWithChapters.book.coverUri,
                 modifier = Modifier.fillMaxSize(),
             )
 
-            book.author?.let { author ->
-                Text(
-                    text = author.uppercase(),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .align(Alignment.BottomCenter)
-                        .background(authorBackgroundColor)
-                        .padding(horizontal = 12.dp),
-                    textAlign = TextAlign.Center,
-                    style = MaterialTheme.typography.labelSmall,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis,
-                )
-            }
+            BookAuthorAndSeries(
+                book.author,
+                book.series,
+                book.title,
+                maxLengthEach = 25,
+                style = MaterialTheme.typography.labelSmall,
+                mainAxisAlignment = FlowMainAxisAlignment.Center,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .align(Alignment.BottomCenter)
+                    .background(authorBackgroundColor)
+                    .padding(horizontal = 12.dp),
+            )
         }
 
         Column(
+            verticalArrangement = Arrangement.SpaceBetween,
             modifier = Modifier
-                .weight(0.5F)
+                .weight(0.55F)
                 .padding(start = 12.dp, end = 12.dp, top = 8.dp, bottom = 12.dp),
-            verticalArrangement = Arrangement.spacedBy(6.dp),
         ) {
+
+            Column {
+                BookTitleAndChapter(
+                    book.title,
+                    bookProgressWithChapters.chapter.title,
+                    bookTitleMaxLines = 3,
+                    chapterTitleMaxLines = 1,
+                )
+            }
 
             BookChaptersDurationInfoRow(
                 book,
                 bookProgressWithChapters.bookProgress,
                 useShortDurationFormat = true,
-                modifier = Modifier.padding(vertical = 6.dp),
-            )
-
-            Text(
-                text = book.title,
-                lineHeight = 1.2.em,
-                modifier = Modifier.fillMaxWidth(),
-                style = MaterialTheme.typography.titleSmall,
-                maxLines = 3,
-                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.padding(top = 6.dp),
             )
         }
     }
@@ -117,10 +115,11 @@ private fun GridBookViewPreview() {
             book = Book.empty().copy(
                 title = List(1024) { "Book Title" }.joinToString(" "),
                 author = List(1024) { "Author" }.joinToString(" "),
+                series = List(1024) { "Series" }.joinToString(" "),
                 duration = ContentDuration(120.hours + 55.minutes),
             ),
             chapter = Chapter.empty().copy(
-                title = "Chapter 1",
+                title = List(1024) { "Chapter 1" }.joinToString(" "),
                 duration = ContentDuration(1.hours),
             ),
             chapters = listOf(

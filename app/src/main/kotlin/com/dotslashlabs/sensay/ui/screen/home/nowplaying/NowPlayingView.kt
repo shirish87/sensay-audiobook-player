@@ -30,6 +30,7 @@ import com.dotslashlabs.sensay.ui.screen.SensayScreen
 import com.dotslashlabs.sensay.ui.screen.common.CoverImage
 import com.dotslashlabs.sensay.util.PlayerState
 import com.dotslashlabs.sensay.util.joinWith
+import com.google.accompanist.flowlayout.FlowMainAxisAlignment
 import com.google.accompanist.flowlayout.FlowRow
 import data.util.ContentDuration
 import kotlin.text.Typography.bullet
@@ -112,11 +113,16 @@ fun NowPlayingViewContent(
             ) {
 
                 BookAuthorAndSeries(
-                    nowPlayingBook,
+                    nowPlayingBook.author,
+                    nowPlayingBook.series,
+                    nowPlayingBook.bookTitle,
                     style = MaterialTheme.typography.labelSmall,
                 )
 
-                BookTitleAndChapter(nowPlayingBook)
+                BookTitleAndChapter(
+                    nowPlayingBook.bookTitle,
+                    nowPlayingBook.chapterTitle,
+                )
             }
 
             Column(
@@ -153,31 +159,38 @@ fun NowPlayingViewContent(
 
 @Composable
 fun BookAuthorAndSeries(
-    bookProgressWithDuration: BookProgressWithDuration,
-    maxLength: Int = 40,
+    author: String?,
+    series: String?,
+    bookTitle: String,
+    maxLengthEach: Int = 40,
     style: TextStyle = MaterialTheme.typography.labelSmall,
+    mainAxisAlignment: FlowMainAxisAlignment = FlowMainAxisAlignment.Start,
+    mainAxisSpacing: Dp = 4.dp,
+    modifier: Modifier = Modifier,
 ) {
 
     FlowRow(
-        modifier = Modifier.fillMaxWidth(),
-        mainAxisSpacing = 4.dp,
+        modifier = modifier
+            .fillMaxWidth(0.95F),
+        mainAxisAlignment = mainAxisAlignment,
+        mainAxisSpacing = mainAxisSpacing,
     ) {
         listOfNotNull(
-            bookProgressWithDuration.author,
-            if (bookProgressWithDuration.series == bookProgressWithDuration.bookTitle)
+            author,
+            if (series == bookTitle)
                 null
-            else bookProgressWithDuration.series,
+            else series,
         )
             .joinWith("$bullet")
             .forEach { text ->
                 Text(
                     text = text.run {
-                        if (length > maxLength)
-                            "${substring(0, maxLength)}$ellipsis"
+                        if (length > maxLengthEach)
+                            "${substring(0, maxLengthEach)}$ellipsis"
                         else this
                     },
                     style = style,
-                    maxLines = 1,
+                    maxLines = 2,
                     overflow = TextOverflow.Ellipsis,
                 )
             }
@@ -186,20 +199,23 @@ fun BookAuthorAndSeries(
 
 @Composable
 fun BookTitleAndChapter(
-    bookProgressWithDuration: BookProgressWithDuration,
+    bookTitle: String,
+    chapterTitle: String,
+    bookTitleMaxLines: Int = 2,
+    chapterTitleMaxLines: Int = 1,
 ) {
 
     Text(
         modifier = Modifier.padding(top = 2.dp),
-        text = bookProgressWithDuration.bookTitle.trim(),
-        maxLines = 2,
+        text = bookTitle.trim(),
+        maxLines = bookTitleMaxLines,
         overflow = TextOverflow.Ellipsis,
         style = MaterialTheme.typography.titleSmall,
     )
     Text(
         modifier = Modifier.padding(top = 2.dp),
-        text = bookProgressWithDuration.chapterTitle.trim(),
-        maxLines = 1,
+        text = chapterTitle.trim(),
+        maxLines = chapterTitleMaxLines,
         overflow = TextOverflow.Ellipsis,
         style = MaterialTheme.typography.labelSmall,
     )

@@ -4,16 +4,16 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.em
 import com.dotslashlabs.sensay.ui.screen.common.BookChaptersDurationInfoRow
 import com.dotslashlabs.sensay.ui.screen.common.CoverImage
+import com.dotslashlabs.sensay.ui.screen.home.nowplaying.BookAuthorAndSeries
+import com.dotslashlabs.sensay.ui.screen.home.nowplaying.BookTitleAndChapter
 import data.BookCategory
 import data.entity.Book
 import data.entity.BookProgress
@@ -52,12 +52,15 @@ fun ListBookView(
 ) {
 
     Row(
-        modifier = Modifier.fillMaxWidth()
-            .height(height)
+        verticalAlignment = Alignment.Top,
+        modifier = Modifier
+            .fillMaxWidth()
+            .sizeIn(maxHeight = height)
     ) {
         if (useCoverImage) {
             Column(
                 modifier = Modifier
+                    .fillMaxHeight()
                     .weight(0.35F),
             ) {
                 CoverImage(
@@ -70,28 +73,25 @@ fun ListBookView(
         val book = bookProgressWithChapters.book
 
         Column(
+            verticalArrangement = Arrangement.SpaceBetween,
             modifier = Modifier
+                .fillMaxHeight()
                 .weight(if (useCoverImage) 0.65F else 1F)
-                .padding(horizontal = 20.dp, vertical = 12.dp),
+                .padding(horizontal = 16.dp, vertical = 16.dp),
         ) {
-            Column(
-                modifier = Modifier.fillMaxWidth(),
-            ) {
-                book.author?.let { author ->
-                    Text(
-                        text = author.uppercase(),
-                        style = MaterialTheme.typography.labelSmall,
-                        maxLines = 2,
-                        overflow = TextOverflow.Ellipsis,
-                    )
-                }
-                Text(
-                    text = book.title,
-                    lineHeight = 1.2.em,
-                    modifier = Modifier.padding(vertical = 4.dp),
-                    style = MaterialTheme.typography.titleSmall,
-                    maxLines = 3,
-                    overflow = TextOverflow.Ellipsis,
+
+            BookAuthorAndSeries(
+                book.author,
+                book.series,
+                book.title,
+                maxLengthEach = 25,
+                style = MaterialTheme.typography.labelSmall,
+            )
+
+            Column {
+                BookTitleAndChapter(
+                    book.title,
+                    bookProgressWithChapters.chapter.title,
                 )
             }
 
@@ -112,6 +112,7 @@ private fun ListBookViewPreview() {
             book = Book.empty().copy(
                 title = List(1024) { "Book Title" }.joinToString(" "),
                 author = List(1024) { "Author" }.joinToString(" "),
+                series = List(1024) { "Series" }.joinToString(" "),
                 duration = ContentDuration(120.hours + 55.minutes),
             ),
             chapter = Chapter.empty().copy(
