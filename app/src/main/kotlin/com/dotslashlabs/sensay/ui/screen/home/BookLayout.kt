@@ -24,7 +24,7 @@ import com.airbnb.mvrx.Success
 import data.entity.BookProgressWithBookAndChapters
 import kotlin.math.roundToInt
 
-fun resolveAsyncState(
+private fun resolveAsyncState(
     items: Async<List<BookProgressWithBookAndChapters>>,
     emptyListItemsCount: Int = 12,
 ) = when (items) {
@@ -191,7 +191,7 @@ fun <SortMenuType> BooksGrid(
     }
 }
 
-fun paddingValuesForCell(cell: Int, cellCount: Int, lastRowStartCell: Int): PaddingValues {
+private fun paddingValuesForCell(cell: Int, cellCount: Int, lastRowStartCell: Int): PaddingValues {
     val startPadding = if (cell % cellCount == 1) 16.dp else 0.dp
 
     return if (cell <= cellCount) {
