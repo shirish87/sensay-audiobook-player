@@ -98,7 +98,7 @@ fun BookChaptersDurationInfoRow(
             book = book,
             bookProgress = bookProgress,
             modifier = Modifier.constrainAs(progress) {
-                top.linkTo(text1.bottom, margin = 10.dp)
+                bottom.linkTo(text1.top, margin = 10.dp)
                 linkTo(start = parent.start, end = parent.end)
                 width = Dimension.fillToConstraints
             },

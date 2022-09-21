@@ -47,7 +47,7 @@ fun BookRow(
 @Composable
 fun ListBookView(
     bookProgressWithChapters: BookProgressWithBookAndChapters,
-    height: Dp = 156.dp,
+    height: Dp = 160.dp,
     useCoverImage: Boolean = true,
 ) {
 
@@ -91,7 +91,9 @@ fun ListBookView(
             Column {
                 BookTitleAndChapter(
                     book.title,
-                    bookProgressWithChapters.chapter.title,
+                    if (bookProgressWithChapters.bookProgress.bookCategory != BookCategory.NOT_STARTED) {
+                        bookProgressWithChapters.chapter.title
+                    } else null,
                 )
             }
 

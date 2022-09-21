@@ -51,10 +51,11 @@ private fun GridBookView(
     height: Dp = 250.dp,
     authorBackgroundColor: Color = MaterialTheme.colorScheme.surface.copy(alpha = 0.85F),
 ) {
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .height(height),
+            .sizeIn(maxHeight = height),
     ) {
         val book = bookProgressWithChapters.book
 
@@ -77,7 +78,7 @@ private fun GridBookView(
                     .fillMaxWidth()
                     .align(Alignment.BottomCenter)
                     .background(authorBackgroundColor)
-                    .padding(horizontal = 12.dp),
+                    .padding(horizontal = 12.dp, vertical = 4.dp),
             )
         }
 
@@ -91,7 +92,9 @@ private fun GridBookView(
             Column {
                 BookTitleAndChapter(
                     book.title,
-                    bookProgressWithChapters.chapter.title,
+                    if (bookProgressWithChapters.bookProgress.bookCategory != BookCategory.NOT_STARTED) {
+                        bookProgressWithChapters.chapter.title
+                    } else null,
                     bookTitleMaxLines = 3,
                     chapterTitleMaxLines = 1,
                 )

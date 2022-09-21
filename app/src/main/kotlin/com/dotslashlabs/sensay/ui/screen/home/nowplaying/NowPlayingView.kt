@@ -169,6 +169,8 @@ fun BookAuthorAndSeries(
     modifier: Modifier = Modifier,
 ) {
 
+    if (author == null && series == null) return
+
     FlowRow(
         modifier = modifier
             .fillMaxWidth(0.95F),
@@ -200,7 +202,7 @@ fun BookAuthorAndSeries(
 @Composable
 fun BookTitleAndChapter(
     bookTitle: String,
-    chapterTitle: String,
+    chapterTitle: String?,
     bookTitleMaxLines: Int = 2,
     chapterTitleMaxLines: Int = 1,
 ) {
@@ -212,13 +214,16 @@ fun BookTitleAndChapter(
         overflow = TextOverflow.Ellipsis,
         style = MaterialTheme.typography.titleSmall,
     )
-    Text(
-        modifier = Modifier.padding(top = 2.dp),
-        text = chapterTitle.trim(),
-        maxLines = chapterTitleMaxLines,
-        overflow = TextOverflow.Ellipsis,
-        style = MaterialTheme.typography.labelSmall,
-    )
+
+    if (chapterTitle != null) {
+        Text(
+            modifier = Modifier.padding(top = 2.dp),
+            text = chapterTitle.trim(),
+            maxLines = chapterTitleMaxLines,
+            overflow = TextOverflow.Ellipsis,
+            style = MaterialTheme.typography.labelSmall,
+        )
+    }
 }
 
 

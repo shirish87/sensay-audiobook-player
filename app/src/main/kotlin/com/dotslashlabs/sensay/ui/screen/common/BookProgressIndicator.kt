@@ -17,7 +17,7 @@ fun BookProgressIndicator(
     modifier: Modifier = Modifier,
 ) {
 
-    if (bookProgress.bookCategory != BookCategory.CURRENT) return
+    if (bookProgress.bookCategory == BookCategory.NOT_STARTED) return
 
     val bookDurationMs = book.duration.ms
     val bookProgressMs = bookProgress.bookProgress.ms
