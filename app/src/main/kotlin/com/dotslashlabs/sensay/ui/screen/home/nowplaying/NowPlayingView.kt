@@ -205,6 +205,8 @@ fun BookTitleAndChapter(
     chapterTitle: String?,
     bookTitleMaxLines: Int = 2,
     chapterTitleMaxLines: Int = 1,
+    bookTitleStyle: TextStyle = MaterialTheme.typography.titleSmall,
+    chapterTitleStyle: TextStyle = MaterialTheme.typography.labelSmall,
 ) {
 
     Text(
@@ -212,7 +214,7 @@ fun BookTitleAndChapter(
         text = bookTitle.trim(),
         maxLines = bookTitleMaxLines,
         overflow = TextOverflow.Ellipsis,
-        style = MaterialTheme.typography.titleSmall,
+        style = bookTitleStyle,
     )
 
     if (chapterTitle != null) {
@@ -221,7 +223,7 @@ fun BookTitleAndChapter(
             text = chapterTitle.trim(),
             maxLines = chapterTitleMaxLines,
             overflow = TextOverflow.Ellipsis,
-            style = MaterialTheme.typography.labelSmall,
+            style = chapterTitleStyle,
         )
     }
 }

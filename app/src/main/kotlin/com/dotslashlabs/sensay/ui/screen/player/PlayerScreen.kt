@@ -22,7 +22,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -41,12 +40,15 @@ import com.dotslashlabs.sensay.ui.screen.SensayScreen
 import com.dotslashlabs.sensay.ui.screen.common.BookProgressIndicator
 import com.dotslashlabs.sensay.ui.screen.common.CoverImage
 import com.dotslashlabs.sensay.ui.screen.common.SensayFrame
+import com.dotslashlabs.sensay.ui.screen.home.nowplaying.BookAuthorAndSeries
+import com.dotslashlabs.sensay.ui.screen.home.nowplaying.BookTitleAndChapter
 import com.dotslashlabs.sensay.ui.theme.DynamicThemePrimaryColorsFromImage
 import com.dotslashlabs.sensay.ui.theme.MinContrastOfPrimaryVsSurface
 import com.dotslashlabs.sensay.ui.theme.contrastAgainst
 import com.dotslashlabs.sensay.ui.theme.rememberDominantColorState
 import com.dotslashlabs.sensay.util.PlayerState
 import com.dotslashlabs.sensay.util.verticalGradientScrim
+import com.google.accompanist.flowlayout.FlowMainAxisAlignment
 import data.BookCategory
 import data.entity.Book
 import data.entity.BookProgress
@@ -289,27 +291,31 @@ private fun PlayerInfo(
     Column(
         modifier = modifier,
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(16.dp),
+        verticalArrangement = Arrangement.spacedBy(6.dp),
     ) {
 
         BookProgressIndicator(
             bookProgressMs = state.media.bookProgress.ms,
             bookDurationMs = state.media.bookDuration.ms,
-            modifier = Modifier.sizeIn(maxWidth = 500.dp),
+            modifier = Modifier
+                .sizeIn(maxWidth = 500.dp)
+                .padding(bottom = 10.dp),
         )
 
-        Text(
-            text = "${book.author}",
-            textAlign = TextAlign.Center,
-            maxLines = 2,
+        BookAuthorAndSeries(
+            author = book.author,
+            series = book.series,
+            bookTitle = book.bookTitle,
+            mainAxisAlignment = FlowMainAxisAlignment.Center,
             style = MaterialTheme.typography.titleSmall,
+            maxLengthEach = 100,
         )
 
-        Text(
-            text = book.bookTitle,
-            textAlign = TextAlign.Center,
-            maxLines = 3,
-            style = MaterialTheme.typography.titleMedium,
+        BookTitleAndChapter(
+            bookTitle = book.bookTitle,
+            bookTitleMaxLines = 4,
+            bookTitleStyle = MaterialTheme.typography.titleMedium,
+            chapterTitle = null,
         )
     }
 }
