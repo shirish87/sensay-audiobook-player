@@ -17,19 +17,16 @@ import config.HomeLayout
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
-import data.SensayStore
-import data.entity.BookProgressWithBookAndChapters
 import data.entity.SourceId
-import java.time.Instant
-import java.util.*
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
+import java.time.Instant
+import java.util.*
 
 val DEFAULT_HOME_LAYOUT = HomeLayout.LIST
 
 data class SensayAppState(
-    val books: Async<List<BookProgressWithBookAndChapters>> = Uninitialized,
     val homeLayout: HomeLayout = DEFAULT_HOME_LAYOUT,
     val isScanningFolders: Boolean = false,
     val audiobookFoldersUpdateTime: Async<Long?> = Uninitialized,
@@ -45,7 +42,6 @@ data class SensayAppState(
 
 class SensayAppViewModel @AssistedInject constructor(
     @Assisted private val state: SensayAppState,
-    store: SensayStore,
     private val configStore: ConfigStore,
 ) : MavericksViewModel<SensayAppState>(state) {
 
@@ -53,10 +49,6 @@ class SensayAppViewModel @AssistedInject constructor(
     private var workRequestId: UUID? = null
 
     init {
-        store.booksProgressWithBookAndChapters().execute {
-            copy(books = it)
-        }
-
         configStore.getHomeLayout().execute {
             copy(homeLayout = it() ?: this.homeLayout)
         }
