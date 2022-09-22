@@ -15,6 +15,7 @@ import com.dotslashlabs.sensay.ui.screen.common.CoverImage
 import com.dotslashlabs.sensay.ui.screen.home.nowplaying.BookAuthorAndSeries
 import com.dotslashlabs.sensay.ui.screen.home.nowplaying.BookTitleAndChapter
 import data.BookCategory
+import data.BookCategory.NOT_STARTED
 import data.entity.Book
 import data.entity.BookProgress
 import data.entity.BookProgressWithBookAndChapters
@@ -91,7 +92,7 @@ fun ListBookView(
             Column {
                 BookTitleAndChapter(
                     book.title,
-                    if (bookProgressWithChapters.bookProgress.bookCategory != BookCategory.NOT_STARTED) {
+                    if (bookProgressWithChapters.bookProgress.bookCategory != NOT_STARTED) {
                         bookProgressWithChapters.chapter.title
                     } else null,
                 )

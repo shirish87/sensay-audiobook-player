@@ -18,6 +18,7 @@ import com.dotslashlabs.sensay.ui.screen.home.nowplaying.BookAuthorAndSeries
 import com.dotslashlabs.sensay.ui.screen.home.nowplaying.BookTitleAndChapter
 import com.google.accompanist.flowlayout.FlowMainAxisAlignment
 import data.BookCategory
+import data.BookCategory.NOT_STARTED
 import data.entity.Book
 import data.entity.BookProgress
 import data.entity.BookProgressWithBookAndChapters
@@ -92,7 +93,7 @@ private fun GridBookView(
             Column {
                 BookTitleAndChapter(
                     book.title,
-                    if (bookProgressWithChapters.bookProgress.bookCategory != BookCategory.NOT_STARTED) {
+                    if (bookProgressWithChapters.bookProgress.bookCategory != NOT_STARTED) {
                         bookProgressWithChapters.chapter.title
                     } else null,
                     bookTitleMaxLines = 3,
