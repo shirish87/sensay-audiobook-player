@@ -1,6 +1,7 @@
 package com.dotslashlabs.sensay.ui.screen.home.nowplaying
 
 import android.content.Context
+import android.net.Uri
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
@@ -19,8 +20,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
-import androidx.navigation.NavBackStackEntry
-import androidx.navigation.NavHostController
+import androidx.lifecycle.LifecycleOwner
 import com.airbnb.mvrx.Success
 import com.airbnb.mvrx.compose.collectAsState
 import com.airbnb.mvrx.compose.mavericksViewModel
@@ -38,11 +38,11 @@ import kotlin.text.Typography.ellipsis
 
 @Composable
 fun NowPlayingView(
-    navHostController: NavHostController,
-    backStackEntry: NavBackStackEntry,
+    lifecycleOwner: LifecycleOwner,
+    onNavigate: (Uri) -> Unit,
     modifier: Modifier,
 ) {
-    val viewModel: NowPlayingViewModel = mavericksViewModel(backStackEntry)
+    val viewModel: NowPlayingViewModel = mavericksViewModel(lifecycleOwner)
     val state by viewModel.collectAsState()
 
     val context = LocalContext.current
@@ -60,7 +60,7 @@ fun NowPlayingView(
             Destination.Player.useRoute(bookId)
         ).toUri()
 
-        navHostController.navigate(deepLink)
+        onNavigate(deepLink)
     })
 }
 
@@ -227,7 +227,6 @@ fun BookTitleAndChapter(
         )
     }
 }
-
 
 fun resolveContentMaxHeight(
     bookProgressWithDuration: BookProgressWithDuration,

@@ -27,6 +27,7 @@ fun HomeAppBar(
     onSources: () -> Unit,
     onSettings: () -> Unit,
     onChangeLayout: (layout: HomeLayout) -> Unit,
+    scrollBehavior: TopAppBarScrollBehavior? = null,
 ) {
 
     Box {
@@ -35,6 +36,7 @@ fun HomeAppBar(
             (navBackStackEntry?.destination?.route == Destination.Home.Library.route)
 
         SmallTopAppBar(
+            scrollBehavior = scrollBehavior,
             modifier = Modifier.fillMaxWidth().align(Alignment.TopStart),
             title = { Text("Sensay") },
             actions = {
