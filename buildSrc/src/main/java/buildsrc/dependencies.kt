@@ -102,6 +102,7 @@ object Libraries {
 
         const val accompanistNavigation = "com.google.accompanist:accompanist-navigation-animation:$version"
         const val accompanistFlowLayout = "com.google.accompanist:accompanist-flowlayout:$version"
+        const val systemUiController = "com.google.accompanist:accompanist-systemuicontroller:$version"
     }
 
     object Room {

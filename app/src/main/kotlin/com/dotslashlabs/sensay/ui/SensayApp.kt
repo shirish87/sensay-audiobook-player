@@ -1,9 +1,12 @@
 package com.dotslashlabs.sensay.ui
 
 import androidx.compose.animation.ExperimentalAnimationApi
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.windowsizeclass.WindowSizeClass
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.graphics.Color
 import androidx.core.net.toUri
 import com.airbnb.mvrx.compose.mavericksActivityViewModel
 import com.dotslashlabs.sensay.ui.screen.Destination
@@ -13,6 +16,7 @@ import com.dotslashlabs.sensay.util.DevicePosture
 import com.dotslashlabs.sensay.util.toWindowSizeClass
 import com.google.accompanist.navigation.animation.AnimatedNavHost
 import com.google.accompanist.navigation.animation.rememberAnimatedNavController
+import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import logcat.logcat
 
 @OptIn(ExperimentalAnimationApi::class)
@@ -22,6 +26,9 @@ fun SensayApp(
     devicePosture: DevicePosture,
     navToLastBook: Boolean,
 ) {
+
+    val systemUiController = rememberSystemUiController()
+    val useDarkIcons = !isSystemInDarkTheme()
 
     val appViewModel: SensayAppViewModel = mavericksActivityViewModel()
     appViewModel.configure(windowSize.toWindowSizeClass(), devicePosture)
@@ -52,5 +59,14 @@ fun SensayApp(
             logcat { "LaunchedEffect.navigate(deepLink=$deepLink)" }
             navController.navigate(deepLink)
         }
+    }
+
+    DisposableEffect(systemUiController, useDarkIcons) {
+        systemUiController.setSystemBarsColor(
+            color = Color.Transparent,
+            darkIcons = useDarkIcons
+        )
+
+        onDispose {}
     }
 }
