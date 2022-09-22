@@ -26,6 +26,7 @@ dependencies {
     }
 
     implementation Libraries.Accompanist.accompanistNavigation
+    implementation Libraries.Accompanist.systemUiController
     implementation Libraries.Accompanist.accompanistFlowLayout
     implementation Libraries.Palette.palette
 
