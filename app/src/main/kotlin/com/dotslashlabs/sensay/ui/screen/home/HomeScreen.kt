@@ -16,7 +16,6 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.LayoutDirection
-import androidx.compose.ui.unit.dp
 import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavHostController
 import com.airbnb.mvrx.compose.collectAsState
@@ -84,25 +83,34 @@ fun HomeContent(
                 )
             },
             bottomBar = {
-                NowPlayingView(
-                    backStackEntry,
-                    navHostController::navigate,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .wrapContentHeight(),
-                )
+                Column {
+                    NowPlayingView(
+                        backStackEntry,
+                        navHostController::navigate,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .wrapContentHeight(),
+                    )
 
-                HomeBottomBar(homeNavController, destination.children)
+                    HomeBottomBar(
+                        homeNavController,
+                        destination.children,
+                    )
+                }
             },
         ) { innerPadding ->
 
             val startDestination = destination.defaultChild?.route ?: return@Scaffold
 
             val layoutDirection = LocalLayoutDirection.current
-            val isHeightEqual =
+            val isTopBarCollapsed =
                 (scrollBehavior.state.heightOffset == scrollBehavior.state.heightOffsetLimit)
 
-            val contentPadding = computeContentPadding(innerPadding, isHeightEqual, layoutDirection)
+            val contentPadding = computeContentPadding(
+                innerPadding,
+                isTopBarCollapsed,
+                layoutDirection,
+            )
 
             AnimatedNavHost(
                 homeNavController,
@@ -120,17 +128,20 @@ fun HomeContent(
 @Composable
 fun computeContentPadding(
     innerPadding: PaddingValues,
-    isHeightEqual: Boolean,
+    isTopBarCollapsed: Boolean,
     layoutDirection: LayoutDirection,
-) = remember(innerPadding, isHeightEqual, layoutDirection) {
-    if (isHeightEqual) {
+) = remember(innerPadding, isTopBarCollapsed, layoutDirection) {
+    if (isTopBarCollapsed) {
         PaddingValues(
-            top = 0.dp,
             bottom = innerPadding.calculateBottomPadding(),
             start = innerPadding.calculateStartPadding(layoutDirection),
             end = innerPadding.calculateEndPadding(layoutDirection),
         )
     } else {
-        innerPadding
+        PaddingValues(
+            top = innerPadding.calculateTopPadding(),
+            start = innerPadding.calculateStartPadding(layoutDirection),
+            end = innerPadding.calculateEndPadding(layoutDirection),
+        )
     }
 }
