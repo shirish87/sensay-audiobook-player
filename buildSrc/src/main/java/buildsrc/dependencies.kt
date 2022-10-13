@@ -91,7 +91,7 @@ object Libraries {
     }
 
     object Mavericks {
-        const val version = "2.7.0"
+        const val version = "3.0.1"
 
         const val mavericksCompose = "com.airbnb.android:mavericks-compose:$version"
         const val mavericksHilt = "com.airbnb.android:mavericks-hilt:$version"
