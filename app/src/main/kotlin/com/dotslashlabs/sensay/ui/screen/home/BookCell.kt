@@ -15,6 +15,8 @@ import androidx.compose.ui.unit.dp
 import com.dotslashlabs.sensay.ui.screen.common.BookChaptersDurationInfoRow
 import com.dotslashlabs.sensay.ui.screen.common.CoverImage
 import com.dotslashlabs.sensay.ui.screen.home.nowplaying.BookAuthorAndSeries
+import com.dotslashlabs.sensay.ui.screen.home.nowplaying.BookChapter
+import com.dotslashlabs.sensay.ui.screen.home.nowplaying.BookTitle
 import com.dotslashlabs.sensay.ui.screen.home.nowplaying.BookTitleAndChapter
 import com.google.accompanist.flowlayout.FlowMainAxisAlignment
 import data.BookCategory
@@ -61,7 +63,7 @@ private fun GridBookView(
         val book = bookProgressWithChapters.book
 
         Box(
-            modifier = Modifier.weight(0.45F),
+            modifier = Modifier.weight(0.5F),
         ) {
             CoverImage(
                 coverUri = bookProgressWithChapters.book.coverUri,
@@ -86,20 +88,21 @@ private fun GridBookView(
         Column(
             verticalArrangement = Arrangement.SpaceBetween,
             modifier = Modifier
-                .weight(0.55F)
+                .weight(0.5F)
                 .padding(start = 12.dp, end = 12.dp, top = 8.dp, bottom = 12.dp),
         ) {
 
-            Column {
-                BookTitleAndChapter(
-                    book.title,
-                    if (bookProgressWithChapters.bookProgress.bookCategory != NOT_STARTED) {
-                        bookProgressWithChapters.chapter.title
-                    } else null,
-                    bookTitleMaxLines = 3,
-                    chapterTitleMaxLines = 1,
-                )
-            }
+            BookTitle(
+                bookTitle = book.title,
+                bookTitleMaxLines = 3,
+            )
+
+            BookChapter(
+                chapterTitle = if (bookProgressWithChapters.bookProgress.bookCategory != NOT_STARTED) {
+                    bookProgressWithChapters.chapter.title
+                } else null,
+                chapterTitleMaxLines = 1,
+            )
 
             BookChaptersDurationInfoRow(
                 book,

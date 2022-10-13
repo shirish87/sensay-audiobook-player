@@ -13,6 +13,8 @@ import androidx.compose.ui.unit.dp
 import com.dotslashlabs.sensay.ui.screen.common.BookChaptersDurationInfoRow
 import com.dotslashlabs.sensay.ui.screen.common.CoverImage
 import com.dotslashlabs.sensay.ui.screen.home.nowplaying.BookAuthorAndSeries
+import com.dotslashlabs.sensay.ui.screen.home.nowplaying.BookChapter
+import com.dotslashlabs.sensay.ui.screen.home.nowplaying.BookTitle
 import com.dotslashlabs.sensay.ui.screen.home.nowplaying.BookTitleAndChapter
 import data.BookCategory
 import data.BookCategory.NOT_STARTED
@@ -89,14 +91,15 @@ fun ListBookView(
                 style = MaterialTheme.typography.labelSmall,
             )
 
-            Column {
-                BookTitleAndChapter(
-                    book.title,
-                    if (bookProgressWithChapters.bookProgress.bookCategory != NOT_STARTED) {
-                        bookProgressWithChapters.chapter.title
-                    } else null,
-                )
-            }
+            BookTitle(
+                bookTitle = book.title,
+            )
+
+            BookChapter(
+                chapterTitle = if (bookProgressWithChapters.bookProgress.bookCategory != NOT_STARTED) {
+                    bookProgressWithChapters.chapter.title
+                } else null,
+            )
 
             BookChaptersDurationInfoRow(
                 book,

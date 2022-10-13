@@ -228,6 +228,40 @@ fun BookTitleAndChapter(
     }
 }
 
+@Composable
+fun BookChapter(
+    chapterTitle: String?,
+    chapterTitleMaxLines: Int = 1,
+    chapterTitleStyle: TextStyle = MaterialTheme.typography.labelSmall,
+) {
+
+    if (chapterTitle != null) {
+        Text(
+            modifier = Modifier.padding(top = 2.dp),
+            text = chapterTitle.trim(),
+            maxLines = chapterTitleMaxLines,
+            overflow = TextOverflow.Ellipsis,
+            style = chapterTitleStyle,
+        )
+    }
+}
+
+@Composable
+fun BookTitle(
+    bookTitle: String,
+    bookTitleMaxLines: Int = 2,
+    bookTitleStyle: TextStyle = MaterialTheme.typography.titleSmall,
+) {
+
+    Text(
+        modifier = Modifier.padding(top = 2.dp),
+        text = bookTitle.trim(),
+        maxLines = bookTitleMaxLines,
+        overflow = TextOverflow.Ellipsis,
+        style = bookTitleStyle,
+    )
+}
+
 fun resolveContentMaxHeight(
     bookProgressWithDuration: BookProgressWithDuration,
     heightLow: Dp = 96.dp,
