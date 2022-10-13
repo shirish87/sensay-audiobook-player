@@ -4,6 +4,10 @@ plugins {
     id 'com.android.library'
 }
 
+android {
+    namespace 'config'
+}
+
 dependencies {
     api Libraries.JavaX.javaXInject
 }

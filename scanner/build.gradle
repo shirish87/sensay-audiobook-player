@@ -5,6 +5,10 @@ plugins {
     id 'org.jetbrains.kotlin.plugin.serialization' version '1.7.10'
 }
 
+android {
+    namespace 'scanner'
+}
+
 dependencies {
     implementation project(path: ":config")
     api Libraries.JavaX.javaXInject
