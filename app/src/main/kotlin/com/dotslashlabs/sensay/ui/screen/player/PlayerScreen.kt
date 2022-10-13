@@ -515,7 +515,10 @@ private fun SelectChapter(
                 expanded = expanded,
                 onDismissRequest = { expanded = false },
             ) {
-                val lastIdx = chapters.lastIndex
+
+                val currentChapterIdx = chapterMediaIds.indexOfFirst { mediaId ->
+                    (mediaId == selectedMedia.mediaId)
+                }
 
                 chapters.mapIndexed { idx, chapter ->
                     val mediaId = chapterMediaIds[idx]
@@ -523,7 +526,7 @@ private fun SelectChapter(
                     DropdownMenuItem(
                         text = { Text(chapter.chapterTitle) },
                         leadingIcon = {
-                            if (mediaId == selectedMedia.mediaId) {
+                            if (idx == currentChapterIdx) {
                                 Icon(
                                     imageVector = Icons.Filled.Check,
                                     contentDescription = null,
@@ -533,12 +536,13 @@ private fun SelectChapter(
                         onClick = {
                             expanded = false
 
-                            if (mediaId != selectedMedia.mediaId) {
+                            if (idx != currentChapterIdx) {
                                 playerActions.setSelectedMediaId(mediaId)
                             }
                         },
                     )
 
+                    val lastIdx = chapters.lastIndex
                     if (idx != lastIdx) {
                         Divider()
                     }
