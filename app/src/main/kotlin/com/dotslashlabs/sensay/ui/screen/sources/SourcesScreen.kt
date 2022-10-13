@@ -84,7 +84,7 @@ fun SourcesContent(
 
     ConfirmDialog(
         data,
-        title = { _ -> "Delete Source" },
+        title = { "Delete Source" },
         message = { d ->
             "Are you sure you want to delete ${
             d?.displayName?.let { "'$it'" } ?: "this"
@@ -109,7 +109,7 @@ fun SourcesContent(
         Scaffold(
             modifier = Modifier.align(Alignment.Center),
             topBar = {
-                SmallTopAppBar(
+                TopAppBar(
                     colors = TopAppBarDefaults.smallTopAppBarColors(
                         containerColor = Color.Transparent,
                     ),

@@ -40,7 +40,7 @@ fun SettingsContent(
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Text(
-            text = destination.route,
+            text = "github.com/shirish87",
             textAlign = TextAlign.Center,
             modifier = Modifier
                 .fillMaxWidth()

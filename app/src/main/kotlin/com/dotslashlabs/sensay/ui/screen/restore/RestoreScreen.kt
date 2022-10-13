@@ -84,7 +84,7 @@ fun RestoreContent(
 
     ConfirmDialog(
         deleteData,
-        title = { _ -> "Delete Progress" },
+        title = { "Delete Progress" },
         message = { d ->
             "Are you sure you want to delete ${
             d?.bookTitle?.let { "'$it'" } ?: "this"
@@ -110,8 +110,8 @@ fun RestoreContent(
 
     ConfirmDialog(
         restoreData,
-        title = { _ -> "Restore Progress" },
-        message = { _ ->
+        title = { "Restore Progress" },
+        message = {
             "Are you sure you want to restore progress for book '${
             bookProgressWithChapters.book.title
             }'?"
@@ -138,7 +138,7 @@ fun RestoreContent(
         Scaffold(
             modifier = Modifier.align(Alignment.Center),
             topBar = {
-                SmallTopAppBar(
+                TopAppBar(
                     colors = TopAppBarDefaults.smallTopAppBarColors(
                         containerColor = Color.Transparent,
                     ),
@@ -178,7 +178,7 @@ fun RestoreContent(
                     val (matching, remaining) = acc.partition(condition.second)
 
                     if (matching.isNotEmpty()) {
-                        listBookProgressUnassociated(
+                        ListBookProgressUnassociated(
                             list = matching,
                             title = condition.first,
                             onDelete = onDelete,
@@ -190,7 +190,7 @@ fun RestoreContent(
                 }
 
                 if (others.isNotEmpty()) {
-                    listBookProgressUnassociated(
+                    ListBookProgressUnassociated(
                         list = others,
                         title = "Incompatible",
                         isRestoreEnabled = false,
@@ -205,7 +205,7 @@ fun RestoreContent(
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun listBookProgressUnassociated(
+fun ListBookProgressUnassociated(
     list: List<Progress>,
     title: String,
     modifier: Modifier = Modifier,

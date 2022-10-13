@@ -30,7 +30,7 @@ fun PlayerAppBar(
 
     val context = LocalContext.current
 
-    SmallTopAppBar(
+    TopAppBar(
         colors = TopAppBarDefaults.smallTopAppBarColors(containerColor = Color.Transparent),
         title = {},
         navigationIcon = {

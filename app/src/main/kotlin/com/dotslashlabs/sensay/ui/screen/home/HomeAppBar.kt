@@ -35,7 +35,7 @@ fun HomeAppBar(
         val isLibraryRoute =
             (navBackStackEntry?.destination?.route == Destination.Home.Library.route)
 
-        SmallTopAppBar(
+        TopAppBar(
             scrollBehavior = scrollBehavior,
             modifier = Modifier.fillMaxWidth().align(Alignment.TopStart),
             title = { Text("Sensay") },
