@@ -23,7 +23,7 @@ object Libraries {
     }
 
     object Kotlin {
-        private const val version = "1.7.10"
+        private const val version = "1.7.20"
 
         const val gradlePlugin = "org.jetbrains.kotlin:kotlin-gradle-plugin:$version"
     }
@@ -50,9 +50,9 @@ object Libraries {
     }
 
     object AndroidX {
-        private const val version = "1.8.0"
+        private const val version = "1.9.0"
         private const val dataStoreVersion = "1.0.0"
-        private const val windowVersion = "1.0.0-alpha09"
+        private const val windowVersion = "1.0.0"
 
         const val core = "androidx.core:core-ktx:$version"
         const val dataStore = "androidx.datastore:datastore-preferences:$dataStoreVersion"
@@ -60,14 +60,14 @@ object Libraries {
     }
 
     object Material {
-        private const val version = "1.7.0-alpha03"
+        private const val version = "1.8.0-alpha01"
 
         const val material = "com.google.android.material:material:$version"
     }
 
     object Compose {
-        private const val version = "1.2.1"
-        private const val material3ComposeVersion = "1.0.0-beta01"
+        private const val version = "1.3.0-rc01"
+        private const val material3ComposeVersion = "1.0.0-rc01"
 
         const val activityCompose = "androidx.activity:activity-compose:1.5.1"
         const val navigationCompose = "androidx.navigation:navigation-compose:2.5.1"
@@ -86,7 +86,7 @@ object Libraries {
         const val composeToolingPreview = "androidx.compose.ui:ui-tooling-preview:$version"
 
         object Compiler {
-            const val version = "1.3.0"
+            const val version = "1.3.2"
         }
     }
 
@@ -107,10 +107,9 @@ object Libraries {
 
     object Room {
         private const val version = "2.4.3"
-        private const val versionRoomPaging = "2.5.0-alpha01"
 
         const val room = "androidx.room:room-ktx:$version"
-        const val roomPaging = "androidx.room:room-paging:$versionRoomPaging"
+        const val roomPaging = "androidx.room:room-paging:$version"
         const val roomRuntime = "androidx.room:room-runtime:$version"
 
         object AnnotationProcessor {
@@ -119,7 +118,7 @@ object Libraries {
     }
 
     object Coil {
-        private const val version = "2.0.0"
+        private const val version = "2.2.2"
 
         const val coil = "io.coil-kt:coil-compose:$version"
     }
@@ -172,7 +171,7 @@ object Libraries {
     }
 
     object Json {
-        private const val version = "1.3.3"
+        private const val version = "1.4.0"
 
         const val kotlinxSerializationJson = "org.jetbrains.kotlinx:kotlinx-serialization-json:$version"
     }
@@ -190,7 +189,7 @@ object Libraries {
     }
 
     object KtLint {
-        private const val version = "0.45.2"
+        private const val version = "0.47.1"
 
         const val ktlint = "com.pinterest:ktlint:$version"
     }
