@@ -11,6 +11,9 @@ kapt {
 }
 
 android {
+    namespace 'com.dotslashlabs.sensay'
+    testNamespace 'com.dotslashlabs.sensay.test'
+
     defaultConfig {
         testInstrumentationRunner = "com.dotslashlabs.sensay.runner.HiltTestRunner"
     }
