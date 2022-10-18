@@ -11,6 +11,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import scanner.MediaScanner
 import scanner.MediaScannerResult
+import java.time.Instant
 
 object BookScanner {
 
@@ -76,7 +77,7 @@ fun MediaScannerResult.toBookWithChapters() = BookWithChapters(
         title = metadata.title ?: fileName,
         duration = ContentDuration(metadata.duration),
         hash = metadata.hash,
-        lastModified = chapters.maxOf { it.lastModified },
+        lastModified = chapters.maxOfOrNull { it.lastModified } ?: Instant.now(),
     ),
     chapters = chapters.map { c ->
         Chapter(
