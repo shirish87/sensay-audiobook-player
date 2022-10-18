@@ -24,14 +24,14 @@ import data.entity.Bookmark
 import data.entity.BookmarkType
 import data.entity.BookmarkWithChapter
 import data.util.ContentDuration
-import kotlin.math.absoluteValue
-import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.launch
 import logcat.logcat
+import kotlin.math.absoluteValue
+import kotlin.time.Duration.Companion.milliseconds
 
 typealias Media = BookProgressWithDuration
 
@@ -50,6 +50,10 @@ data class PlayerViewState(
     val playbackConnectionState: Async<PlaybackConnectionState> = Uninitialized,
 
     val bookmarks: Async<List<BookmarkWithChapter>> = Uninitialized,
+
+    val isEqPanelVisible: Boolean = false,
+    val isVolumeBoostEnabled: Boolean = false,
+    val isVoiceBoostEnabled: Boolean = false,
 ) : MavericksState {
 
     constructor(args: PlayerViewArgs) : this(bookId = args.bookId)
@@ -126,6 +130,11 @@ interface PlayerActions {
 
     fun createBookmark()
     fun deleteBookmark(bookmark: Bookmark)
+
+    fun toggleEqPanel(isVisible: Boolean)
+
+    fun toggleVolumeBoost(isEnabled: Boolean)
+    fun toggleVoiceBoost(isEnabled: Boolean)
 }
 
 class PlayerViewModel @AssistedInject constructor(
@@ -398,6 +407,18 @@ class PlayerViewModel @AssistedInject constructor(
                 copy(media = selectedMedia)
             }
         }
+    }
+
+    override fun toggleEqPanel(isVisible: Boolean) {
+        setState { copy(isEqPanelVisible = isVisible) }
+    }
+
+    override fun toggleVolumeBoost(isEnabled: Boolean) {
+        setState { copy(isVolumeBoostEnabled = isEnabled) }
+    }
+
+    override fun toggleVoiceBoost(isEnabled: Boolean) {
+        setState { copy(isVoiceBoostEnabled = isEnabled) }
     }
 
     @AssistedFactory

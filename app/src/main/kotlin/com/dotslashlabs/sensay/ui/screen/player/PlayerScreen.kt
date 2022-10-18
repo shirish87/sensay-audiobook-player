@@ -49,6 +49,7 @@ import com.dotslashlabs.sensay.ui.theme.rememberDominantColorState
 import com.dotslashlabs.sensay.util.PlayerState
 import com.dotslashlabs.sensay.util.verticalGradientScrim
 import com.google.accompanist.flowlayout.FlowMainAxisAlignment
+import com.google.accompanist.flowlayout.FlowRow
 import data.BookCategory
 import data.entity.Book
 import data.entity.BookProgress
@@ -161,13 +162,23 @@ fun PlayerContentViewNormal(
             verticalAlignment = Alignment.Top,
             horizontalArrangement = Arrangement.Center,
         ) {
-            PlayerImage(
-                coverUri = state.coverUri,
-                onClick = onBackPress,
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(horizontal = 40.dp, vertical = 20.dp),
-            )
+
+            Column(
+                verticalArrangement = Arrangement.SpaceEvenly,
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                if (state.isEqPanelVisible) {
+                    PlayerEq(playerActions, state)
+                }
+
+                PlayerImage(
+                    coverUri = state.coverUri,
+                    onClick = onBackPress,
+                    modifier = Modifier
+                        .fillMaxSize(fraction = if (state.isEqPanelVisible) 0.65F else 1F)
+                        .padding(horizontal = 40.dp, vertical = 20.dp),
+                )
+            }
         }
 
         Row(
@@ -225,12 +236,18 @@ fun PlayerContentViewLandscape(
     ) {
         Column(
             modifier = Modifier.weight(0.3F),
+            verticalArrangement = Arrangement.SpaceEvenly,
+            horizontalAlignment = Alignment.CenterHorizontally,
         ) {
+            if (state.isEqPanelVisible) {
+                PlayerEq(playerActions, state)
+            }
+
             PlayerImage(
                 coverUri = state.coverUri,
                 onClick = onBackPress,
                 modifier = Modifier
-                    .fillMaxSize()
+                    .fillMaxSize(fraction = if (state.isEqPanelVisible) 0.65F else 1F)
                     .padding(20.dp),
             )
         }
@@ -259,6 +276,45 @@ fun PlayerContentViewLandscape(
                 modifier = Modifier.padding(20.dp),
             )
         }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun PlayerEq(
+    playerActions: PlayerActions,
+    state: PlayerViewState,
+    modifier: Modifier = Modifier,
+) {
+
+    FlowRow(
+        modifier = modifier,
+        mainAxisSpacing = 10.dp,
+    ) {
+
+        InputChip(
+            selected = state.isVolumeBoostEnabled,
+            label = { Text("Volume Boost") },
+            leadingIcon = {
+                Icon(
+                    imageVector = Icons.Default.Speaker,
+                    contentDescription = "",
+                )
+            },
+            onClick = { playerActions.toggleVolumeBoost(!state.isVolumeBoostEnabled) },
+        )
+
+        InputChip(
+            selected = state.isVoiceBoostEnabled,
+            label = { Text("Voice Boost") },
+            leadingIcon = {
+                Icon(
+                    imageVector = Icons.Default.AutoFixNormal,
+                    contentDescription = "",
+                )
+            },
+            onClick = { playerActions.toggleVoiceBoost(!state.isVoiceBoostEnabled) },
+        )
     }
 }
 
@@ -702,6 +758,18 @@ fun PlayerContentPreview() {
         }
 
         override fun deleteBookmark(bookmark: Bookmark) {
+            TODO("Not yet implemented")
+        }
+
+        override fun toggleEqPanel(isVisible: Boolean) {
+            TODO("Not yet implemented")
+        }
+
+        override fun toggleVolumeBoost(isEnabled: Boolean) {
+            TODO("Not yet implemented")
+        }
+
+        override fun toggleVoiceBoost(isEnabled: Boolean) {
             TODO("Not yet implemented")
         }
     }

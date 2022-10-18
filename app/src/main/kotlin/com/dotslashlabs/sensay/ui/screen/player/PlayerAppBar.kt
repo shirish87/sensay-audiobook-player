@@ -8,6 +8,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.BookmarkAdd
 import androidx.compose.material.icons.filled.Bookmarks
+import androidx.compose.material.icons.filled.GraphicEq
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
@@ -42,6 +43,19 @@ fun PlayerAppBar(
             }
         },
         actions = {
+            IconButton(
+                onClick = {
+                    playerActions.toggleEqPanel(!state.isEqPanelVisible)
+                },
+                modifier = Modifier.alpha(
+                    if (state.isEqPanelVisible) ContentAlpha.medium else 1F,
+                ),
+            ) {
+                Icon(
+                    imageVector = Icons.Default.GraphicEq,
+                    contentDescription = "",
+                )
+            }
             IconButton(
                 onClick = {
                     if (!state.isBookmarkEnabled) return@IconButton
