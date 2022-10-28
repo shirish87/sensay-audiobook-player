@@ -538,6 +538,7 @@ private fun SelectChapter(
             .wrapContentSize(Alignment.Center)
             .padding(top = 10.dp),
     ) {
+
         var expanded by remember { mutableStateOf(false) }
 
         ExposedDropdownMenuBox(
@@ -548,6 +549,7 @@ private fun SelectChapter(
             TextField(
                 readOnly = true,
                 enabled = false,
+                modifier = Modifier.menuAnchor(),
                 value = selectedMedia.chapterTitle,
                 onValueChange = {},
                 label = { Text(text = "Chapter") },
