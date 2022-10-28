@@ -350,14 +350,6 @@ private fun PlayerInfo(
         verticalArrangement = Arrangement.spacedBy(6.dp),
     ) {
 
-        BookProgressIndicator(
-            bookProgressMs = state.media.bookProgress.ms,
-            bookDurationMs = state.media.bookDuration.ms,
-            modifier = Modifier
-                .sizeIn(maxWidth = 500.dp)
-                .padding(bottom = 10.dp),
-        )
-
         BookAuthorAndSeries(
             author = book.author,
             series = book.series,
@@ -372,6 +364,14 @@ private fun PlayerInfo(
             bookTitleMaxLines = 4,
             bookTitleStyle = MaterialTheme.typography.titleMedium,
             chapterTitle = null,
+        )
+
+        BookProgressIndicator(
+            bookProgressMs = state.media.bookProgress.ms,
+            bookDurationMs = state.media.bookDuration.ms,
+            modifier = Modifier
+                .sizeIn(maxWidth = 500.dp)
+                .padding(top = 10.dp),
         )
     }
 }
