@@ -17,13 +17,13 @@ object Libraries {
     )
 
     object Gradle {
-        private const val version = "7.3.0"
+        private const val version = "7.3.1"
 
         const val gradlePlugin = "com.android.tools.build:gradle:$version"
     }
 
     object Kotlin {
-        private const val version = "1.7.20"
+        private const val version = "1.7.22"
 
         const val gradlePlugin = "org.jetbrains.kotlin:kotlin-gradle-plugin:$version"
     }
@@ -39,7 +39,7 @@ object Libraries {
     }
 
     object Hilt {
-        const val version = "2.43"
+        const val version = "2.44.2"
 
         const val gradlePlugin = "com.google.dagger:hilt-android-gradle-plugin:$version"
         const val hilt = "com.google.dagger:hilt-android:$version"
@@ -60,27 +60,29 @@ object Libraries {
     }
 
     object Material {
-        private const val version = "1.8.0-alpha01"
+        private const val version = "1.8.0-beta01"
 
         const val material = "com.google.android.material:material:$version"
     }
 
     object Compose {
-        private const val version = "1.3.0"
-        private const val material3ComposeVersion = "1.0.0"
+        private const val version = "1.3.2"
+        private const val material3ComposeVersion = "1.0.1"
 
         const val activityCompose = "androidx.activity:activity-compose:1.6.1"
         const val navigationCompose = "androidx.navigation:navigation-compose:2.5.3"
 
-        const val foundation = "androidx.compose.foundation:foundation:$version"
+        const val foundation = "androidx.compose.foundation:foundation:1.3.1"
+        const val foundationLayout = "androidx.compose.foundation:foundation-layout:1.3.1"
         const val constraintLayout = "androidx.constraintlayout:constraintlayout-compose:1.0.1"
 
 
         const val material3 = "androidx.compose.material3:material3:$material3ComposeVersion"
         const val material3WindowSizeClass = "androidx.compose.material3:material3-window-size-class:$material3ComposeVersion"
 
-        const val material = "androidx.compose.material:material:$version"
-        const val materialIconsExtended = "androidx.compose.material:material-icons-extended:$version"
+        const val material = "androidx.compose.material:material:1.3.1"
+        const val materialIcons = "androidx.compose.material:material-icons-core:1.3.1"
+        const val materialIconsExtended = "androidx.compose.material:material-icons-extended:1.3.1"
 
         const val composeTooling = "androidx.compose.ui:ui-tooling:$version"
         const val composeToolingPreview = "androidx.compose.ui:ui-tooling-preview:$version"
@@ -98,7 +100,7 @@ object Libraries {
     }
 
     object Accompanist {
-        private const val version = "0.25.1"
+        private const val version = "0.28.0"
 
         const val accompanistNavigation = "com.google.accompanist:accompanist-navigation-animation:$version"
         const val accompanistFlowLayout = "com.google.accompanist:accompanist-flowlayout:$version"
@@ -130,13 +132,13 @@ object Libraries {
     }
 
     object FfmpegKitAudio {
-        private const val version = "4.5.1-1"
+        private const val version = "5.1.LTS"
 
         const val ffmpegKitAudio = "com.arthenica:ffmpeg-kit-audio:$version"
     }
 
     object Media3 {
-        private const val version = "1.0.0-beta02"
+        private const val version = "1.0.0-beta03"
 
         // For media playback using ExoPlayer
         const val exoplayer = "androidx.media3:media3-exoplayer:$version"
