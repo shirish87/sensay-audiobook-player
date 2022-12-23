@@ -15,7 +15,6 @@ import com.dotslashlabs.sensay.ui.screen.common.CoverImage
 import com.dotslashlabs.sensay.ui.screen.home.nowplaying.BookAuthorAndSeries
 import com.dotslashlabs.sensay.ui.screen.home.nowplaying.BookChapter
 import com.dotslashlabs.sensay.ui.screen.home.nowplaying.BookTitle
-import com.dotslashlabs.sensay.ui.screen.home.nowplaying.BookTitleAndChapter
 import data.BookCategory
 import data.BookCategory.NOT_STARTED
 import data.entity.Book

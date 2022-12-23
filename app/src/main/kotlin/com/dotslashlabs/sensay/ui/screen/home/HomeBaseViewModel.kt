@@ -2,10 +2,10 @@ package com.dotslashlabs.sensay.ui.screen.home
 
 import com.airbnb.mvrx.MavericksState
 import com.airbnb.mvrx.MavericksViewModel
-import kotlin.reflect.KProperty1
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlin.reflect.KProperty1
 
 abstract class HomeBaseViewModel<S : MavericksState>(
     initialState: S

@@ -4,19 +4,19 @@ import android.graphics.Rect
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.compose.material3.windowsizeclass.WindowHeightSizeClass
-import androidx.compose.material3.windowsizeclass.WindowSizeClass as WindowSizeClazz
 import androidx.compose.material3.windowsizeclass.WindowWidthSizeClass
 import androidx.core.os.bundleOf
 import androidx.lifecycle.flowWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import androidx.window.layout.FoldingFeature
 import androidx.window.layout.WindowInfoTracker
-import kotlin.contracts.ExperimentalContracts
-import kotlin.contracts.contract
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
+import kotlin.contracts.ExperimentalContracts
+import kotlin.contracts.contract
+import androidx.compose.material3.windowsizeclass.WindowSizeClass as WindowSizeClazz
 
 /**
  * Information about the posture of the device

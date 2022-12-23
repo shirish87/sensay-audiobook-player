@@ -27,8 +27,8 @@ import kotlin.time.Duration.Companion.minutes
 fun BookChaptersDurationInfoRow(
     book: Book,
     bookProgress: BookProgress,
-    useShortDurationFormat: Boolean = false,
     modifier: Modifier = Modifier,
+    useShortDurationFormat: Boolean = false,
 ) {
     ConstraintLayout(
         modifier = modifier.fillMaxWidth(),

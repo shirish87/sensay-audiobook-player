@@ -9,10 +9,10 @@ import com.dotslashlabs.sensay.util.PlayerState
 import config.ConfigStore
 import dagger.hilt.android.AndroidEntryPoint
 import data.SensayStore
-import javax.inject.Inject
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.collectLatest
 import logcat.logcat
+import javax.inject.Inject
 
 @AndroidEntryPoint
 class PlaybackService : MediaSessionService() {
