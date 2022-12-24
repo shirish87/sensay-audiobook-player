@@ -8,6 +8,7 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -144,15 +145,13 @@ fun SourcesContent(
                     onClick = { launcher.launch(null) }
                 )
             },
-        ) {
+        ) { paddingValues ->
             val listState: LazyListState = rememberLazyListState()
 
-            LazyColumn(state = listState, contentPadding = it) {
+            LazyColumn(state = listState, contentPadding = paddingValues) {
                 val audiobookFolders = ((state.sources as? Success?)?.invoke() ?: emptyList())
 
-                items(count = audiobookFolders.size) { index ->
-                    val item = audiobookFolders[index]
-
+                items(audiobookFolders, key = { it.sourceId }) { item ->
                     ListItem(
                         headlineText = { Text(text = item.displayName) },
                         supportingText = { Text(text = item.uri.path ?: "") },

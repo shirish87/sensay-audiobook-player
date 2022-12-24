@@ -6,6 +6,7 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
@@ -228,9 +229,7 @@ fun ListBookProgressUnassociated(
             )
         }
 
-        items(count = list.size) { index ->
-            val item = list[index]
-
+        items(list, key = { it.progressId }) { item ->
             val bookProgressWithChapters = BookProgressWithBookAndChapters.empty().run {
                 copy(
                     bookProgress = item.toBookProgress(

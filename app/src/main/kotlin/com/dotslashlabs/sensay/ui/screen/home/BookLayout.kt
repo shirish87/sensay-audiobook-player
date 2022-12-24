@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.grid.*
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.ExpandLess
@@ -55,7 +56,8 @@ fun <SortMenuType> BooksList(
     val isFilterEnabled = filterMenuOptions.isFilterEnabled || filterListOptions.isFilterEnabled
 
     var expandedHiddenBooks by remember { mutableStateOf(false) }
-    val (books, hiddenBooks) = results.partition { it.bookProgress.isVisible }
+    val (allBooks, hiddenBooks) = results.partition { it.bookProgress.isVisible }
+    val books = allBooks.filter { !it.isEmpty }
 
     Column(Modifier.fillMaxSize()) {
         if (isFilterEnabled || (!isLoading && results.isNotEmpty())) {
@@ -79,15 +81,13 @@ fun <SortMenuType> BooksList(
                 }
             }
 
-            items(count = books.size) { index ->
-                books[index].run {
-                    BookRow(
-                        this,
-                        config,
-                        onNavToBook = if (isEmpty) ({}) else onNavToBook,
-                        modifier = Modifier,
-                    )
-                }
+            items(books, key = { it.bookProgress.bookProgressId }) { book ->
+                BookRow(
+                    book,
+                    config,
+                    onNavToBook = if (book.isEmpty) ({}) else onNavToBook,
+                    modifier = Modifier,
+                )
             }
 
             if (hiddenBooks.isNotEmpty()) {
@@ -131,7 +131,8 @@ fun <SortMenuType> BooksGrid(
     val isFilterEnabled = filterMenuOptions.isFilterEnabled || filterListOptions.isFilterEnabled
 
     var expandedHiddenBooks by remember { mutableStateOf(false) }
-    val (books, hiddenBooks) = results.partition { it.bookProgress.isVisible }
+    val (allBooks, hiddenBooks) = results.partition { it.bookProgress.isVisible }
+    val books = allBooks.filter { !it.isEmpty }
 
     Column(Modifier.fillMaxSize()) {
         if (isFilterEnabled || (!isLoading && results.isNotEmpty())) {
@@ -161,17 +162,15 @@ fun <SortMenuType> BooksGrid(
                 }
             }
 
-            items(count = books.size) { index ->
-                books[index].run {
-                    BookCell(
-                        this,
-                        config,
-                        onNavToBook = if (isEmpty) ({}) else onNavToBook,
-                        modifier = Modifier.padding(
-                            paddingValuesForCell(index + 1, cellCount, lastRowStartCell),
-                        ),
-                    )
-                }
+            itemsIndexed(books, key = { _, o -> o.bookProgress.bookProgressId }) { index, book ->
+                BookCell(
+                    book,
+                    config,
+                    onNavToBook = if (book.isEmpty) ({}) else onNavToBook,
+                    modifier = Modifier.padding(
+                        paddingValuesForCell(index + 1, cellCount, lastRowStartCell),
+                    ),
+                )
             }
 
             if (hiddenBooks.isNotEmpty()) {
@@ -275,14 +274,12 @@ private fun hiddenBooksListView(
             hiddenBooksSummaryView(books, true, setExpanded)
         }
 
-        items(count = books.size) { index ->
-            books[index].run {
-                BookRow(
-                    this,
-                    config,
-                    onNavToBook = {},
-                )
-            }
+        items(books, key = { it.bookProgress.bookProgressId }) { books ->
+            BookRow(
+                books,
+                config,
+                onNavToBook = {},
+            )
         }
 
         item {
@@ -315,10 +312,10 @@ private fun hiddenBooksGridView(
             hiddenBooksSummaryView(books, true, setExpanded)
         }
 
-        items(count = books.size) { index ->
+        itemsIndexed(books, key = { _, o -> o.bookProgress.bookProgressId }) { index, book ->
             books[index].run {
                 BookCell(
-                    this,
+                    book,
                     config,
                     onNavToBook = {},
                     modifier = Modifier.padding(
