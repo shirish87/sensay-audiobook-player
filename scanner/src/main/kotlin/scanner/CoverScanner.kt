@@ -107,7 +107,7 @@ class CoverScanner @Inject constructor() {
 
         selectedBitmap?.let { bitmap ->
             destFile.outputStream().use { outputStream ->
-                bitmap.compress(Bitmap.CompressFormat.WEBP_LOSSLESS, 75, outputStream)
+                bitmap.compress(Bitmap.CompressFormat.WEBP_LOSSLESS, 100, outputStream)
             }
 
             bitmap.recycle()

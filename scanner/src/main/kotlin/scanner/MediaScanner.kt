@@ -3,8 +3,12 @@ package scanner
 import android.content.Context
 import android.net.Uri
 import androidx.documentfile.provider.DocumentFile
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.cancelChildren
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.channels.SendChannel
+import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import logcat.logcat
 import java.io.File
 import java.time.Instant
@@ -110,7 +114,7 @@ class MediaScanner @Inject constructor(private val mediaAnalyzer: MediaAnalyzer)
 
     private suspend fun levelScan(
         dirFiles: List<DocumentFile>,
-        callback: suspend (LevelScan) -> Unit,
+        channel: SendChannel<LevelScan>,
         level: Int = 0,
         maxLevels: Int = 4,
         chunkLevelDirSize: Int = 10,
@@ -121,7 +125,7 @@ class MediaScanner @Inject constructor(private val mediaAnalyzer: MediaAnalyzer)
 
         if (dirFiles.isEmpty() || level >= maxLevels) {
             logcat { "emit: $levelScan" }
-            return callback(levelScan)
+            return channel.send(levelScan)
         }
 
         val nextLevelDirs = mutableListOf<DocumentFile>()
@@ -145,14 +149,14 @@ class MediaScanner @Inject constructor(private val mediaAnalyzer: MediaAnalyzer)
 
         if (levelScan.levelDirs.size >= chunkLevelDirSize) {
             logcat { "emit: single + audio files: $levelScan" }
-            callback(levelScan.copy(levelDirs = mutableListOf()))
+            channel.send(levelScan.copy(levelDirs = mutableListOf()))
 
             levelScan.levelDirs.groupBy { o -> o.name?.get(0)?.toString() ?: "" }
                 .forEach {
                     if (it.value.isEmpty()) return@forEach
 
                     logcat { "emit: alpha-(${it.key})-chunked levelDirs: $levelScan" }
-                    callback(
+                    channel.send(
                         levelScan.copy(
                             levelDirs = it.value.toMutableList(),
                             singleAudioFiles = mutableListOf(),
@@ -162,11 +166,11 @@ class MediaScanner @Inject constructor(private val mediaAnalyzer: MediaAnalyzer)
                 }
         } else {
             logcat { "emit: $levelScan" }
-            callback(levelScan)
+            channel.send(levelScan)
         }
 
         if (nextLevelDirs.isNotEmpty()) {
-            levelScan(nextLevelDirs, callback,level + 1, maxLevels, chunkLevelDirSize)
+            levelScan(nextLevelDirs, channel,level + 1, maxLevels, chunkLevelDirSize)
         }
     }
 
@@ -175,35 +179,42 @@ class MediaScanner @Inject constructor(private val mediaAnalyzer: MediaAnalyzer)
         rootDir: DocumentFile,
         acceptFileFilter: suspend (file: DocumentFile) -> Boolean,
         maxLevels: Int = 4,
-    ): Flow<MediaScannerResult> = flow {
-        if (!rootDir.isDirectory || !rootDir.canRead()) return@flow
+    ): Flow<MediaScannerResult> = channelFlow {
+        if (!rootDir.isDirectory || !rootDir.canRead()) return@channelFlow
 
         // (root) -> file.m4b
         // (root) -> (book) -> file.(m4b|mp3|...)
         // (root) -> (author|series) -> (book) -> file.(m4b|mp3|...)
         // (root) -> (author|series) -> (book) -> (chapter) -> file.(m4b|mp3|...)
 
-        val callback: suspend (LevelScan) -> Unit = { scan ->
+        runBlocking {
+            val channel = Channel<LevelScan>()
+            launch {
+                levelScan(listOf(rootDir), channel, maxLevels = maxLevels)
+                channel.close()
+            }
 
-            val pendingFiles = scan.singleAudioFiles + scan.audioFiles
+            channel.consumeAsFlow().collect { scan ->
+                val pendingFiles = scan.singleAudioFiles + scan.audioFiles
 
-            scan.levelDirs.flatMap { it.listFiles().filter(audioFileFilter) }
-                .mapNotNull { f -> analyzeFile(context, f, acceptFileFilter) }
-                .plus(pendingFiles.mapNotNull { f -> analyzeFile(context, f, acceptFileFilter) })
-                .consolidate(::consolidateMediaScannerResults)
-                .groupBy { it.chapters.isNotEmpty() }
-                .flatMap { (hasChapters, grp) ->
-                    if (hasChapters) return@flatMap grp
+                scan.levelDirs.flatMap { it.listFiles().filter(audioFileFilter) }
+                    .mapNotNull { f -> analyzeFile(context, f, acceptFileFilter) }
+                    .plus(pendingFiles.mapNotNull { f -> analyzeFile(context, f, acceptFileFilter) })
+                    .consolidate(::consolidateMediaScannerResults)
+                    .groupBy { it.chapters.isNotEmpty() }
+                    .flatMap { (hasChapters, grp) ->
+                        if (hasChapters) return@flatMap grp
 
-                    // 0-chapter files in the same directory
-                    consolidateSingleMediaScannerResults(grp)
-                }
-                .filter { acceptFileFilter(it.root) }
-                .also { l -> logcat { "ADDING: ${l.joinToString { it.fileName }}" } }
-                .map { emit(it) }
+                        // 0-chapter files in the same directory
+                        consolidateSingleMediaScannerResults(grp)
+                    }
+                    .filter { acceptFileFilter(it.root) }
+                    .also { l -> logcat { "ADDING: ${l.joinToString { it.fileName }}" } }
+                    .map { send(it) }
+            }
+
+            coroutineContext.cancelChildren()
         }
-
-        levelScan(listOf(rootDir), callback, maxLevels = maxLevels)
     }
 
     private fun consolidateSingleMediaScannerResults(
