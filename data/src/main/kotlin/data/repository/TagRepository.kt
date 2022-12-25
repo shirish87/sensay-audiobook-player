@@ -4,8 +4,8 @@ import data.dao.TagDao
 import data.entity.BookId
 import data.entity.BookTagCrossRef
 import data.entity.Tag
-import javax.inject.Inject
 import kotlinx.coroutines.flow.firstOrNull
+import javax.inject.Inject
 
 class TagRepository @Inject constructor(
     private val tagDao: TagDao,

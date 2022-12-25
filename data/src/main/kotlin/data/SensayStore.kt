@@ -4,10 +4,10 @@ import android.net.Uri
 import androidx.room.Transaction
 import data.entity.*
 import data.repository.*
-import java.time.Instant
-import javax.inject.Inject
 import kotlinx.coroutines.flow.firstOrNull
 import logcat.logcat
+import java.time.Instant
+import javax.inject.Inject
 
 data class BookWithChaptersAndTags(
     val booksWithChapters: BookWithChapters,
@@ -32,6 +32,8 @@ class SensayStore @Inject constructor(
 
         return booksWithChaptersAndTags.mapNotNull {
             val book = it.booksWithChapters.book
+            logcat { "Attempting book: ${book.title}" }
+
             val chapters = it.booksWithChapters.chapters.sortedBy { o -> o.trackId }
             val tags = it.tags
 
@@ -40,13 +42,14 @@ class SensayStore @Inject constructor(
                     "Invalid chapters in book '${book.title}': ${
                     chapters.joinToString(" ") { c ->
                         "(${c.trackId}) ${c.title} [${c.start.format()} => ${c.end.format()}]"
-                    }
-                    }"
+                    }} (${chapters.size})"
                 }
 
+                logcat { "mapNotNull: ${book.title}" }
                 return@mapNotNull null
             }
 
+            logcat { "Creating book: ${book.title}" }
             var bookId: Long = -1L
 
             try {
@@ -187,27 +190,30 @@ class SensayStore @Inject constructor(
                 sourceWithBooks.books.map { it.bookId }
             }
         } catch (ex: Exception) {
+            ex.printStackTrace()
             emptyList()
         }
     }
 
-    private suspend fun deleteBooks(books: Collection<Book>): Boolean {
+    private suspend fun deleteBooks(books: Collection<Book>, batchSize: Int = 25): Boolean {
         return try {
             runInTransaction {
-                val bookIds = books.map { it.bookId }
+                books.chunked(batchSize).map { chunk ->
+                    val bookIds = chunk.map { it.bookId }
+                    bookProgressRepository.deleteOrResetBooksProgress(bookIds, batchSize)
 
-                bookProgressRepository.deleteOrResetBooksProgress(bookIds)
+                    shelfRepository.deleteShelves(bookIds)
+                    tagRepository.deleteTags(bookIds)
 
-                shelfRepository.deleteShelves(bookIds)
-                tagRepository.deleteTags(bookIds)
-
-                chapterRepository.deleteChapters(bookIds)
-                bookmarkRepository.deleteBookmarksForBooks(bookIds)
-                bookRepository.deleteBooks(books)
+                    chapterRepository.deleteChapters(bookIds, batchSize)
+                    bookmarkRepository.deleteBookmarksForBooks(bookIds)
+                    bookRepository.deleteBooks(chunk)
+                }
 
                 true
             }
         } catch (ex: Exception) {
+            ex.printStackTrace()
             false
         }
     }

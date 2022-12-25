@@ -2,8 +2,8 @@ package data.entity
 
 import android.os.Parcelable
 import androidx.room.*
-import java.time.Instant
 import kotlinx.parcelize.Parcelize
+import java.time.Instant
 
 typealias ShelfId = Long
 

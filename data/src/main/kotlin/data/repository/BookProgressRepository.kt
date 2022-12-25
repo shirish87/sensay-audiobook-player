@@ -9,8 +9,9 @@ import data.dao.insertOrUpdate
 import data.entity.BookId
 import data.entity.BookProgress
 import data.entity.Progress
-import javax.inject.Inject
 import kotlinx.coroutines.flow.firstOrNull
+import kotlinx.coroutines.runBlocking
+import javax.inject.Inject
 
 class BookProgressRepository @Inject constructor(
     private val bookProgressDao: BookProgressDao,
@@ -61,7 +62,7 @@ class BookProgressRepository @Inject constructor(
     suspend fun insertBookProgress(bookProgress: BookProgress) =
         bookProgressDao.insert(bookProgress)
 
-    suspend fun deleteOrResetBooksProgress(bookIds: Collection<BookId>) {
+    suspend fun deleteOrResetBooksProgress(bookIds: Collection<BookId>, batchSize: Int = 25) {
         val results = bookProgressDao.booksProgress(bookIds).firstOrNull() ?: return
         if (results.isEmpty()) return
 
@@ -72,7 +73,9 @@ class BookProgressRepository @Inject constructor(
             progressDao.insertOrUpdate(Progress.from(bookProgress))
         }
 
-        bookProgressDao.deleteAll(results)
+        results.chunked(batchSize) {
+            runBlocking { bookProgressDao.deleteAll(it) }
+        }
     }
 
     suspend fun update(bookProgressUpdate: BookProgressUpdate) =

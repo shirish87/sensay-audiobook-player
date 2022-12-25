@@ -5,10 +5,10 @@ import androidx.room.*
 import data.BookCategory
 import data.util.ContentDuration
 import data.util.ContentDurationParceler
-import java.time.Instant
 import kotlinx.parcelize.IgnoredOnParcel
 import kotlinx.parcelize.Parcelize
 import kotlinx.parcelize.TypeParceler
+import java.time.Instant
 
 typealias BookProgressId = Long
 

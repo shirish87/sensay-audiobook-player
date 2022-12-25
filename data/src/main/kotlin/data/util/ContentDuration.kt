@@ -1,8 +1,8 @@
 package data.util
 
 import android.os.Parcel
-import kotlin.time.Duration
 import kotlinx.parcelize.Parceler
+import kotlin.time.Duration
 
 val Duration.ms: Long
     get() = this.inWholeMilliseconds
