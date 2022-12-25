@@ -1,18 +1,27 @@
 package scanner
 
 import android.content.Context
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.net.Uri
 import androidx.core.content.FileProvider
 import androidx.documentfile.provider.DocumentFile
-import java.io.File
-import javax.inject.Inject
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import logcat.logcat
+import java.io.File
+import javax.inject.Inject
+
 
 fun DocumentFile.isNonEmptyFile() = (isFile && exists() && canRead() && length() > 0)
 fun DocumentFile.isImage() = type?.startsWith("image/") == true
 fun File.isNonEmptyFile() = (isFile && exists() && canRead() && length() > 0)
+
+enum class ImageFormat(val extension: String) {
+    webp("webp"),
+    jpg("jpg"),
+    png("png"),
+}
 
 class CoverScanner @Inject constructor() {
 
@@ -37,19 +46,17 @@ class CoverScanner @Inject constructor() {
             ?: return@withContext null
         if (!documentFile.isDirectory) return@withContext null
 
-        val destFile = newBookCoverFile(context, coverFileId)
+        val destFile = newBookCoverFile(context, coverFileId, ImageFormat.webp)
         if (!forceCreate && destFile.isNonEmptyFile())
             return@withContext fileToDocumentFile(context, destFile)
 
         for (f in documentFile.listFiles().filter { (it.isNonEmptyFile() && it.isImage()) }) {
-            runCatching {
-                context.contentResolver.openInputStream(f.uri)?.use { input ->
-                    destFile.outputStream().use { output -> input.copyTo(output) }
-                }
+            val r = runCatching {
+                compressCoverFile(context, f, destFile)
+            }
 
-                if (destFile.isNonEmptyFile()) {
-                    return@withContext fileToDocumentFile(context, destFile)
-                }
+            if (r.isFailure) {
+                logcat { "scanCoverFromDisk error: ${f.uri} ${r.exceptionOrNull()?.message}" }
             }
         }
 
@@ -64,26 +71,56 @@ class CoverScanner @Inject constructor() {
     ): DocumentFile? = withContext(Dispatchers.IO) {
         logcat { "scanForEmbeddedCover: $uri" }
 
-        val coverFile = newBookCoverFile(context, coverFileId)
+        val compressedCoverFile = newBookCoverFile(context, coverFileId, ImageFormat.webp)
+        if (!forceCreate && compressedCoverFile.isNonEmptyFile())
+            return@withContext fileToDocumentFile(context, compressedCoverFile)
 
-        if (!forceCreate && coverFile.isNonEmptyFile())
-            return@withContext fileToDocumentFile(context, coverFile)
+        val rawCoverFile = newBookCoverFile(context, coverFileId)
+        if (forceCreate || !rawCoverFile.isNonEmptyFile()) {
+            ffmpeg(
+                input = uri,
+                context = context,
+                command = listOf("-an", rawCoverFile.absolutePath),
+            )
+        }
 
-        ffmpeg(
-            input = uri,
-            context = context,
-            command = listOf("-an", coverFile.absolutePath),
-        )
-
-        return@withContext if (coverFile.isNonEmptyFile())
-            fileToDocumentFile(context, coverFile)
+        return@withContext if (rawCoverFile.isNonEmptyFile())
+            compressCoverFile(
+                context,
+                fileToDocumentFile(context, rawCoverFile),
+                compressedCoverFile,
+            )
         else null
+    }
+
+    private suspend fun compressCoverFile(
+        context: Context,
+        srcDocumentFile: DocumentFile?,
+        destFile: File,
+    ): DocumentFile? = withContext(Dispatchers.IO) {
+        if (srcDocumentFile == null) return@withContext null
+
+        val selectedBitmap: Bitmap? =
+            context.contentResolver.openInputStream(srcDocumentFile.uri)?.use { inputStream ->
+                BitmapFactory.decodeStream(inputStream)
+            }
+
+        selectedBitmap?.let { bitmap ->
+            destFile.outputStream().use { outputStream ->
+                bitmap.compress(Bitmap.CompressFormat.WEBP_LOSSLESS, 75, outputStream)
+            }
+
+            bitmap.recycle()
+        }
+
+        return@withContext fileToDocumentFile(context, destFile)
     }
 
     private suspend fun newBookCoverFile(
         context: Context,
         coverFileId: String,
-        coverFile: String = "$coverFileId.png",
+        format: ImageFormat = ImageFormat.png,
+        coverFile: String = "$coverFileId.${format.extension}",
     ): File = withContext(Dispatchers.IO) {
         val coversFolder = File(context.cacheDir, "covers")
         if (!coversFolder.exists()) {
