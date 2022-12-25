@@ -2,12 +2,12 @@ package scanner
 
 import android.content.Context
 import androidx.documentfile.provider.DocumentFile
-import javax.inject.Inject
-import kotlin.time.Duration.Companion.seconds
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
 import logcat.asLog
 import logcat.logcat
+import javax.inject.Inject
+import kotlin.time.Duration.Companion.seconds
 
 class MediaAnalyzer @Inject constructor() {
 

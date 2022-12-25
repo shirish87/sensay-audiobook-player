@@ -2,13 +2,16 @@ package com.dotslashlabs.sensay.scan
 
 import android.content.Context
 import androidx.documentfile.provider.DocumentFile
+import com.dotslashlabs.sensay.util.chunked
 import data.entity.Book
 import data.entity.BookWithChapters
 import data.entity.Chapter
 import data.entity.Source
 import data.util.ContentDuration
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.fold
 import kotlinx.coroutines.withContext
+import logcat.logcat
 import scanner.MediaScanner
 import scanner.MediaScannerResult
 import java.time.Instant
@@ -40,30 +43,18 @@ object BookScanner {
 
         return@withContext sourceDocumentFileMap.fold(0) { booksCount, sourceDocumentFile ->
             val (sourceId, df) = sourceDocumentFile
-            val sourceBooks = mutableListOf<Pair<BookWithChapters, DocumentFile>>()
-            var sourceBooksCount = 0
 
-            val f = mediaScanner.scan(
+            mediaScanner.scan(
                 context,
                 df,
                 bookFileFilter,
             )
-
-            f.collect { result ->
-                sourceBooks.add(result.toBookWithChapters() to result.root)
-
-                if (sourceBooks.size >= batchSize) {
-                    sourceBooksCount += callback(sourceId, sourceBooks)
-                    sourceBooks.clear()
+                .chunked(batchSize)
+                .fold(booksCount) { sourceBooksCount, results ->
+                    logcat { "PROCESSING BATCH: sourceId=$sourceId ${results.size} ${results.map { it.root.name }}" }
+                    val batch = results.map { it.toBookWithChapters() to it.root }
+                    sourceBooksCount + callback(sourceId, batch)
                 }
-            }
-
-            if (sourceBooks.isNotEmpty()) {
-                sourceBooksCount += callback(sourceId, sourceBooks)
-                sourceBooks.clear()
-            }
-
-            booksCount + sourceBooksCount
         }
     }
 }

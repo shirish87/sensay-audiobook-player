@@ -4,11 +4,11 @@ import android.content.Context
 import android.net.Uri
 import androidx.core.net.toFile
 import com.arthenica.ffmpegkit.*
-import kotlin.coroutines.resume
-import kotlin.coroutines.resumeWithException
 import kotlinx.coroutines.suspendCancellableCoroutine
 import logcat.asLog
 import logcat.logcat
+import kotlin.coroutines.resume
+import kotlin.coroutines.resumeWithException
 
 class FfmpegException(message: String) : Exception(message)
 

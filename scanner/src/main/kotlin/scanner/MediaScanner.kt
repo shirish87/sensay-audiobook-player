@@ -3,13 +3,15 @@ package scanner
 import android.content.Context
 import android.net.Uri
 import androidx.documentfile.provider.DocumentFile
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flow
+import logcat.logcat
+import java.io.File
 import java.time.Instant
 import javax.inject.Inject
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.DurationUnit
-import kotlinx.coroutines.flow.flow
-import logcat.logcat
 
 data class MediaScannerChapter(
     val uri: Uri,
@@ -51,8 +53,11 @@ data class MediaScannerResult(
 
 internal data class LevelScan(
     val level: Int,
-    val pendingFiles: MutableList<DocumentFile> = mutableListOf(),
-    val leafDirs: MutableList<DocumentFile> = mutableListOf(),
+    val srcDirs: MutableList<DocumentFile> = mutableListOf(),
+
+    val singleAudioFiles: MutableList<DocumentFile> = mutableListOf(),
+    val audioFiles: MutableList<DocumentFile> = mutableListOf(),
+    val levelDirs: MutableList<DocumentFile> = mutableListOf(),
 )
 
 class MediaScanner @Inject constructor(private val mediaAnalyzer: MediaAnalyzer) {
@@ -68,9 +73,9 @@ class MediaScanner @Inject constructor(private val mediaAnalyzer: MediaAnalyzer)
         ".*\\.(${joinToString("|")})$".toRegex(RegexOption.IGNORE_CASE)
     }
 
-//    private val validSingleFileExtension = singleFileExtensions.run {
-//        ".*\\.(${joinToString("|")})$".toRegex(RegexOption.IGNORE_CASE)
-//    }
+    private val validSingleFileExtension = singleFileExtensions.run {
+        ".*\\.(${joinToString("|")})$".toRegex(RegexOption.IGNORE_CASE)
+    }
 
     private val dirFilter = { f: DocumentFile ->
         f.isDirectory && f.canRead()
@@ -84,9 +89,9 @@ class MediaScanner @Inject constructor(private val mediaAnalyzer: MediaAnalyzer)
                 )
     }
 
-//    private val singleFileFilter = { f: DocumentFile ->
-//        f.isFile && f.canRead() && validSingleFileExtension.matches(f.uri.toString())
-//    }
+    private val singleAudioFileFilter = { f: DocumentFile ->
+        f.isFile && f.canRead() && f.isNonEmptyFile() && validSingleFileExtension.matches(f.name!!)
+    }
 
 //    private val nonLeafDirFilter = { f: DocumentFile ->
 //        // current f is a readable directory
@@ -103,12 +108,74 @@ class MediaScanner @Inject constructor(private val mediaAnalyzer: MediaAnalyzer)
             .run { !any(dirFilter) && any(audioFileFilter) }
     }
 
+    private suspend fun levelScan(
+        dirFiles: List<DocumentFile>,
+        callback: suspend (LevelScan) -> Unit,
+        level: Int = 0,
+        maxLevels: Int = 4,
+        chunkLevelDirSize: Int = 10,
+        levelScan: LevelScan = LevelScan(level),
+    ) {
+
+        logcat { "levelScan: level=$level listing=${dirFiles.joinToString { it.name!! }}" }
+
+        if (dirFiles.isEmpty() || level >= maxLevels) {
+            logcat { "emit: $levelScan" }
+            return callback(levelScan)
+        }
+
+        val nextLevelDirs = mutableListOf<DocumentFile>()
+
+        dirFiles.forEach { l ->
+            if (!l.isDirectory || !l.canRead()) return@forEach
+
+            val listing = l.listFiles()
+            val (singleAudios, filesOrDirs) = listing.partition(singleAudioFileFilter)
+            val (audios, filesOrDirsMinusSingleAudio) = filesOrDirs.partition(audioFileFilter)
+            val (dirs, nextLevel) = filesOrDirsMinusSingleAudio.partition(leafDirFilter)
+
+            levelScan.apply {
+                singleAudioFiles.addAll(singleAudios)
+                audioFiles.addAll(audios)
+                levelDirs.addAll(dirs)
+            }
+
+            nextLevelDirs.addAll(nextLevel)
+        }
+
+        if (levelScan.levelDirs.size >= chunkLevelDirSize) {
+            logcat { "emit: single + audio files: $levelScan" }
+            callback(levelScan.copy(levelDirs = mutableListOf()))
+
+            levelScan.levelDirs.groupBy { o -> o.name?.get(0)?.toString() ?: "" }
+                .forEach {
+                    if (it.value.isEmpty()) return@forEach
+
+                    logcat { "emit: alpha-(${it.key})-chunked levelDirs: $levelScan" }
+                    callback(
+                        levelScan.copy(
+                            levelDirs = it.value.toMutableList(),
+                            singleAudioFiles = mutableListOf(),
+                            audioFiles = mutableListOf(),
+                        )
+                    )
+                }
+        } else {
+            logcat { "emit: $levelScan" }
+            callback(levelScan)
+        }
+
+        if (nextLevelDirs.isNotEmpty()) {
+            levelScan(nextLevelDirs, callback,level + 1, maxLevels, chunkLevelDirSize)
+        }
+    }
+
     suspend fun scan(
         context: Context,
         rootDir: DocumentFile,
         acceptFileFilter: suspend (file: DocumentFile) -> Boolean,
         maxLevels: Int = 4,
-    ) = flow {
+    ): Flow<MediaScannerResult> = flow {
         if (!rootDir.isDirectory || !rootDir.canRead()) return@flow
 
         // (root) -> file.m4b
@@ -116,62 +183,27 @@ class MediaScanner @Inject constructor(private val mediaAnalyzer: MediaAnalyzer)
         // (root) -> (author|series) -> (book) -> file.(m4b|mp3|...)
         // (root) -> (author|series) -> (book) -> (chapter) -> file.(m4b|mp3|...)
 
-        val levels = (0 until maxLevels).fold(
-            Pair(
-                mutableMapOf<Int, LevelScan>(),
-                rootDir.listFiles().toList(),
-            ),
-        ) { r, level ->
+        val callback: suspend (LevelScan) -> Unit = { scan ->
 
-            if (r.second.isEmpty()) return@fold r
+            val pendingFiles = scan.singleAudioFiles + scan.audioFiles
 
-            val (acc, listing) = r
-            val (audioFiles, filesOrDirs) = listing.partition(audioFileFilter)
-            val (levelLeafDirs, nextLevel) = filesOrDirs.partition(leafDirFilter)
-
-            acc.getOrPut(level) { LevelScan(level) }.apply {
-                pendingFiles.addAll(audioFiles)
-                leafDirs.addAll(levelLeafDirs)
-            }
-
-            Pair(
-                acc,
-                nextLevel.flatMap { l -> l.listFiles().toList() },
-            )
-        }.first.values.toList()
-
-        levels.flatMap { (level, pendingFiles, levelDirs) ->
-            logcat {
-                "level=$level levelDirs=${
-                levelDirs.joinToString { it.name ?: "" }
-                } pendingFiles=${pendingFiles.size}"
-            }
-
-            if (levelDirs.isEmpty() && pendingFiles.isEmpty()) return@flatMap emptyList()
-
-            levelDirs.flatMap { it.listFiles().filter(audioFileFilter) }
+            scan.levelDirs.flatMap { it.listFiles().filter(audioFileFilter) }
                 .mapNotNull { f -> analyzeFile(context, f, acceptFileFilter) }
                 .plus(pendingFiles.mapNotNull { f -> analyzeFile(context, f, acceptFileFilter) })
                 .consolidate(::consolidateMediaScannerResults)
-        }
-            .groupBy { it.chapters.isNotEmpty() }
-            .flatMap { (k, grp) ->
-                if (k) return@flatMap grp
+                .groupBy { it.chapters.isNotEmpty() }
+                .flatMap { (hasChapters, grp) ->
+                    if (hasChapters) return@flatMap grp
 
-                // 0-chapter files in the same directory
-                consolidateSingleMediaScannerResults(grp)
-            }
-            .filter { acceptFileFilter(it.root) }
-            .also {
-                logcat {
-                    "levels processed books=${
-                    it.joinToString { m ->
-                        m.metadata.title ?: ""
-                    }
-                    } (${it.size})"
+                    // 0-chapter files in the same directory
+                    consolidateSingleMediaScannerResults(grp)
                 }
-            }
-            .map { r -> emit(r) }
+                .filter { acceptFileFilter(it.root) }
+                .also { l -> logcat { "ADDING: ${l.joinToString { it.fileName }}" } }
+                .map { emit(it) }
+        }
+
+        levelScan(listOf(rootDir), callback, maxLevels = maxLevels)
     }
 
     private fun consolidateSingleMediaScannerResults(
@@ -179,7 +211,7 @@ class MediaScanner @Inject constructor(private val mediaAnalyzer: MediaAnalyzer)
     ): List<MediaScannerResult> {
 
         return results.filter { it.root.isFile }
-            .groupBy { it.root.parentNames().joinToString("/") }
+            .groupBy { it.root.parentNames().joinToString(File.separator) }
             .mapNotNull { (grp, files) ->
                 if (files.size <= 1) return@mapNotNull files.firstOrNull()
 
@@ -362,10 +394,21 @@ class MediaScanner @Inject constructor(private val mediaAnalyzer: MediaAnalyzer)
 
         if (file.type?.startsWith("audio/", true) != true &&
             !validSupportedFileExtension.matches(file.name!!)
-        ) return null
+        ) {
+            logcat { "analyzeFile.REJECTED: ${file.name} Failed mimetype or extension" }
+            return null
+        }
 
-        if (!acceptFileFilter(file)) return null
-        val metadata = mediaAnalyzer.analyze(context, file) ?: return null
+        if (!acceptFileFilter(file)) {
+            logcat { "analyzeFile.REJECTED: ${file.name} Failed acceptFileFilter" }
+            return null
+        }
+
+        val metadata = mediaAnalyzer.analyze(context, file)
+        if (metadata == null) {
+            logcat { "analyzeFile.REJECTED: ${file.name} Failed metadata analyzer" }
+            return null
+        }
 
         val coverFile = coverScanner.scanCover(
             context,
@@ -373,6 +416,7 @@ class MediaScanner @Inject constructor(private val mediaAnalyzer: MediaAnalyzer)
             metadata.hash,
         )
 
+        logcat { "analyzeFile.ACCEPTED: file=${file.name} / metadata=${metadata.duration} / ${metadata.chapters.size}" }
         return MediaScannerResult.create(file, coverFile, metadata)
     }
 }
