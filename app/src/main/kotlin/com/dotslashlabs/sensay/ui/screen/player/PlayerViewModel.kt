@@ -128,7 +128,7 @@ interface PlayerActions {
     fun setSelectedMediaId(mediaId: String)
     fun resetSelectedMediaId()
 
-    fun createBookmark()
+    suspend fun createBookmark()
     fun deleteBookmark(bookmark: Bookmark)
 
     fun toggleEqPanel(isVisible: Boolean)
@@ -319,25 +319,24 @@ class PlayerViewModel @AssistedInject constructor(
         }
     }
 
-    override fun createBookmark() = withState { state ->
-        val playerMedia = state.playerMedia ?: return@withState
+    override suspend fun createBookmark() {
+        val state = awaitState()
+        val playerMedia = state.playerMedia ?: return
 
         val (positionMs, durationMs) = state.progressPair
-        val chapterPosition = positionMs ?: return@withState
-        val chapterDuration = durationMs ?: return@withState
+        val chapterPosition = positionMs ?: return
+        val chapterDuration = durationMs ?: return
 
-        viewModelScope.launch(Dispatchers.IO) {
-            store.createBookmark(
-                Bookmark(
-                    bookmarkType = BookmarkType.USER,
-                    chapterId = playerMedia.chapterId,
-                    bookId = playerMedia.bookId,
-                    chapterPosition = ContentDuration.ms(chapterPosition),
-                    chapterDuration = ContentDuration.ms(chapterDuration),
-                    title = playerMedia.chapterTitle,
-                )
+        store.createBookmark(
+            Bookmark(
+                bookmarkType = BookmarkType.USER,
+                chapterId = playerMedia.chapterId,
+                bookId = playerMedia.bookId,
+                chapterPosition = ContentDuration.ms(chapterPosition),
+                chapterDuration = ContentDuration.ms(chapterDuration),
+                title = playerMedia.chapterTitle,
             )
-        }
+        )
     }
 
     override fun deleteBookmark(bookmark: Bookmark) {

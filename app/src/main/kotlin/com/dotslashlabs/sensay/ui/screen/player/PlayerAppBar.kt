@@ -60,8 +60,18 @@ fun PlayerAppBar(
                 onClick = {
                     if (!state.isBookmarkEnabled) return@IconButton
 
-                    playerActions.createBookmark()
-                    Toast.makeText(context, "Saved bookmark", Toast.LENGTH_SHORT).show()
+                    scope.launch {
+                        try {
+                            playerActions.createBookmark()
+                            Toast.makeText(context, "Saved bookmark", Toast.LENGTH_SHORT).show()
+                        } catch (ex: Exception) {
+                            Toast.makeText(
+                                context,
+                                "Failed to save bookmark: ${ex.message}",
+                                Toast.LENGTH_SHORT,
+                            ).show()
+                        }
+                    }
                 },
                 modifier = Modifier.alpha(
                     if (!state.isBookmarkEnabled) ContentAlpha.disabled else 1F,
