@@ -25,7 +25,7 @@ class SensayStore @Inject constructor(
     private val progressRepository: ProgressRepository,
 ) {
 
-    suspend fun createBooksWithChapters(
+    suspend fun createOrUpdateBooksWithChapters(
         sourceId: SourceId,
         booksWithChaptersAndTags: Collection<BookWithChaptersAndTags>,
     ): List<Long> {
@@ -34,8 +34,14 @@ class SensayStore @Inject constructor(
             val book = it.booksWithChapters.book
             logcat { "Attempting book: ${book.title}" }
 
-            val chapters = it.booksWithChapters.chapters.sortedBy { o -> o.trackId }
+            val chapters = it.booksWithChapters.chapters.sortedBy { o -> o.trackId }.toMutableList()
             val tags = it.tags
+
+            if (chapters.isEmpty() && !book.duration.isEmpty()) {
+                // book is not chapterized
+                // add a single "synthetic" default chapter
+                chapters.add(Chapter.defaultChapter(book))
+            }
 
             if (chapters.isEmpty() || chapters.any { c -> c.isInvalid() }) {
                 logcat {
@@ -54,33 +60,26 @@ class SensayStore @Inject constructor(
 
             try {
                 runInTransaction {
-                    bookId = bookRepository.createBook(book)
+                    val existingBook = bookRepository.bookByUri(book.uri).firstOrNull()
+
+                    bookId = if (existingBook != null) {
+                        bookRepository.updateBook(book.copy(bookId = existingBook.bookId))
+                        existingBook.bookId
+                    } else
+                        bookRepository.createBook(book)
+
                     if (bookId == -1L) return@mapNotNull null
 
-                    val chapterIds = chapterRepository.createChapters(chapters)
+                    if (existingBook != null) {
+                        chapterRepository.deleteChapters(listOf(bookId))
+                        bookProgressRepository.deleteOrResetBooksProgress(listOf(bookId))
+                        // TODO: code to restore bookProgress
+                    }
 
+                    val chapterIds = chapterRepository.createChapters(chapters)
                     if (chapterIds.any { c -> c == -1L }) {
                         return@mapNotNull null
                     }
-
-                    val existingTags =
-                        tagRepository.tagsByNames(tags).firstOrNull() ?: emptyList()
-
-                    val tagIds = existingTags.map { t -> t.tagId }.plus(
-                        tagRepository.createTags(
-                            tags.filterNot { t -> existingTags.any { et -> et.name == t } }
-                                .map { t -> Tag(name = t) },
-                        )
-                    )
-
-                    tagRepository.insertBookTagCrossRefs(
-                        tagIds.map { tagId ->
-                            BookTagCrossRef(
-                                bookId,
-                                tagId,
-                            )
-                        }
-                    )
 
                     chapterRepository.insertBookChapterCrossRefs(
                         chapterIds.map { chapterId ->
@@ -104,6 +103,24 @@ class SensayStore @Inject constructor(
                             bookRemaining = book.duration,
                         )
                     )
+
+                    if (existingBook != null) {
+                        tagRepository.deleteTags(listOf(bookId))
+                    }
+
+                    val tagIds = tagRepository.createOrGetTags(tags)
+                    tagRepository.insertBookTagCrossRefs(
+                        tagIds.map { tagId ->
+                            BookTagCrossRef(
+                                bookId,
+                                tagId,
+                            )
+                        }
+                    )
+
+                    if (existingBook != null) {
+                        sourceRepository.deleteSourceBookCrossRefByBook(bookId)
+                    }
 
                     sourceRepository.insertSourceBookCrossRef(
                         SourceBookCrossRef(

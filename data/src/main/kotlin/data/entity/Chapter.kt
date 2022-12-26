@@ -49,6 +49,22 @@ data class Chapter(
             start = ContentDuration.ZERO,
             end = ContentDuration.ZERO,
         )
+
+        fun defaultChapter(
+            book: Book,
+            title: String = "Chapter 1",
+            trackId: Int = 0,
+        ) = Chapter(
+            uri = book.uri,
+            coverUri = book.coverUri,
+            hash = book.hash,
+            title = title,
+            trackId = trackId,
+            start = ContentDuration.ZERO,
+            end = book.duration,
+            duration = book.duration,
+            lastModified = book.lastModified,
+        )
     }
 
     fun isInvalid() = (end == ContentDuration.ZERO || start > end)

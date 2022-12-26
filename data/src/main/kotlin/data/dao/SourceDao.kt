@@ -2,10 +2,7 @@ package data.dao
 
 import android.net.Uri
 import androidx.room.*
-import data.entity.Source
-import data.entity.SourceBookCrossRef
-import data.entity.SourceId
-import data.entity.SourceWithBooks
+import data.entity.*
 import kotlinx.coroutines.flow.Flow
 import java.time.Instant
 
@@ -35,6 +32,9 @@ interface SourceDao : BaseDao<Source> {
 
     @Query("SELECT * FROM SourceBookCrossRef WHERE sourceId = :sourceId")
     fun sourceBookCrossRefs(sourceId: SourceId): Flow<List<SourceBookCrossRef>>
+
+    @Query("SELECT * FROM SourceBookCrossRef WHERE bookId = :bookId")
+    fun sourceBookCrossRefsByBook(bookId: BookId): Flow<List<SourceBookCrossRef>>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertSourceBookCrossRef(ref: SourceBookCrossRef): Long

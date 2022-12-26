@@ -83,7 +83,7 @@ class BookScannerWorker @AssistedInject constructor(
             },
         ) { sourceId, sourceBooks ->
 
-            store.createBooksWithChapters(
+            store.createOrUpdateBooksWithChapters(
                 sourceId,
                 sourceBooks.map { (booksWithChapters, f) ->
                     BookWithChaptersAndTags(

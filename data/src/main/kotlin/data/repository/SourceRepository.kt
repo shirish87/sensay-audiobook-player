@@ -2,6 +2,7 @@ package data.repository
 
 import android.net.Uri
 import data.dao.SourceDao
+import data.entity.BookId
 import data.entity.Source
 import data.entity.SourceBookCrossRef
 import data.entity.SourceId
@@ -46,5 +47,11 @@ class SourceRepository @Inject constructor(
         }
 
         sourceDao.delete(source)
+    }
+
+    suspend fun deleteSourceBookCrossRefByBook(bookId: BookId) {
+        sourceDao.sourceBookCrossRefsByBook(bookId).firstOrNull()?.let {
+            sourceDao.deleteSourceBookCrossRefs(it)
+        }
     }
 }
