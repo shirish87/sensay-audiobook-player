@@ -16,7 +16,6 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavHostController
@@ -30,6 +29,7 @@ import com.dotslashlabs.sensay.ui.screen.Destination
 import com.dotslashlabs.sensay.ui.screen.SensayScreen
 import com.dotslashlabs.sensay.ui.screen.common.ConfirmDialog
 import com.dotslashlabs.sensay.ui.screen.common.SensayFrame
+import com.dotslashlabs.sensay.ui.screen.common.SimpleTopAppBar
 import data.entity.Source
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -110,21 +110,11 @@ fun SourcesContent(
         Scaffold(
             modifier = Modifier.align(Alignment.Center),
             topBar = {
-                TopAppBar(
-                    colors = TopAppBarDefaults.smallTopAppBarColors(
-                        containerColor = Color.Transparent,
-                    ),
+                SimpleTopAppBar(
+                    isBusy = isScanningFolders,
                     title = { Text("Sources") },
-                    navigationIcon = {
-                        IconButton(onClick = onBackPress) {
-                            Icon(
-                                imageVector = Icons.Default.ArrowBack,
-                                contentDescription = "",
-                            )
-                        }
-                    },
+                    onBackPress = onBackPress,
                     actions = {
-
                         IconButton(
                             enabled = !isScanningFolders,
                             onClick = { appViewModel.scanFolders(context, true) },
