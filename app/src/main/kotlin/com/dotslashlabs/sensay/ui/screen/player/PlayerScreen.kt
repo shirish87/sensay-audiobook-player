@@ -755,7 +755,7 @@ fun PlayerContentPreview() {
             TODO("Not yet implemented")
         }
 
-        override fun createBookmark() {
+        override suspend fun createBookmark() {
             TODO("Not yet implemented")
         }
 
