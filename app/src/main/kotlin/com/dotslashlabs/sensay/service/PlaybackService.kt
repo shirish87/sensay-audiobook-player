@@ -79,6 +79,7 @@ class PlaybackService : MediaSessionService() {
         }
 
         player.release()
+        mediaSessionQueue.release()
         mediaSession.release()
 
         super.onDestroy()

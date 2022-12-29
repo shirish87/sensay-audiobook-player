@@ -1,5 +1,6 @@
 package com.dotslashlabs.sensay.ui.screen.player
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.net.Uri
 import android.os.Bundle
@@ -8,10 +9,15 @@ import android.os.Parcelable
 import androidx.core.os.bundleOf
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MediaMetadata
+import androidx.media3.session.MediaController
+import androidx.media3.session.SessionResult
+import androidx.work.await
 import com.airbnb.mvrx.*
 import com.airbnb.mvrx.hilt.AssistedViewModelFactory
 import com.airbnb.mvrx.hilt.hiltMavericksViewModelFactory
+import com.dotslashlabs.sensay.common.AudioEffectCommands
 import com.dotslashlabs.sensay.common.BookProgressWithDuration
+import com.dotslashlabs.sensay.common.ExtraSessionCommands
 import com.dotslashlabs.sensay.common.PlaybackConnectionState
 import com.dotslashlabs.sensay.ui.screen.common.BasePlayerViewModel
 import com.dotslashlabs.sensay.util.BUNDLE_KEY_BOOK_ID
@@ -53,7 +59,9 @@ data class PlayerViewState(
 
     val isEqPanelVisible: Boolean = false,
     val isVolumeBoostEnabled: Boolean = false,
-    val isVoiceBoostEnabled: Boolean = false,
+    val isBassBoostEnabled: Boolean = false,
+    val isReverbEnabled: Boolean = false,
+    val isSkipSilenceEnabled: Boolean = false,
 ) : MavericksState {
 
     constructor(args: PlayerViewArgs) : this(bookId = args.bookId)
@@ -134,9 +142,12 @@ interface PlayerActions {
     fun toggleEqPanel(isVisible: Boolean)
 
     fun toggleVolumeBoost(isEnabled: Boolean)
-    fun toggleVoiceBoost(isEnabled: Boolean)
+    fun toggleBassBoost(isEnabled: Boolean)
+    fun toggleReverb(isEnabled: Boolean)
+    fun toggleSkipSilence(isEnabled: Boolean)
 }
 
+@SuppressLint("UnsafeOptInUsageError")
 class PlayerViewModel @AssistedInject constructor(
     @Assisted state: PlayerViewState,
     private val store: SensayStore,
@@ -413,11 +424,55 @@ class PlayerViewModel @AssistedInject constructor(
     }
 
     override fun toggleVolumeBoost(isEnabled: Boolean) {
-        setState { copy(isVolumeBoostEnabled = isEnabled) }
+        viewModelScope.launch {
+            val result = (player?.player as? MediaController)?.sendCustomCommand(
+                AudioEffectCommands.VOLUME_BOOST.toCommand(),
+                bundleOf("isEnabled" to isEnabled),
+            )?.await()
+
+            if (result?.resultCode == SessionResult.RESULT_SUCCESS) {
+                setState { copy(isVolumeBoostEnabled = isEnabled) }
+            }
+        }
     }
 
-    override fun toggleVoiceBoost(isEnabled: Boolean) {
-        setState { copy(isVoiceBoostEnabled = isEnabled) }
+    override fun toggleBassBoost(isEnabled: Boolean) {
+        viewModelScope.launch {
+            val result = (player?.player as? MediaController)?.sendCustomCommand(
+                AudioEffectCommands.BASS_BOOST.toCommand(),
+                bundleOf(AudioEffectCommands.CUSTOM_ACTION_ARG_ENABLED to isEnabled),
+            )?.await()
+
+            if (result?.resultCode == SessionResult.RESULT_SUCCESS) {
+                setState { copy(isBassBoostEnabled = isEnabled) }
+            }
+        }
+    }
+
+    override fun toggleReverb(isEnabled: Boolean) {
+        viewModelScope.launch {
+            val result = (player?.player as? MediaController)?.sendCustomCommand(
+                AudioEffectCommands.REVERB.toCommand(),
+                bundleOf(AudioEffectCommands.CUSTOM_ACTION_ARG_ENABLED to isEnabled),
+            )?.await()
+
+            if (result?.resultCode == SessionResult.RESULT_SUCCESS) {
+                setState { copy(isReverbEnabled = isEnabled) }
+            }
+        }
+    }
+
+    override fun toggleSkipSilence(isEnabled: Boolean) {
+        viewModelScope.launch {
+            val result = (player?.player as? MediaController)?.sendCustomCommand(
+                ExtraSessionCommands.SKIP_SILENCE.toCommand(),
+                bundleOf(ExtraSessionCommands.CUSTOM_ACTION_ARG_ENABLED to isEnabled),
+            )?.await()
+
+            if (result?.resultCode == SessionResult.RESULT_SUCCESS) {
+                setState { copy(isSkipSilenceEnabled = isEnabled) }
+            }
+        }
     }
 
     @AssistedFactory

@@ -293,6 +293,18 @@ private fun PlayerEq(
     ) {
 
         InputChip(
+            selected = state.isReverbEnabled,
+            label = { Text("Reverb") },
+            leadingIcon = {
+                Icon(
+                    imageVector = Icons.Default.SpatialAudio,
+                    contentDescription = "",
+                )
+            },
+            onClick = { playerActions.toggleReverb(!state.isReverbEnabled) },
+        )
+
+        InputChip(
             selected = state.isVolumeBoostEnabled,
             label = { Text("Volume Boost") },
             leadingIcon = {
@@ -305,15 +317,27 @@ private fun PlayerEq(
         )
 
         InputChip(
-            selected = state.isVoiceBoostEnabled,
-            label = { Text("Voice Boost") },
+            selected = state.isBassBoostEnabled,
+            label = { Text("Bass Boost") },
             leadingIcon = {
                 Icon(
-                    imageVector = Icons.Default.AutoFixNormal,
+                    imageVector = Icons.Default.SurroundSound,
                     contentDescription = "",
                 )
             },
-            onClick = { playerActions.toggleVoiceBoost(!state.isVoiceBoostEnabled) },
+            onClick = { playerActions.toggleBassBoost(!state.isBassBoostEnabled) },
+        )
+
+        InputChip(
+            selected = state.isSkipSilenceEnabled,
+            label = { Text("Skip Silence") },
+            leadingIcon = {
+                Icon(
+                    imageVector = Icons.Default.VolumeMute,
+                    contentDescription = "",
+                )
+            },
+            onClick = { playerActions.toggleSkipSilence(!state.isSkipSilenceEnabled) },
         )
     }
 }
@@ -771,7 +795,15 @@ fun PlayerContentPreview() {
             TODO("Not yet implemented")
         }
 
-        override fun toggleVoiceBoost(isEnabled: Boolean) {
+        override fun toggleBassBoost(isEnabled: Boolean) {
+            TODO("Not yet implemented")
+        }
+
+        override fun toggleReverb(isEnabled: Boolean) {
+            TODO("Not yet implemented")
+        }
+
+        override fun toggleSkipSilence(isEnabled: Boolean) {
             TODO("Not yet implemented")
         }
     }
