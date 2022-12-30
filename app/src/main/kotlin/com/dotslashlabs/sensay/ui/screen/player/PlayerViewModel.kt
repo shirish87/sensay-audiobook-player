@@ -26,6 +26,7 @@ import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
 import data.SensayStore
+import data.entity.BookConfig
 import data.entity.Bookmark
 import data.entity.BookmarkType
 import data.entity.BookmarkWithChapter
@@ -55,13 +56,10 @@ data class PlayerViewState(
 
     val playbackConnectionState: Async<PlaybackConnectionState> = Uninitialized,
 
+    val bookConfig: Async<BookConfig> = Uninitialized,
     val bookmarks: Async<List<BookmarkWithChapter>> = Uninitialized,
 
     val isEqPanelVisible: Boolean = false,
-    val isVolumeBoostEnabled: Boolean = false,
-    val isBassBoostEnabled: Boolean = false,
-    val isReverbEnabled: Boolean = false,
-    val isSkipSilenceEnabled: Boolean = false,
 ) : MavericksState {
 
     constructor(args: PlayerViewArgs) : this(bookId = args.bookId)
@@ -113,6 +111,8 @@ data class PlayerViewState(
     val isBookmarkEnabled =
         (isActiveMedia && ((progressPair.first ?: 0L) >= 0 && (progressPair.second ?: 0L) > 0))
 
+    val isEqPanelEnabled = (bookConfig is Success)
+
     fun formatTime(value: Long?): String = when (value) {
         null -> ""
         0L -> DURATION_ZERO
@@ -162,7 +162,8 @@ class PlayerViewModel @AssistedInject constructor(
             // load one-time data
             store.bookWithChapters(bookId).take(1),
             store.bookProgress(bookId),
-        ) { a, b -> a to b }.setOnEach { (bookWithChapters, bookProgress) ->
+            ::Pair,
+        ).setOnEach { (bookWithChapters, bookProgress) ->
 
             val progressMediaId =
                 PlayerViewState.getMediaId(bookProgress.bookId, bookProgress.chapterId)
@@ -196,6 +197,9 @@ class PlayerViewModel @AssistedInject constructor(
 
         store.bookmarksWithChapters(bookId)
             .execute(retainValue = PlayerViewState::bookmarks) { copy(bookmarks = it) }
+
+        store.ensureBookConfig(bookId)
+            .execute(retainValue = PlayerViewState::bookConfig) { copy(bookConfig = it) }
 
         onEach(PlayerViewState::isPlayingMedia) { isPlaying ->
             player?.apply {
@@ -423,20 +427,22 @@ class PlayerViewModel @AssistedInject constructor(
         setState { copy(isEqPanelVisible = isVisible) }
     }
 
-    override fun toggleVolumeBoost(isEnabled: Boolean) {
+    override fun toggleVolumeBoost(isEnabled: Boolean) = withState { state ->
         viewModelScope.launch {
             val result = (player?.player as? MediaController)?.sendCustomCommand(
                 AudioEffectCommands.VOLUME_BOOST.toCommand(),
-                bundleOf("isEnabled" to isEnabled),
+                bundleOf(AudioEffectCommands.CUSTOM_ACTION_ARG_ENABLED to isEnabled),
             )?.await()
 
             if (result?.resultCode == SessionResult.RESULT_SUCCESS) {
-                setState { copy(isVolumeBoostEnabled = isEnabled) }
+                state.bookConfig()?.copy(isVolumeBoostEnabled = isEnabled)?.let {
+                    store.updateBookConfig(it)
+                }
             }
         }
     }
 
-    override fun toggleBassBoost(isEnabled: Boolean) {
+    override fun toggleBassBoost(isEnabled: Boolean) = withState { state ->
         viewModelScope.launch {
             val result = (player?.player as? MediaController)?.sendCustomCommand(
                 AudioEffectCommands.BASS_BOOST.toCommand(),
@@ -444,12 +450,14 @@ class PlayerViewModel @AssistedInject constructor(
             )?.await()
 
             if (result?.resultCode == SessionResult.RESULT_SUCCESS) {
-                setState { copy(isBassBoostEnabled = isEnabled) }
+                state.bookConfig()?.copy(isBassBoostEnabled = isEnabled)?.let {
+                    store.updateBookConfig(it)
+                }
             }
         }
     }
 
-    override fun toggleReverb(isEnabled: Boolean) {
+    override fun toggleReverb(isEnabled: Boolean) = withState { state ->
         viewModelScope.launch {
             val result = (player?.player as? MediaController)?.sendCustomCommand(
                 AudioEffectCommands.REVERB.toCommand(),
@@ -457,12 +465,14 @@ class PlayerViewModel @AssistedInject constructor(
             )?.await()
 
             if (result?.resultCode == SessionResult.RESULT_SUCCESS) {
-                setState { copy(isReverbEnabled = isEnabled) }
+                state.bookConfig()?.copy(isReverbEnabled = isEnabled)?.let {
+                    store.updateBookConfig(it)
+                }
             }
         }
     }
 
-    override fun toggleSkipSilence(isEnabled: Boolean) {
+    override fun toggleSkipSilence(isEnabled: Boolean) = withState { state ->
         viewModelScope.launch {
             val result = (player?.player as? MediaController)?.sendCustomCommand(
                 ExtraSessionCommands.SKIP_SILENCE.toCommand(),
@@ -470,7 +480,9 @@ class PlayerViewModel @AssistedInject constructor(
             )?.await()
 
             if (result?.resultCode == SessionResult.RESULT_SUCCESS) {
-                setState { copy(isSkipSilenceEnabled = isEnabled) }
+                state.bookConfig()?.copy(isSkipSilenceEnabled = isEnabled)?.let {
+                    store.updateBookConfig(it)
+                }
             }
         }
     }

@@ -287,13 +287,15 @@ private fun PlayerEq(
     modifier: Modifier = Modifier,
 ) {
 
+    val eqState = state.bookConfig() ?: return
+
     FlowRow(
         modifier = modifier,
         mainAxisSpacing = 10.dp,
     ) {
 
         InputChip(
-            selected = state.isReverbEnabled,
+            selected = eqState.isReverbEnabled,
             label = { Text("Reverb") },
             leadingIcon = {
                 Icon(
@@ -301,11 +303,11 @@ private fun PlayerEq(
                     contentDescription = "",
                 )
             },
-            onClick = { playerActions.toggleReverb(!state.isReverbEnabled) },
+            onClick = { playerActions.toggleReverb(!eqState.isReverbEnabled) },
         )
 
         InputChip(
-            selected = state.isVolumeBoostEnabled,
+            selected = eqState.isVolumeBoostEnabled,
             label = { Text("Volume Boost") },
             leadingIcon = {
                 Icon(
@@ -313,11 +315,11 @@ private fun PlayerEq(
                     contentDescription = "",
                 )
             },
-            onClick = { playerActions.toggleVolumeBoost(!state.isVolumeBoostEnabled) },
+            onClick = { playerActions.toggleVolumeBoost(!eqState.isVolumeBoostEnabled) },
         )
 
         InputChip(
-            selected = state.isBassBoostEnabled,
+            selected = eqState.isBassBoostEnabled,
             label = { Text("Bass Boost") },
             leadingIcon = {
                 Icon(
@@ -325,11 +327,11 @@ private fun PlayerEq(
                     contentDescription = "",
                 )
             },
-            onClick = { playerActions.toggleBassBoost(!state.isBassBoostEnabled) },
+            onClick = { playerActions.toggleBassBoost(!eqState.isBassBoostEnabled) },
         )
 
         InputChip(
-            selected = state.isSkipSilenceEnabled,
+            selected = eqState.isSkipSilenceEnabled,
             label = { Text("Skip Silence") },
             leadingIcon = {
                 Icon(
@@ -337,7 +339,7 @@ private fun PlayerEq(
                     contentDescription = "",
                 )
             },
-            onClick = { playerActions.toggleSkipSilence(!state.isSkipSilenceEnabled) },
+            onClick = { playerActions.toggleSkipSilence(!eqState.isSkipSilenceEnabled) },
         )
     }
 }

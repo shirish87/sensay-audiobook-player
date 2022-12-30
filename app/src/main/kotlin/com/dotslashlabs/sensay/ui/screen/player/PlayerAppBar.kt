@@ -45,10 +45,12 @@ fun PlayerAppBar(
         actions = {
             IconButton(
                 onClick = {
+                    if (!state.isEqPanelEnabled) return@IconButton
+
                     playerActions.toggleEqPanel(!state.isEqPanelVisible)
                 },
                 modifier = Modifier.alpha(
-                    if (state.isEqPanelVisible) ContentAlpha.medium else 1F,
+                    if (!state.isEqPanelEnabled || state.isEqPanelVisible) ContentAlpha.medium else ContentAlpha.high,
                 ),
             ) {
                 Icon(
@@ -74,7 +76,7 @@ fun PlayerAppBar(
                     }
                 },
                 modifier = Modifier.alpha(
-                    if (!state.isBookmarkEnabled) ContentAlpha.disabled else 1F,
+                    if (!state.isBookmarkEnabled) ContentAlpha.disabled else ContentAlpha.high,
                 ),
             ) {
                 Icon(
