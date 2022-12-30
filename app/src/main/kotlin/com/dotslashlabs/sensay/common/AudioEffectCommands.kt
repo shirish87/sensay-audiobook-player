@@ -2,8 +2,10 @@ package com.dotslashlabs.sensay.common
 
 import android.media.audiofx.AudioEffect
 import android.media.audiofx.BassBoost
+import android.media.audiofx.Equalizer
 import android.media.audiofx.LoudnessEnhancer
 import android.media.audiofx.PresetReverb
+import android.media.audiofx.Virtualizer
 import android.os.Bundle
 import androidx.media3.session.SessionCommand
 import logcat.logcat
@@ -46,7 +48,7 @@ enum class AudioEffectCommands(private val commandName: String) {
 
                     if (strengthSupported) {
                         logcat { "EQ band=bass previousLevel=$roundedStrength" }
-                        // setStrength(100)
+                         setStrength(300)
                     }
                 }
                 REVERB.commandName -> PresetReverb(priority, audioSessionId).apply {
