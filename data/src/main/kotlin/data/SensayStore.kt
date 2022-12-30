@@ -4,7 +4,7 @@ import android.net.Uri
 import androidx.room.Transaction
 import data.entity.*
 import data.repository.*
-import kotlinx.coroutines.flow.firstOrNull
+import kotlinx.coroutines.flow.*
 import logcat.logcat
 import java.time.Instant
 import javax.inject.Inject
@@ -23,6 +23,7 @@ class SensayStore @Inject constructor(
     private val sourceRepository: SourceRepository,
     private val bookmarkRepository: BookmarkRepository,
     private val progressRepository: ProgressRepository,
+    private val bookConfigRepository: BookConfigRepository,
 ) {
 
     suspend fun createOrUpdateBooksWithChapters(
@@ -249,6 +250,19 @@ class SensayStore @Inject constructor(
     fun bookmarksWithChapters(bookId: BookId) = bookmarkRepository.bookmarksWithChapters(bookId)
 
     suspend fun deleteProgress(progress: Progress) = progressRepository.deleteProgress(progress)
+
+    fun ensureBookConfig(bookId: BookId): Flow<BookConfig> = flow {
+        val bookConfig = bookConfigRepository.bookConfig(bookId).firstOrNull()
+        if (bookConfig != null) {
+            return@flow emit(bookConfig)
+        }
+
+        val id = bookConfigRepository.createBookConfig(BookConfig(bookId = bookId))
+        emitAll(bookConfigRepository.bookConfig(id))
+    }
+
+    suspend fun updateBookConfig(bookConfig: BookConfig) =
+        bookConfigRepository.updateBookConfig(bookConfig)
 }
 
 @Transaction

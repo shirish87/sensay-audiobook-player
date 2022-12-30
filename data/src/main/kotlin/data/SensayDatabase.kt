@@ -1,10 +1,7 @@
 package data
 
 import android.content.Context
-import androidx.room.Database
-import androidx.room.Room
-import androidx.room.RoomDatabase
-import androidx.room.TypeConverters
+import androidx.room.*
 import data.dao.*
 import data.entity.*
 import data.util.DataTypeConverters
@@ -23,15 +20,19 @@ import data.util.DataTypeConverters
         BookTagCrossRef::class,
         SourceBookCrossRef::class,
         Progress::class,
+        BookConfig::class,
     ],
     version = SensayDatabase.VERSION,
-    exportSchema = false,
+    exportSchema = true,
+    autoMigrations = [
+        AutoMigration(from = 1, to = 2),
+    ],
 )
 @TypeConverters(DataTypeConverters::class)
 abstract class SensayDatabase : RoomDatabase() {
 
     companion object {
-        const val VERSION = 1
+        const val VERSION = 2
 
         fun instance(appContext: Context) = Room.databaseBuilder(
             appContext,
@@ -48,4 +49,5 @@ abstract class SensayDatabase : RoomDatabase() {
     abstract fun sourceDao(): SourceDao
     abstract fun bookmarkDao(): BookmarkDao
     abstract fun progressDao(): ProgressDao
+    abstract fun bookConfigDao(): BookConfigDao
 }
