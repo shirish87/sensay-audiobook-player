@@ -1,7 +1,7 @@
 package com.dotslashlabs.sensay.ui.screen.home
 
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.*
+import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavHostController
 import com.airbnb.mvrx.compose.collectAsState
@@ -15,6 +15,7 @@ import com.dotslashlabs.sensay.ui.screen.common.SensayFrame
 import com.dotslashlabs.sensay.util.isLifecycleResumed
 import config.HomeLayout
 import data.BookCategory
+import data.entity.BookProgressWithBookAndChapters
 
 object CurrentScreen : SensayScreen {
     @Composable
@@ -79,6 +80,23 @@ object CurrentScreen : SensayScreen {
             onBookVisibilityChange = viewModel::setBookVisibility,
         )
 
+        val context = LocalContext.current
+        var isPlayerAvailable by remember { mutableStateOf(false) }
+
+        val onPlay: ((bookProgressWithChapters: BookProgressWithBookAndChapters) -> Unit)? =
+            if (isPlayerAvailable) ({ b -> viewModel.play(b) }) else null
+
+        DisposableEffect(viewModel, context) {
+            viewModel.attachPlayer(context) { err ->
+                isPlayerAvailable = (err == null)
+            }
+
+            onDispose {
+                isPlayerAvailable = false
+                viewModel.detachPlayer()
+            }
+        }
+
         SensayFrame {
             when (homeLayout) {
                 HomeLayout.LIST -> BooksList(
@@ -88,6 +106,7 @@ object CurrentScreen : SensayScreen {
                     filterMenuOptions,
                     filterListOptions,
                     onNavToBook = onNavToBook,
+                    onPlay = onPlay,
                 )
                 HomeLayout.GRID -> BooksGrid(
                     state.books,
@@ -96,6 +115,7 @@ object CurrentScreen : SensayScreen {
                     filterMenuOptions,
                     filterListOptions,
                     onNavToBook = onNavToBook,
+                    onPlay = onPlay,
                 )
             }
         }

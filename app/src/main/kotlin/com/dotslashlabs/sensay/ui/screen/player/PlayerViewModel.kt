@@ -7,8 +7,6 @@ import android.os.Bundle
 import android.os.Parcel
 import android.os.Parcelable
 import androidx.core.os.bundleOf
-import androidx.media3.common.MediaItem
-import androidx.media3.common.MediaMetadata
 import androidx.media3.session.MediaController
 import androidx.media3.session.SessionResult
 import androidx.work.await
@@ -20,8 +18,6 @@ import com.dotslashlabs.sensay.common.BookProgressWithDuration
 import com.dotslashlabs.sensay.common.ExtraSessionCommands
 import com.dotslashlabs.sensay.common.PlaybackConnectionState
 import com.dotslashlabs.sensay.ui.screen.common.BasePlayerViewModel
-import com.dotslashlabs.sensay.util.BUNDLE_KEY_BOOK_ID
-import com.dotslashlabs.sensay.util.BUNDLE_KEY_CHAPTER_ID
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
 import dagger.assisted.AssistedInject
@@ -38,7 +34,6 @@ import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import logcat.logcat
-import kotlin.math.absoluteValue
 import kotlin.time.Duration.Companion.milliseconds
 
 typealias Media = BookProgressWithDuration
@@ -367,50 +362,14 @@ class PlayerViewModel @AssistedInject constructor(
     }
 
     private fun prepareMediaItems() = withState { state ->
-        val selectedMedia = state.media ?: return@withState
+        val media = state.media ?: return@withState
 
-        // already set
-        // if (state.playerMediaId == selectedMedia.mediaId) return@withState
-
-        val playerMediaIdx = state.playerMediaIds.indexOf(selectedMedia.mediaId)
-        val hasCurrentChapterEnded =
-            (selectedMedia.chapterDuration.ms - selectedMedia.chapterProgress.ms).absoluteValue < 20
-
-        val startPositionMs = if (hasCurrentChapterEnded) 0L else selectedMedia.chapterProgress.ms
-        val chapters = state.mediaList
-
-        viewModelScope.launch {
-            val player = this@PlayerViewModel.player ?: return@launch
-
-            player.apply {
-                if (playerMediaIdx != -1) {
-                    // selectedMediaId already exists in the player's media items
-                    seekTo(playerMediaIdx, startPositionMs)
-                } else {
-                    val chapterIdx = state.mediaIds.indexOf(selectedMedia.mediaId)
-
-                    val mediaItems = chapters.map { c ->
-                        MediaItem.Builder()
-                            .setMediaId(c.mediaId)
-                            .setMediaMetadata(
-                                MediaMetadata.Builder()
-                                    .setExtras(
-                                        bundleOf(
-                                            BUNDLE_KEY_BOOK_ID to c.bookId,
-                                            BUNDLE_KEY_CHAPTER_ID to c.chapterId,
-                                        )
-                                    )
-                                    .build()
-                            )
-                            .build()
-                    }
-
-                    setMediaItems(mediaItems, chapterIdx, startPositionMs)
-                }
-
-                prepare()
-            }
-        }
+        prepareMediaItems(
+            media,
+            state.mediaList,
+            state.mediaIds,
+            state.playerMediaIds,
+        )
     }
 
     override fun setSelectedMediaId(mediaId: String) {
