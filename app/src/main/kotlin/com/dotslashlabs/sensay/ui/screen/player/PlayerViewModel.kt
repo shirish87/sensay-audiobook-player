@@ -36,6 +36,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import logcat.logcat
 import kotlin.math.absoluteValue
 import kotlin.time.Duration.Companion.milliseconds
@@ -198,7 +199,12 @@ class PlayerViewModel @AssistedInject constructor(
         store.bookmarksWithChapters(bookId)
             .execute(retainValue = PlayerViewState::bookmarks) { copy(bookmarks = it) }
 
-        store.ensureBookConfig(bookId)
+        // bit of a workaround
+        viewModelScope.launch(Dispatchers.IO) {
+            store.ensureBookConfig(bookId)
+        }
+
+        store.bookConfig(bookId)
             .execute(retainValue = PlayerViewState::bookConfig) { copy(bookConfig = it) }
 
         onEach(PlayerViewState::isPlayingMedia) { isPlaying ->
@@ -436,7 +442,9 @@ class PlayerViewModel @AssistedInject constructor(
 
             if (result?.resultCode == SessionResult.RESULT_SUCCESS) {
                 state.bookConfig()?.copy(isVolumeBoostEnabled = isEnabled)?.let {
-                    store.updateBookConfig(it)
+                    withContext(Dispatchers.IO) {
+                        store.updateBookConfig(it)
+                    }
                 }
             }
         }
@@ -451,7 +459,9 @@ class PlayerViewModel @AssistedInject constructor(
 
             if (result?.resultCode == SessionResult.RESULT_SUCCESS) {
                 state.bookConfig()?.copy(isBassBoostEnabled = isEnabled)?.let {
-                    store.updateBookConfig(it)
+                    withContext(Dispatchers.IO) {
+                        store.updateBookConfig(it)
+                    }
                 }
             }
         }
@@ -466,7 +476,9 @@ class PlayerViewModel @AssistedInject constructor(
 
             if (result?.resultCode == SessionResult.RESULT_SUCCESS) {
                 state.bookConfig()?.copy(isReverbEnabled = isEnabled)?.let {
-                    store.updateBookConfig(it)
+                    withContext(Dispatchers.IO) {
+                        store.updateBookConfig(it)
+                    }
                 }
             }
         }
@@ -481,7 +493,9 @@ class PlayerViewModel @AssistedInject constructor(
 
             if (result?.resultCode == SessionResult.RESULT_SUCCESS) {
                 state.bookConfig()?.copy(isSkipSilenceEnabled = isEnabled)?.let {
-                    store.updateBookConfig(it)
+                    withContext(Dispatchers.IO) {
+                        store.updateBookConfig(it)
+                    }
                 }
             }
         }

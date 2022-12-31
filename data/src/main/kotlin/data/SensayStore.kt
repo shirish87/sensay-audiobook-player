@@ -75,6 +75,8 @@ class SensayStore @Inject constructor(
                         chapterRepository.deleteChapters(listOf(bookId))
                         bookProgressRepository.deleteOrResetBooksProgress(listOf(bookId))
                         // TODO: code to restore bookProgress
+                    } else {
+                        bookConfigRepository.insertBookConfig(BookConfig(bookId))
                     }
 
                     val chapterIds = chapterRepository.createChapters(chapters)
@@ -251,15 +253,14 @@ class SensayStore @Inject constructor(
 
     suspend fun deleteProgress(progress: Progress) = progressRepository.deleteProgress(progress)
 
-    fun ensureBookConfig(bookId: BookId): Flow<BookConfig> = flow {
+    suspend fun ensureBookConfig(bookId: BookId) {
         val bookConfig = bookConfigRepository.bookConfig(bookId).firstOrNull()
-        if (bookConfig != null) {
-            return@flow emit(bookConfig)
+        if (bookConfig == null) {
+            bookConfigRepository.insertBookConfig(BookConfig(bookId = bookId))
         }
-
-        val id = bookConfigRepository.createBookConfig(BookConfig(bookId = bookId))
-        emitAll(bookConfigRepository.bookConfig(id))
     }
+
+    fun bookConfig(bookId: BookId): Flow<BookConfig> = bookConfigRepository.bookConfig(bookId)
 
     suspend fun updateBookConfig(bookConfig: BookConfig) =
         bookConfigRepository.updateBookConfig(bookConfig)

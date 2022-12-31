@@ -11,7 +11,7 @@ class BookConfigRepository @Inject constructor(
 
     fun bookConfig(bookId: BookId) = bookConfigDao.bookConfig(bookId)
 
-    suspend fun createBookConfig(bookConfig: BookConfig) = bookConfigDao.insert(bookConfig)
+    suspend fun insertBookConfig(bookConfig: BookConfig) = bookConfigDao.insert(bookConfig)
 
     suspend fun updateBookConfig(bookConfig: BookConfig) = bookConfigDao.update(bookConfig)
 }
