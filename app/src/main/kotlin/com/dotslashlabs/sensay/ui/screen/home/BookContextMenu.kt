@@ -8,7 +8,10 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -34,6 +37,8 @@ data class BookContextMenuConfig(
 fun BookContextMenu(
     bookProgressWithChapters: BookProgressWithBookAndChapters,
     config: BookContextMenuConfig,
+    isMenuExpanded: Boolean,
+    setMenuExpanded: (Boolean) -> Unit,
     modifier: Modifier = Modifier,
 ) {
 
@@ -46,8 +51,6 @@ fun BookContextMenu(
         BookCategory.CURRENT to Icons.Outlined.Subscriptions,
         BookCategory.FINISHED to Icons.Outlined.Done,
     ).filterNot { it.first == bookCategory }
-
-    var expanded by remember { mutableStateOf(false) }
 
     val context = LocalContext.current
 
@@ -122,13 +125,13 @@ fun BookContextMenu(
             .fillMaxSize()
             .wrapContentSize(Alignment.TopEnd),
     ) {
-        IconButton(onClick = { expanded = true }) {
+        IconButton(onClick = { setMenuExpanded(true) }) {
             Icon(Icons.Default.MoreVert, contentDescription = "Localized description")
         }
         DropdownMenu(
             modifier = Modifier,
-            expanded = expanded,
-            onDismissRequest = { expanded = false }
+            expanded = isMenuExpanded,
+            onDismissRequest = { setMenuExpanded(false) }
         ) {
 
             categoryMenuItems.forEach { (category, imageVector) ->
@@ -136,7 +139,7 @@ fun BookContextMenu(
                     text = { Text("Mark as ${category.label}") },
                     onClick = {
                         changeCategoryData.value = bookProgressWithChapters to category
-                        expanded = false
+                        setMenuExpanded(false)
                     },
                     leadingIcon = {
                         Icon(
@@ -154,7 +157,7 @@ fun BookContextMenu(
                 DropdownMenuItem(
                     text = { Text("Restore Progress") },
                     onClick = {
-                        expanded = false
+                        setMenuExpanded(false)
                         config.onNavToRestore(bookProgressWithChapters.bookProgress.bookId)
                     },
                     leadingIcon = {
@@ -175,7 +178,7 @@ fun BookContextMenu(
                     text = { Text("${if (isBookVisible) "Hide" else "Show"} Book") },
                     onClick = {
                         visibilityData.value = bookProgressWithChapters to isBookVisible
-                        expanded = false
+                        setMenuExpanded(false)
                     },
                     leadingIcon = {
                         Icon(

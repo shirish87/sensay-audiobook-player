@@ -1,10 +1,11 @@
 package com.dotslashlabs.sensay.ui.screen.home
 
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.ElevatedCard
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
@@ -25,7 +26,7 @@ import data.util.ContentDuration
 import kotlin.time.Duration.Companion.hours
 import kotlin.time.Duration.Companion.minutes
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun BookRow(
     bookProgressWithChapters: BookProgressWithBookAndChapters,
@@ -33,15 +34,22 @@ fun BookRow(
     onNavToBook: OnNavToBook,
     modifier: Modifier = Modifier,
 ) {
+
+    var isMenuExpanded by remember { mutableStateOf(false) }
+    val setMenuExpanded: (Boolean) -> Unit = { isMenuExpanded = it }
+
     ElevatedCard(
-        onClick = { onNavToBook(bookProgressWithChapters.book.bookId) },
         modifier = modifier
             .padding(horizontal = 16.dp, vertical = 8.dp)
-            .fillMaxWidth(),
+            .fillMaxWidth()
+            .combinedClickable(
+                onClick = { onNavToBook(bookProgressWithChapters.book.bookId) },
+                onLongClick = { setMenuExpanded(!isMenuExpanded) },
+            ),
     ) {
         Box {
             ListBookView(bookProgressWithChapters)
-            BookContextMenu(bookProgressWithChapters, config)
+            BookContextMenu(bookProgressWithChapters, config, isMenuExpanded, setMenuExpanded)
         }
     }
 }

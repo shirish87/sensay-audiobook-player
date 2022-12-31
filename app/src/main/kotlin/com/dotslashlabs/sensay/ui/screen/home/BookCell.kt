@@ -1,11 +1,12 @@
 package com.dotslashlabs.sensay.ui.screen.home
 
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.ElevatedCard
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -28,7 +29,7 @@ import data.util.ContentDuration
 import kotlin.time.Duration.Companion.hours
 import kotlin.time.Duration.Companion.minutes
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun BookCell(
     bookProgressWithChapters: BookProgressWithBookAndChapters,
@@ -36,13 +37,21 @@ fun BookCell(
     onNavToBook: OnNavToBook,
     modifier: Modifier = Modifier,
 ) {
+
+    var isMenuExpanded by remember { mutableStateOf(false) }
+    val setMenuExpanded: (Boolean) -> Unit = { isMenuExpanded = it }
+
     ElevatedCard(
-        onClick = { onNavToBook(bookProgressWithChapters.book.bookId) },
-        modifier = modifier.fillMaxWidth(),
+        modifier = modifier
+            .fillMaxWidth()
+            .combinedClickable(
+                onClick = { onNavToBook(bookProgressWithChapters.book.bookId) },
+                onLongClick = { setMenuExpanded(!isMenuExpanded) },
+            ),
     ) {
         Box {
             GridBookView(bookProgressWithChapters)
-            BookContextMenu(bookProgressWithChapters, config)
+            BookContextMenu(bookProgressWithChapters, config, isMenuExpanded, setMenuExpanded)
         }
     }
 }
