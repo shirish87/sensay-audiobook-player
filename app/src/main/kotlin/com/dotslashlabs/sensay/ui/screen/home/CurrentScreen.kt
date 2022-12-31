@@ -84,7 +84,7 @@ object CurrentScreen : SensayScreen {
         var isPlayerAvailable by remember { mutableStateOf(false) }
 
         val onPlay: ((bookProgressWithChapters: BookProgressWithBookAndChapters) -> Unit)? =
-            if (isPlayerAvailable) ({ b -> viewModel.play(b) }) else null
+            if (isPlayerAvailable) viewModel::play else null
 
         DisposableEffect(viewModel, context) {
             viewModel.attachPlayer(context) { err ->
