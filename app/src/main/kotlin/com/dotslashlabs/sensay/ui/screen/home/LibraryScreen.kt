@@ -15,8 +15,11 @@ import com.dotslashlabs.sensay.ui.screen.common.SensayFrame
 import com.dotslashlabs.sensay.util.isLifecycleResumed
 import config.HomeLayout
 import data.BookCategory
+import data.entity.BookProgressWithBookAndChapters
 
 typealias OnNavToBook = (bookId: Long) -> Unit
+
+typealias OnPlay = ((bookProgressWithChapters: BookProgressWithBookAndChapters) -> Unit)
 
 object LibraryScreen : SensayScreen {
     @Composable

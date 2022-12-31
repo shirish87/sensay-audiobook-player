@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.filled.PlayCircle
 import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -40,6 +41,7 @@ fun BookContextMenu(
     isMenuExpanded: Boolean,
     setMenuExpanded: (Boolean) -> Unit,
     modifier: Modifier = Modifier,
+    onPlay: OnPlay? = null,
 ) {
 
     if (bookProgressWithChapters.isEmpty || !config.isEnabled) return
@@ -117,6 +119,18 @@ fun BookContextMenu(
                 "Book '${arg.first.book.title}' set to ${arg.second.label}",
                 Toast.LENGTH_SHORT,
             ).show()
+        }
+    }
+
+    onPlay?.let {
+        Box(
+            modifier = modifier
+                .fillMaxSize()
+                .wrapContentSize(Alignment.TopStart),
+        ) {
+            IconButton(onClick = { it(bookProgressWithChapters) }) {
+                Icon(Icons.Default.PlayCircle, contentDescription = "Localized description")
+            }
         }
     }
 

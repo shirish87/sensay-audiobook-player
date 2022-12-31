@@ -33,6 +33,7 @@ fun BookRow(
     config: BookContextMenuConfig,
     onNavToBook: OnNavToBook,
     modifier: Modifier = Modifier,
+    onPlay: OnPlay? = null,
 ) {
 
     var isMenuExpanded by remember { mutableStateOf(false) }
@@ -49,7 +50,13 @@ fun BookRow(
     ) {
         Box {
             ListBookView(bookProgressWithChapters)
-            BookContextMenu(bookProgressWithChapters, config, isMenuExpanded, setMenuExpanded)
+            BookContextMenu(
+                bookProgressWithChapters,
+                config,
+                isMenuExpanded,
+                setMenuExpanded,
+                onPlay = onPlay,
+            )
         }
     }
 }

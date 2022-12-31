@@ -48,6 +48,7 @@ fun <SortMenuType> BooksList(
     filterMenuOptions: FilterMenuOptions,
     filterListOptions: FilterListOptions<String>,
     onNavToBook: OnNavToBook,
+    onPlay: ((bookProgressWithChapters: BookProgressWithBookAndChapters) -> Unit)? = null,
 ) {
 
     val state: LazyListState = rememberLazyListState()
@@ -87,6 +88,7 @@ fun <SortMenuType> BooksList(
                     config,
                     onNavToBook = if (book.isEmpty) ({}) else onNavToBook,
                     modifier = Modifier,
+                    onPlay = onPlay,
                 )
             }
 
@@ -119,6 +121,7 @@ fun <SortMenuType> BooksGrid(
     filterMenuOptions: FilterMenuOptions,
     filterListOptions: FilterListOptions<String>,
     onNavToBook: OnNavToBook,
+    onPlay: ((bookProgressWithChapters: BookProgressWithBookAndChapters) -> Unit)? = null,
 ) {
     val state: LazyGridState = rememberLazyGridState()
     val cellCount = gridColumnCount()
@@ -170,6 +173,7 @@ fun <SortMenuType> BooksGrid(
                     modifier = Modifier.padding(
                         paddingValuesForCell(index + 1, cellCount, lastRowStartCell),
                     ),
+                    onPlay = onPlay,
                 )
             }
 
