@@ -1,6 +1,6 @@
 package com.dotslashlabs.sensay
 
-import com.airbnb.mvrx.test.MvRxTestRule
+import com.airbnb.mvrx.test.MavericksTestRule
 import dagger.hilt.android.testing.HiltAndroidRule
 import java.util.concurrent.TimeUnit
 import kotlinx.coroutines.CoroutineScope
@@ -35,7 +35,7 @@ abstract class BaseTest {
     val hiltRule by lazy { HiltAndroidRule(this) }
 
     @get:Rule(order = 1)
-    val mvrxRule = MvRxTestRule()
+    val mavericksTestRule = MavericksTestRule()
 
     @get:Rule
     val mainDispatcherRule = MainDispatcherRule()
