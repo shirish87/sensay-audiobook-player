@@ -7,16 +7,14 @@ import android.os.Bundle
 import android.os.Parcel
 import android.os.Parcelable
 import androidx.core.os.bundleOf
-import androidx.media3.session.MediaController
 import androidx.media3.session.SessionResult
 import androidx.work.await
 import com.airbnb.mvrx.*
 import com.airbnb.mvrx.hilt.AssistedViewModelFactory
 import com.airbnb.mvrx.hilt.hiltMavericksViewModelFactory
-import com.dotslashlabs.sensay.common.AudioEffectCommands
-import com.dotslashlabs.sensay.common.BookProgressWithDuration
-import com.dotslashlabs.sensay.common.ExtraSessionCommands
-import com.dotslashlabs.sensay.common.PlaybackConnectionState
+import com.dotslashlabs.sensay.common.*
+import com.dotslashlabs.sensay.ui.PlayerAppViewActions
+import com.dotslashlabs.sensay.ui.PlayerAppViewState
 import com.dotslashlabs.sensay.ui.screen.common.BasePlayerViewModel
 import dagger.assisted.Assisted
 import dagger.assisted.AssistedFactory
@@ -34,7 +32,7 @@ import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import logcat.logcat
-import kotlin.time.Duration.Companion.milliseconds
+import okhttp3.internal.toHexString
 
 typealias Media = BookProgressWithDuration
 
@@ -50,20 +48,17 @@ data class PlayerViewState(
     val mediaList: List<Media> = emptyList(),
     val media: Media? = null,
 
-    val playbackConnectionState: Async<PlaybackConnectionState> = Uninitialized,
-
     val bookConfig: Async<BookConfig> = Uninitialized,
     val bookmarks: Async<List<BookmarkWithChapter>> = Uninitialized,
 
     val isEqPanelVisible: Boolean = false,
+
+    val playbackConnectionState: Async<PlaybackConnectionState> = Uninitialized,
 ) : MavericksState {
 
     constructor(args: PlayerViewArgs) : this(bookId = args.bookId)
 
     companion object {
-        const val DURATION_ZERO: String = "00:00:00"
-
-        fun getMediaId(bookId: Long, chapterId: Long) = "books/$bookId/chapters/$chapterId"
 
         fun getSliderPosition(positionMs: Long?, durationMs: Long?): Float =
             if ((positionMs ?: 0) > 0 && (durationMs ?: 0) > 0)
@@ -72,11 +67,9 @@ data class PlayerViewState(
     }
 
     val coverUri: Uri? = media?.coverUri
+    val mediaId: MediaId? = media?.mediaId
 
     val connState = playbackConnectionState()
-
-    val isConnected = (connState?.isConnected == true)
-
     val playerMediaId = connState?.playerState?.mediaId
 
     val playerMediaIds = connState?.playerMediaIds ?: emptyList()
@@ -92,7 +85,9 @@ data class PlayerViewState(
     } else null
 
     val isActiveMedia: Boolean = (playerMedia != null)
-    val isPlayingMedia: Boolean = (isActiveMedia && connState?.playerState?.isPlaying == true)
+
+    private val isPlaying = (connState?.playerState?.isPlaying == true)
+    val isPlayingMedia: Boolean = (isActiveMedia && isPlaying)
 
     val enableResetSelectedMediaId =
         (mediaIds.contains(playerMediaId) && playerMediaId != media?.mediaId)
@@ -108,26 +103,36 @@ data class PlayerViewState(
         (isActiveMedia && ((progressPair.first ?: 0L) >= 0 && (progressPair.second ?: 0L) > 0))
 
     val isEqPanelEnabled = (bookConfig is Success)
-
-    fun formatTime(value: Long?): String = when (value) {
-        null -> ""
-        0L -> DURATION_ZERO
-        else -> ContentDuration.format(value.milliseconds) ?: DURATION_ZERO
-    }
 }
 
 interface PlayerActions {
-    fun attachPlayer(context: Context)
-    fun detachPlayer()
+    fun attachPlayer(context: Context): Unit?
+    fun detachPlayer(): Unit?
 
-    fun previousChapter(): Unit?
-    fun nextChapter(): Unit?
-    fun seekBack(): Unit?
-    fun seekForward(): Unit?
-    fun seekTo(fraction: Float, ofDurationMs: Long): Unit?
-    fun seekToPosition(mediaId: String, positionMs: Long, durationMs: Long): Unit?
-    fun pause(): Unit?
-    fun play(): Unit?
+    fun previousChapter(
+        playerAppViewActions: PlayerAppViewActions,
+        playerAppViewState: PlayerAppViewState,
+    ): Unit?
+
+    fun nextChapter(
+        playerAppViewActions: PlayerAppViewActions,
+        playerAppViewState: PlayerAppViewState,
+    ): Unit?
+
+    fun seekTo(
+        playerAppViewActions: PlayerAppViewActions,
+        fraction: Float,
+        ofDurationMs: Long,
+    ): Unit?
+
+    fun seekToPosition(
+        playerAppViewActions: PlayerAppViewActions,
+        mediaId: String,
+        positionMs: Long,
+        durationMs: Long,
+    ): Unit?
+
+    fun play(playerAppViewActions: PlayerAppViewActions): Unit?
 
     fun setSelectedMediaId(mediaId: String)
     fun resetSelectedMediaId()
@@ -137,10 +142,10 @@ interface PlayerActions {
 
     fun toggleEqPanel(isVisible: Boolean)
 
-    fun toggleVolumeBoost(isEnabled: Boolean)
-    fun toggleBassBoost(isEnabled: Boolean)
-    fun toggleReverb(isEnabled: Boolean)
-    fun toggleSkipSilence(isEnabled: Boolean)
+    fun toggleVolumeBoost(playerAppViewActions: PlayerAppViewActions, isEnabled: Boolean)
+    fun toggleBassBoost(playerAppViewActions: PlayerAppViewActions, isEnabled: Boolean)
+    fun toggleReverb(playerAppViewActions: PlayerAppViewActions, isEnabled: Boolean)
+    fun toggleSkipSilence(playerAppViewActions: PlayerAppViewActions, isEnabled: Boolean)
 }
 
 @SuppressLint("UnsafeOptInUsageError")
@@ -162,7 +167,7 @@ class PlayerViewModel @AssistedInject constructor(
         ).setOnEach { (bookWithChapters, bookProgress) ->
 
             val progressMediaId =
-                PlayerViewState.getMediaId(bookProgress.bookId, bookProgress.chapterId)
+                PlayerAppViewState.getMediaId(bookProgress.bookId, bookProgress.chapterId)
 
             if (media?.mediaId == progressMediaId) {
                 return@setOnEach this
@@ -202,16 +207,6 @@ class PlayerViewModel @AssistedInject constructor(
         store.bookConfig(bookId)
             .execute(retainValue = PlayerViewState::bookConfig) { copy(bookConfig = it) }
 
-        onEach(PlayerViewState::isPlayingMedia) { isPlaying ->
-            player?.apply {
-                if (isPlaying) {
-                    startLiveTracker(viewModelScope)
-                } else {
-                    stopLiveTracker()
-                }
-            }
-        }
-
         onEach(
             PlayerViewState::isActiveMedia,
             PlayerViewState::media,
@@ -245,57 +240,92 @@ class PlayerViewModel @AssistedInject constructor(
     }
 
     override fun attachPlayer(context: Context) {
-        logcat { "attachPlayer" }
-
         setState { copy(isLoading = true) }
-        attach(context) { _, playerEvents, _ ->
-            setState { copy(isLoading = false) }
+        attach(context) { err, playerEvents, _ ->
+            logcat { "attachPlayer: ${player?.hashCode()?.toHexString()}" }
+            setState { copy(isLoading = false, error = err?.message) }
 
             job?.cancel()
             job = playerEvents
-                ?.execute(retainValue = PlayerViewState::playbackConnectionState) {
-                    copy(playbackConnectionState = it)
+                ?.execute(retainValue = PlayerViewState::playbackConnectionState) { state ->
+                    copy(playbackConnectionState = state)
                 }
+
+            onEach(
+                PlayerViewState::mediaId,
+                PlayerViewState::playerMediaId,
+            ) { mediaId, playerMediaId ->
+                if (mediaId != null && mediaId == playerMediaId) {
+                    player?.startLiveTracker(viewModelScope)
+                } else {
+                    player?.stopLiveTracker()
+                }
+            }
         }
     }
 
     override fun detachPlayer() {
-        logcat { "detachPlayer" }
+        logcat { "detachPlayer: ${player?.hashCode()?.toHexString()}" }
+        setState { copy(isLoading = false, error = null) }
         detach()
 
         job?.cancel()
         job = null
     }
 
-    override fun previousChapter() = withState { state ->
+    override fun play(playerAppViewActions: PlayerAppViewActions) {
+        prepareMediaItems(playerAppViewActions)
+        playerAppViewActions.play()
+    }
+
+    override fun previousChapter(
+        playerAppViewActions: PlayerAppViewActions,
+        playerAppViewState: PlayerAppViewState,
+    ) = withState { state ->
         if (!state.hasPreviousChapter) return@withState
 
-        setChapter(state.mediaIds[state.playerMediaIdx - 1])
+        setChapter(
+            playerAppViewActions,
+            playerAppViewState,
+            state.mediaIds[state.playerMediaIdx - 1],
+        )
     }
 
-    override fun nextChapter() = withState { state ->
+    override fun nextChapter(
+        playerAppViewActions: PlayerAppViewActions,
+        playerAppViewState: PlayerAppViewState,
+    ) = withState { state ->
         if (!state.hasNextChapter) return@withState
 
-        setChapter(state.mediaIds[state.playerMediaIdx + 1])
+        setChapter(
+            playerAppViewActions,
+            playerAppViewState,
+            state.mediaIds[state.playerMediaIdx + 1],
+        )
     }
 
-    private fun setChapter(mediaId: String) {
+    private fun setChapter(
+        playerAppViewActions: PlayerAppViewActions,
+        playerAppViewState: PlayerAppViewState,
+        mediaId: String,
+    ) {
         setSelectedMediaId(mediaId)
 
         viewModelScope.launch {
-            if (player?.isPlaying == true) {
-                play()
+            if (playerAppViewState.isPlaying) {
+                playerAppViewActions.play()
             } else {
-                prepareMediaItems()
-                player?.pause()
+                prepareMediaItems(playerAppViewActions)
+                playerAppViewActions.pause()
             }
         }
     }
 
-    override fun seekBack() = player?.seekBack()
-    override fun seekForward() = player?.seekForward()
-
-    override fun seekTo(fraction: Float, ofDurationMs: Long) = withState { state ->
+    override fun seekTo(
+        playerAppViewActions: PlayerAppViewActions,
+        fraction: Float,
+        ofDurationMs: Long,
+    ) = withState { state ->
         if (!state.isPlayingMedia) return@withState
         val mediaItemIndex = state.playerMediaIds.indexOf(state.playerMediaId)
         if (mediaItemIndex == -1) return@withState
@@ -305,34 +335,25 @@ class PlayerViewModel @AssistedInject constructor(
         val positionMs = (fraction * ofDurationMs).toLong()
 
         viewModelScope.launch {
-            player?.apply {
-                seekTo(mediaItemIndex, positionMs)
-            }
+            playerAppViewActions.seekTo(mediaItemIndex, positionMs)
         }
     }
 
-    override fun seekToPosition(mediaId: String, positionMs: Long, durationMs: Long) =
-        withState { state ->
-            val mediaIdx = state.mediaList.indexOfFirst { it.mediaId == mediaId }
-            if (mediaIdx == -1) return@withState
+    override fun seekToPosition(
+        playerAppViewActions: PlayerAppViewActions,
+        mediaId: String,
+        positionMs: Long,
+        durationMs: Long,
+    ) = withState { state ->
+        val mediaIdx = state.mediaList.indexOfFirst { it.mediaId == mediaId }
+        if (mediaIdx == -1) return@withState
 
-            val media = state.mediaList[mediaIdx]
-                .copy(chapterProgress = ContentDuration.ms(positionMs))
+        val media = state.mediaList[mediaIdx]
+            .copy(chapterProgress = ContentDuration.ms(positionMs))
 
-            setState { copy(media = media) }
-            prepareMediaItems()
-            seekTo((positionMs.toFloat() / maxOf(1L, durationMs)), durationMs)
-        }
-
-    override fun pause() = player?.pause()
-
-    override fun play() {
-        player?.apply {
-            prepareMediaItems()
-
-            playWhenReady = true
-            play()
-        }
+        setState { copy(media = media) }
+        prepareMediaItems(playerAppViewActions)
+        seekTo(playerAppViewActions, (positionMs.toFloat() / maxOf(1L, durationMs)), durationMs)
     }
 
     override suspend fun createBookmark() {
@@ -361,10 +382,10 @@ class PlayerViewModel @AssistedInject constructor(
         }
     }
 
-    private fun prepareMediaItems() = withState { state ->
+    private fun prepareMediaItems(playerAppViewActions: PlayerAppViewActions) = withState { state ->
         val media = state.media ?: return@withState
 
-        prepareMediaItems(
+        playerAppViewActions.prepareMediaItems(
             media,
             state.mediaList,
             state.mediaIds,
@@ -392,73 +413,77 @@ class PlayerViewModel @AssistedInject constructor(
         setState { copy(isEqPanelVisible = isVisible) }
     }
 
-    override fun toggleVolumeBoost(isEnabled: Boolean) = withState { state ->
-        viewModelScope.launch {
-            val result = (player?.player as? MediaController)?.sendCustomCommand(
-                AudioEffectCommands.VOLUME_BOOST.toCommand(),
-                bundleOf(AudioEffectCommands.CUSTOM_ACTION_ARG_ENABLED to isEnabled),
-            )?.await()
+    override fun toggleVolumeBoost(playerAppViewActions: PlayerAppViewActions, isEnabled: Boolean) =
+        withState { state ->
+            viewModelScope.launch {
+                val result = playerAppViewActions.sendCustomCommand(
+                    AudioEffectCommands.VOLUME_BOOST.toCommand(),
+                    bundleOf(AudioEffectCommands.CUSTOM_ACTION_ARG_ENABLED to isEnabled),
+                )?.await()
 
-            if (result?.resultCode == SessionResult.RESULT_SUCCESS) {
-                state.bookConfig()?.copy(isVolumeBoostEnabled = isEnabled)?.let {
-                    withContext(Dispatchers.IO) {
-                        store.updateBookConfig(it)
+                if (result?.resultCode == SessionResult.RESULT_SUCCESS) {
+                    state.bookConfig()?.copy(isVolumeBoostEnabled = isEnabled)?.let {
+                        withContext(Dispatchers.IO) {
+                            store.updateBookConfig(it)
+                        }
                     }
                 }
             }
         }
-    }
 
-    override fun toggleBassBoost(isEnabled: Boolean) = withState { state ->
-        viewModelScope.launch {
-            val result = (player?.player as? MediaController)?.sendCustomCommand(
-                AudioEffectCommands.BASS_BOOST.toCommand(),
-                bundleOf(AudioEffectCommands.CUSTOM_ACTION_ARG_ENABLED to isEnabled),
-            )?.await()
+    override fun toggleBassBoost(playerAppViewActions: PlayerAppViewActions, isEnabled: Boolean) =
+        withState { state ->
+            viewModelScope.launch {
+                val result = playerAppViewActions.sendCustomCommand(
+                    AudioEffectCommands.BASS_BOOST.toCommand(),
+                    bundleOf(AudioEffectCommands.CUSTOM_ACTION_ARG_ENABLED to isEnabled),
+                )?.await()
 
-            if (result?.resultCode == SessionResult.RESULT_SUCCESS) {
-                state.bookConfig()?.copy(isBassBoostEnabled = isEnabled)?.let {
-                    withContext(Dispatchers.IO) {
-                        store.updateBookConfig(it)
+                if (result?.resultCode == SessionResult.RESULT_SUCCESS) {
+                    state.bookConfig()?.copy(isBassBoostEnabled = isEnabled)?.let {
+                        withContext(Dispatchers.IO) {
+                            store.updateBookConfig(it)
+                        }
                     }
                 }
             }
         }
-    }
 
-    override fun toggleReverb(isEnabled: Boolean) = withState { state ->
-        viewModelScope.launch {
-            val result = (player?.player as? MediaController)?.sendCustomCommand(
-                AudioEffectCommands.REVERB.toCommand(),
-                bundleOf(AudioEffectCommands.CUSTOM_ACTION_ARG_ENABLED to isEnabled),
-            )?.await()
+    override fun toggleReverb(playerAppViewActions: PlayerAppViewActions, isEnabled: Boolean) =
+        withState { state ->
+            viewModelScope.launch {
+                val result = playerAppViewActions.sendCustomCommand(
+                    AudioEffectCommands.REVERB.toCommand(),
+                    bundleOf(AudioEffectCommands.CUSTOM_ACTION_ARG_ENABLED to isEnabled),
+                )?.await()
 
-            if (result?.resultCode == SessionResult.RESULT_SUCCESS) {
-                state.bookConfig()?.copy(isReverbEnabled = isEnabled)?.let {
-                    withContext(Dispatchers.IO) {
-                        store.updateBookConfig(it)
+                if (result?.resultCode == SessionResult.RESULT_SUCCESS) {
+                    state.bookConfig()?.copy(isReverbEnabled = isEnabled)?.let {
+                        withContext(Dispatchers.IO) {
+                            store.updateBookConfig(it)
+                        }
                     }
                 }
             }
         }
-    }
 
-    override fun toggleSkipSilence(isEnabled: Boolean) = withState { state ->
-        viewModelScope.launch {
-            val result = (player?.player as? MediaController)?.sendCustomCommand(
-                ExtraSessionCommands.SKIP_SILENCE.toCommand(),
-                bundleOf(ExtraSessionCommands.CUSTOM_ACTION_ARG_ENABLED to isEnabled),
-            )?.await()
+    override fun toggleSkipSilence(playerAppViewActions: PlayerAppViewActions, isEnabled: Boolean) =
+        withState { state ->
+            viewModelScope.launch {
+                val result = playerAppViewActions.sendCustomCommand(
+                    ExtraSessionCommands.SKIP_SILENCE.toCommand(),
+                    bundleOf(ExtraSessionCommands.CUSTOM_ACTION_ARG_ENABLED to isEnabled),
+                )?.await()
 
-            if (result?.resultCode == SessionResult.RESULT_SUCCESS) {
-                state.bookConfig()?.copy(isSkipSilenceEnabled = isEnabled)?.let {
-                    withContext(Dispatchers.IO) {
-                        store.updateBookConfig(it)
+                if (result?.resultCode == SessionResult.RESULT_SUCCESS) {
+                    state.bookConfig()?.copy(isSkipSilenceEnabled = isEnabled)?.let {
+                        withContext(Dispatchers.IO) {
+                            store.updateBookConfig(it)
+                        }
                     }
                 }
             }
         }
-    }
 
     @AssistedFactory
     interface Factory : AssistedViewModelFactory<PlayerViewModel, PlayerViewState> {

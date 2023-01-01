@@ -16,6 +16,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import com.dotslashlabs.sensay.ui.screen.common.SimpleTopAppBar
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
@@ -31,17 +32,10 @@ fun PlayerAppBar(
 
     val context = LocalContext.current
 
-    TopAppBar(
-        colors = TopAppBarDefaults.smallTopAppBarColors(containerColor = Color.Transparent),
+    SimpleTopAppBar(
+        isBusy = state.isLoading,
         title = {},
-        navigationIcon = {
-            IconButton(onClick = onBackPress) {
-                Icon(
-                    imageVector = Icons.Default.ArrowBack,
-                    contentDescription = "",
-                )
-            }
-        },
+        onBackPress = onBackPress,
         actions = {
             IconButton(
                 onClick = {

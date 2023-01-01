@@ -1,12 +1,13 @@
 package com.dotslashlabs.sensay.ui.screen.home
 
-import androidx.compose.runtime.*
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavHostController
 import com.airbnb.mvrx.compose.collectAsState
 import com.airbnb.mvrx.compose.mavericksActivityViewModel
 import com.airbnb.mvrx.compose.mavericksViewModel
+import com.dotslashlabs.sensay.ui.PlayerAppViewModel
 import com.dotslashlabs.sensay.ui.SensayAppState
 import com.dotslashlabs.sensay.ui.SensayAppViewModel
 import com.dotslashlabs.sensay.ui.screen.Destination
@@ -84,22 +85,7 @@ object LibraryScreen : SensayScreen {
             onBookVisibilityChange = viewModel::setBookVisibility,
         )
 
-        val context = LocalContext.current
-        var isPlayerAvailable by remember { mutableStateOf(false) }
-
-        val onPlay: ((bookProgressWithChapters: BookProgressWithBookAndChapters) -> Unit)? =
-            if (isPlayerAvailable) viewModel::play else null
-
-        DisposableEffect(viewModel, context) {
-            viewModel.attachPlayer(context) { err ->
-                isPlayerAvailable = (err == null)
-            }
-
-            onDispose {
-                isPlayerAvailable = false
-                viewModel.detachPlayer()
-            }
-        }
+        val playerAppViewModel: PlayerAppViewModel = mavericksActivityViewModel()
 
         SensayFrame {
             when (homeLayout) {
@@ -110,7 +96,7 @@ object LibraryScreen : SensayScreen {
                     filterMenuOptions = filterMenuOptions,
                     filterListOptions = filterListOptions,
                     onNavToBook = onNavToBook,
-                    onPlay = onPlay,
+                    onPlay = playerAppViewModel::play,
                 )
                 HomeLayout.GRID -> BooksGrid(
                     state.books,
@@ -119,7 +105,7 @@ object LibraryScreen : SensayScreen {
                     filterMenuOptions = filterMenuOptions,
                     filterListOptions = filterListOptions,
                     onNavToBook = onNavToBook,
-                    onPlay = onPlay,
+                    onPlay = playerAppViewModel::play,
                 )
             }
         }

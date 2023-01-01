@@ -1,7 +1,6 @@
 package com.dotslashlabs.sensay.ui.screen.player
 
 import android.annotation.SuppressLint
-import android.content.Context
 import android.net.Uri
 import android.os.Bundle
 import androidx.compose.foundation.clickable
@@ -22,19 +21,15 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavHostController
-import com.airbnb.mvrx.Success
 import com.airbnb.mvrx.compose.collectAsState
 import com.airbnb.mvrx.compose.mavericksActivityViewModel
 import com.airbnb.mvrx.compose.mavericksViewModel
 import com.dotslashlabs.sensay.R
-import com.dotslashlabs.sensay.common.PlaybackConnectionState
-import com.dotslashlabs.sensay.ui.SensayAppState
-import com.dotslashlabs.sensay.ui.SensayAppViewModel
+import com.dotslashlabs.sensay.ui.*
 import com.dotslashlabs.sensay.ui.screen.Destination
 import com.dotslashlabs.sensay.ui.screen.SensayScreen
 import com.dotslashlabs.sensay.ui.screen.common.BookProgressIndicator
@@ -46,17 +41,10 @@ import com.dotslashlabs.sensay.ui.theme.DynamicThemePrimaryColorsFromImage
 import com.dotslashlabs.sensay.ui.theme.MinContrastOfPrimaryVsSurface
 import com.dotslashlabs.sensay.ui.theme.contrastAgainst
 import com.dotslashlabs.sensay.ui.theme.rememberDominantColorState
-import com.dotslashlabs.sensay.util.PlayerState
 import com.dotslashlabs.sensay.util.verticalGradientScrim
 import com.google.accompanist.flowlayout.FlowMainAxisAlignment
 import com.google.accompanist.flowlayout.FlowRow
-import data.BookCategory
-import data.entity.Book
-import data.entity.BookProgress
-import data.entity.Bookmark
-import data.entity.Chapter
-import data.util.ContentDuration
-import kotlin.time.Duration.Companion.hours
+import logcat.logcat
 
 object PlayerScreen : SensayScreen {
     @Composable
@@ -79,21 +67,35 @@ fun PlayerContent(
     val appViewModel: SensayAppViewModel = mavericksActivityViewModel()
     val useLandscapeLayout by appViewModel.collectAsState(SensayAppState::useLandscapeLayout)
 
+    val playerAppViewModel: PlayerAppViewModel = mavericksActivityViewModel()
+    val playerAppViewState: PlayerAppViewState by playerAppViewModel.collectAsState()
+
     val viewModel: PlayerViewModel =
         mavericksViewModel(argsFactory = { PlayerViewArgs(argsBundle) })
     val state by viewModel.collectAsState()
+
+    PlayerBottomSheet(playerAppViewModel, viewModel, state) { bottomSheetState ->
+        PlayerContentView(
+            playerAppViewModel,
+            playerAppViewState,
+            viewModel,
+            state,
+            bottomSheetState,
+            useLandscapeLayout,
+            onBackPress,
+        )
+    }
+
     val context = LocalContext.current
 
     DisposableEffect(viewModel, context) {
+        logcat { "PlayerContent.attachPlayer" }
         viewModel.attachPlayer(context)
 
         onDispose {
+            logcat { "PlayerContent.detachPlayer" }
             viewModel.detachPlayer()
         }
-    }
-
-    PlayerBottomSheet(viewModel, state) { bottomSheetState ->
-        PlayerContentView(viewModel, state, bottomSheetState, useLandscapeLayout, onBackPress)
     }
 }
 
@@ -101,6 +103,8 @@ fun PlayerContent(
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalMaterialApi::class)
 @Composable
 fun PlayerContentView(
+    playerAppViewActions: PlayerAppViewActions,
+    playerAppViewState: PlayerAppViewState,
     playerActions: PlayerActions,
     state: PlayerViewState,
     bottomSheetState: ModalBottomSheetState,
@@ -122,8 +126,12 @@ fun PlayerContentView(
                     PlayerAppBar(playerActions, state, bottomSheetState, onBackPress = onBackPress)
                 },
                 content = { contentPadding ->
+                    if (state.isLoading) return@Scaffold
+
                     if (useLandscapeLayout) {
                         PlayerContentViewLandscape(
+                            playerAppViewActions,
+                            playerAppViewState,
                             playerActions,
                             state,
                             modifier = Modifier.padding(contentPadding),
@@ -131,6 +139,8 @@ fun PlayerContentView(
                         )
                     } else {
                         PlayerContentViewNormal(
+                            playerAppViewActions,
+                            playerAppViewState,
                             playerActions,
                             state,
                             modifier = Modifier.padding(contentPadding),
@@ -145,6 +155,8 @@ fun PlayerContentView(
 
 @Composable
 fun PlayerContentViewNormal(
+    playerAppViewActions: PlayerAppViewActions,
+    playerAppViewState: PlayerAppViewState,
     playerActions: PlayerActions,
     state: PlayerViewState,
     modifier: Modifier = Modifier,
@@ -168,7 +180,7 @@ fun PlayerContentViewNormal(
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 if (state.isEqPanelVisible) {
-                    PlayerEq(playerActions, state)
+                    PlayerEq(playerAppViewActions, playerActions, state)
                 }
 
                 PlayerImage(
@@ -205,6 +217,7 @@ fun PlayerContentViewNormal(
             horizontalArrangement = Arrangement.Center,
         ) {
             PlayerProgress(
+                playerAppViewActions = playerAppViewActions,
                 playerActions = playerActions,
                 state = state,
                 modifier = Modifier.padding(top = 16.dp, start = 20.dp, end = 20.dp),
@@ -212,6 +225,8 @@ fun PlayerContentViewNormal(
         }
 
         PlayerButtons(
+            playerAppViewActions,
+            playerAppViewState,
             playerActions,
             state,
             modifier = Modifier.padding(20.dp),
@@ -221,6 +236,8 @@ fun PlayerContentViewNormal(
 
 @Composable
 fun PlayerContentViewLandscape(
+    playerAppViewActions: PlayerAppViewActions,
+    playerAppViewState: PlayerAppViewState,
     playerActions: PlayerActions,
     state: PlayerViewState,
     modifier: Modifier = Modifier,
@@ -240,7 +257,7 @@ fun PlayerContentViewLandscape(
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             if (state.isEqPanelVisible) {
-                PlayerEq(playerActions, state)
+                PlayerEq(playerAppViewActions, playerActions, state)
             }
 
             PlayerImage(
@@ -265,12 +282,15 @@ fun PlayerContentViewLandscape(
             SelectChapter(playerActions, state)
 
             PlayerProgress(
+                playerAppViewActions = playerAppViewActions,
                 playerActions = playerActions,
                 state = state,
                 modifier = Modifier.padding(top = 16.dp, start = 20.dp, end = 20.dp),
             )
 
             PlayerButtons(
+                playerAppViewActions,
+                playerAppViewState,
                 playerActions,
                 state,
                 modifier = Modifier.padding(20.dp),
@@ -282,6 +302,7 @@ fun PlayerContentViewLandscape(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun PlayerEq(
+    playerAppViewActions: PlayerAppViewActions,
     playerActions: PlayerActions,
     state: PlayerViewState,
     modifier: Modifier = Modifier,
@@ -303,7 +324,12 @@ private fun PlayerEq(
                     contentDescription = "",
                 )
             },
-            onClick = { playerActions.toggleReverb(!eqState.isReverbEnabled) },
+            onClick = {
+                playerActions.toggleReverb(
+                    playerAppViewActions,
+                    !eqState.isReverbEnabled,
+                )
+            },
         )
 
         InputChip(
@@ -315,7 +341,12 @@ private fun PlayerEq(
                     contentDescription = "",
                 )
             },
-            onClick = { playerActions.toggleVolumeBoost(!eqState.isVolumeBoostEnabled) },
+            onClick = {
+                playerActions.toggleVolumeBoost(
+                    playerAppViewActions,
+                    !eqState.isVolumeBoostEnabled,
+                )
+            },
         )
 
         InputChip(
@@ -327,7 +358,12 @@ private fun PlayerEq(
                     contentDescription = "",
                 )
             },
-            onClick = { playerActions.toggleBassBoost(!eqState.isBassBoostEnabled) },
+            onClick = {
+                playerActions.toggleBassBoost(
+                    playerAppViewActions,
+                    !eqState.isBassBoostEnabled,
+                )
+            },
         )
 
         InputChip(
@@ -339,7 +375,12 @@ private fun PlayerEq(
                     contentDescription = "",
                 )
             },
-            onClick = { playerActions.toggleSkipSilence(!eqState.isSkipSilenceEnabled) },
+            onClick = {
+                playerActions.toggleSkipSilence(
+                    playerAppViewActions,
+                    !eqState.isSkipSilenceEnabled,
+                )
+            },
         )
     }
 }
@@ -404,6 +445,7 @@ private fun PlayerInfo(
 
 @Composable
 private fun PlayerProgress(
+    playerAppViewActions: PlayerAppViewActions,
     playerActions: PlayerActions,
     state: PlayerViewState,
     modifier: Modifier = Modifier,
@@ -420,7 +462,7 @@ private fun PlayerProgress(
                     horizontalAlignment = Alignment.Start,
                 ) {
                     Text(
-                        text = state.formatTime(position),
+                        text = PlayerAppViewState.formatTime(position),
                         style = MaterialTheme.typography.bodySmall,
                     )
                 }
@@ -429,7 +471,7 @@ private fun PlayerProgress(
                     horizontalAlignment = Alignment.End,
                 ) {
                     Text(
-                        text = state.formatTime(duration),
+                        text = PlayerAppViewState.formatTime(duration),
                         style = MaterialTheme.typography.bodySmall,
                     )
                 }
@@ -441,7 +483,7 @@ private fun PlayerProgress(
                 value = state.sliderPosition,
                 valueRange = 0F..0.99F,
                 onValueChange = {
-                    playerActions.seekTo(it, duration)
+                    playerActions.seekTo(playerAppViewActions, it, duration)
                 },
             )
         }
@@ -450,6 +492,8 @@ private fun PlayerProgress(
 
 @Composable
 private fun PlayerButtons(
+    playerAppViewActions: PlayerAppViewActions,
+    playerAppViewState: PlayerAppViewState,
     playerActions: PlayerActions,
     state: PlayerViewState,
     modifier: Modifier = Modifier,
@@ -471,7 +515,7 @@ private fun PlayerButtons(
             enabled = state.isActiveMedia &&
                 !state.isLoading &&
                 state.hasPreviousChapter,
-            onClick = { playerActions.previousChapter() },
+            onClick = { playerActions.previousChapter(playerAppViewActions, playerAppViewState) },
             modifier = buttonsModifier,
         ) {
             Icon(
@@ -482,7 +526,7 @@ private fun PlayerButtons(
 
         OutlinedIconButton(
             enabled = state.isActiveMedia && !state.isLoading,
-            onClick = { playerActions.seekBack() },
+            onClick = { playerAppViewActions.seekBack() },
             modifier = buttonsModifier,
         ) {
             Icon(
@@ -494,11 +538,11 @@ private fun PlayerButtons(
         OutlinedIconButton(
             enabled = !state.isLoading,
             onClick = {
-                playerActions.apply {
+                playerAppViewActions.apply {
                     if (state.isPlayingMedia) {
                         pause()
                     } else {
-                        play()
+                        playerActions.play(playerAppViewActions)
                     }
                 }
             },
@@ -517,7 +561,7 @@ private fun PlayerButtons(
 
         OutlinedIconButton(
             enabled = state.isActiveMedia && !state.isLoading,
-            onClick = { playerActions.seekForward() },
+            onClick = { playerAppViewActions.seekForward() },
             modifier = buttonsModifier,
         ) {
             Icon(
@@ -530,7 +574,7 @@ private fun PlayerButtons(
             enabled = state.isActiveMedia &&
                 !state.isLoading &&
                 state.hasNextChapter,
-            onClick = { playerActions.nextChapter() },
+            onClick = { playerActions.nextChapter(playerAppViewActions, playerAppViewState) },
             modifier = buttonsModifier,
         ) {
             Icon(
@@ -680,143 +724,143 @@ fun ExposedDropdownMenuDefaults.disabledTextFieldColors(): TextFieldColors {
     )
 }
 
-@OptIn(ExperimentalMaterialApi::class)
-@Preview(showBackground = true)
-@Composable
-fun PlayerContentPreview() {
-    val bookId = 2L
-
-    val book = Book.empty().copy(
-        bookId = bookId,
-        title = "Book Title",
-        author = "Author",
-        duration = ContentDuration(5.hours),
-    )
-
-    val chapters = listOf(
-        Chapter.empty().copy(
-            chapterId = 1,
-            title = "Chapter 1 Title",
-            duration = ContentDuration(1.hours),
-        ),
-        Chapter.empty().copy(
-            chapterId = 2,
-            title = "Chapter 2 Title",
-            duration = ContentDuration(1.hours),
-        ),
-    )
-
-    val bookProgress = BookProgress.empty().copy(
-        bookCategory = BookCategory.CURRENT,
-        currentChapter = 1,
-        totalChapters = 2,
-        chapterProgress = ContentDuration(1.hours),
-        bookProgress = ContentDuration(1.hours),
-    )
-
-    val mediaList = Media.fromBookAndChapters(bookProgress, book, chapters)
-    val mediaIds = chapters.map { PlayerViewState.getMediaId(bookId, it.chapterId) }
-
-    val state = PlayerViewState(
-        bookId = bookId,
-        media = mediaList.first(),
-        mediaList = mediaList,
-        mediaIds = mediaIds,
-        playbackConnectionState = Success(
-            PlaybackConnectionState(
-                isConnected = true,
-                playerState = PlayerState(
-                    isPlaying = false,
-                ),
-            )
-        )
-    )
-
-    val playerActions = object : PlayerActions {
-        override fun attachPlayer(context: Context) {
-            TODO("Not yet implemented")
-        }
-
-        override fun detachPlayer() {
-            TODO("Not yet implemented")
-        }
-
-        override fun previousChapter(): Unit? {
-            TODO("Not yet implemented")
-        }
-
-        override fun nextChapter(): Unit? {
-            TODO("Not yet implemented")
-        }
-
-        override fun seekBack(): Unit? {
-            TODO("Not yet implemented")
-        }
-
-        override fun seekForward(): Unit? {
-            TODO("Not yet implemented")
-        }
-
-        override fun seekTo(fraction: Float, ofDurationMs: Long): Unit? {
-            TODO("Not yet implemented")
-        }
-
-        override fun seekToPosition(mediaId: String, positionMs: Long, durationMs: Long): Unit? {
-            TODO("Not yet implemented")
-        }
-
-        override fun pause(): Unit? {
-            TODO("Not yet implemented")
-        }
-
-        override fun play(): Unit? {
-            TODO("Not yet implemented")
-        }
-
-        override fun setSelectedMediaId(mediaId: String) {
-            TODO("Not yet implemented")
-        }
-
-        override fun resetSelectedMediaId() {
-            TODO("Not yet implemented")
-        }
-
-        override suspend fun createBookmark() {
-            TODO("Not yet implemented")
-        }
-
-        override fun deleteBookmark(bookmark: Bookmark) {
-            TODO("Not yet implemented")
-        }
-
-        override fun toggleEqPanel(isVisible: Boolean) {
-            TODO("Not yet implemented")
-        }
-
-        override fun toggleVolumeBoost(isEnabled: Boolean) {
-            TODO("Not yet implemented")
-        }
-
-        override fun toggleBassBoost(isEnabled: Boolean) {
-            TODO("Not yet implemented")
-        }
-
-        override fun toggleReverb(isEnabled: Boolean) {
-            TODO("Not yet implemented")
-        }
-
-        override fun toggleSkipSilence(isEnabled: Boolean) {
-            TODO("Not yet implemented")
-        }
-    }
-
-    PlayerBottomSheet(playerActions, state) { bottomSheetState ->
-        PlayerContentView(
-            playerActions,
-            state,
-            bottomSheetState,
-            useLandscapeLayout = false,
-            onBackPress = {},
-        )
-    }
-}
+//@OptIn(ExperimentalMaterialApi::class)
+//@Preview(showBackground = true)
+//@Composable
+//fun PlayerContentPreview() {
+//    val bookId = 2L
+//
+//    val book = Book.empty().copy(
+//        bookId = bookId,
+//        title = "Book Title",
+//        author = "Author",
+//        duration = ContentDuration(5.hours),
+//    )
+//
+//    val chapters = listOf(
+//        Chapter.empty().copy(
+//            chapterId = 1,
+//            title = "Chapter 1 Title",
+//            duration = ContentDuration(1.hours),
+//        ),
+//        Chapter.empty().copy(
+//            chapterId = 2,
+//            title = "Chapter 2 Title",
+//            duration = ContentDuration(1.hours),
+//        ),
+//    )
+//
+//    val bookProgress = BookProgress.empty().copy(
+//        bookCategory = BookCategory.CURRENT,
+//        currentChapter = 1,
+//        totalChapters = 2,
+//        chapterProgress = ContentDuration(1.hours),
+//        bookProgress = ContentDuration(1.hours),
+//    )
+//
+//    val mediaList = Media.fromBookAndChapters(bookProgress, book, chapters)
+//    val mediaIds = chapters.map { PlayerViewState.getMediaId(bookId, it.chapterId) }
+//
+//    val state = PlayerViewState(
+//        bookId = bookId,
+//        media = mediaList.first(),
+//        mediaList = mediaList,
+//        mediaIds = mediaIds,
+//        playbackConnectionState = Success(
+//            PlaybackConnectionState(
+//                isConnected = true,
+//                playerState = PlayerState(
+//                    isPlaying = false,
+//                ),
+//            )
+//        )
+//    )
+//
+//    val playerActions = object : PlayerActions {
+//        override fun attachPlayer(context: Context) {
+//            TODO("Not yet implemented")
+//        }
+//
+//        override fun detachPlayer() {
+//            TODO("Not yet implemented")
+//        }
+//
+//        override fun previousChapter(): Unit? {
+//            TODO("Not yet implemented")
+//        }
+//
+//        override fun nextChapter(): Unit? {
+//            TODO("Not yet implemented")
+//        }
+//
+//        override fun seekBack(): Unit? {
+//            TODO("Not yet implemented")
+//        }
+//
+//        override fun seekForward(): Unit? {
+//            TODO("Not yet implemented")
+//        }
+//
+//        override fun seekTo(fraction: Float, ofDurationMs: Long): Unit? {
+//            TODO("Not yet implemented")
+//        }
+//
+//        override fun seekToPosition(mediaId: String, positionMs: Long, durationMs: Long): Unit? {
+//            TODO("Not yet implemented")
+//        }
+//
+//        override fun pause(): Unit? {
+//            TODO("Not yet implemented")
+//        }
+//
+//        override fun play(): Unit? {
+//            TODO("Not yet implemented")
+//        }
+//
+//        override fun setSelectedMediaId(mediaId: String) {
+//            TODO("Not yet implemented")
+//        }
+//
+//        override fun resetSelectedMediaId() {
+//            TODO("Not yet implemented")
+//        }
+//
+//        override suspend fun createBookmark() {
+//            TODO("Not yet implemented")
+//        }
+//
+//        override fun deleteBookmark(bookmark: Bookmark) {
+//            TODO("Not yet implemented")
+//        }
+//
+//        override fun toggleEqPanel(isVisible: Boolean) {
+//            TODO("Not yet implemented")
+//        }
+//
+//        override fun toggleVolumeBoost(isEnabled: Boolean) {
+//            TODO("Not yet implemented")
+//        }
+//
+//        override fun toggleBassBoost(isEnabled: Boolean) {
+//            TODO("Not yet implemented")
+//        }
+//
+//        override fun toggleReverb(isEnabled: Boolean) {
+//            TODO("Not yet implemented")
+//        }
+//
+//        override fun toggleSkipSilence(isEnabled: Boolean) {
+//            TODO("Not yet implemented")
+//        }
+//    }
+//
+//    PlayerBottomSheet(playerActions, state) { bottomSheetState ->
+//        PlayerContentView(
+//            playerActions,
+//            state,
+//            bottomSheetState,
+//            useLandscapeLayout = false,
+//            onBackPress = {},
+//        )
+//    }
+//}

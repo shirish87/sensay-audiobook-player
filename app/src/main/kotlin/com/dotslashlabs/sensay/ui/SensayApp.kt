@@ -7,6 +7,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.core.net.toUri
 import com.airbnb.mvrx.compose.mavericksActivityViewModel
 import com.dotslashlabs.sensay.ui.screen.Destination
@@ -68,5 +69,18 @@ fun SensayApp(
         )
 
         onDispose {}
+    }
+
+    val playerAppViewModel: PlayerAppViewModel = mavericksActivityViewModel()
+    val context = LocalContext.current
+
+    DisposableEffect(playerAppViewModel, context) {
+        logcat { "SensayApp.attachPlayer" }
+        playerAppViewModel.attachPlayer(context)
+
+        onDispose {
+            logcat { "SensayApp.detachPlayer" }
+            playerAppViewModel.detachPlayer()
+        }
     }
 }

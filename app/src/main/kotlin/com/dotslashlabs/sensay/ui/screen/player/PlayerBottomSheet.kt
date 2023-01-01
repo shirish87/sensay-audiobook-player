@@ -20,6 +20,8 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import com.dotslashlabs.sensay.ui.PlayerAppViewActions
+import com.dotslashlabs.sensay.ui.PlayerAppViewState
 import com.dotslashlabs.sensay.ui.screen.common.ConfirmDialog
 import data.entity.Bookmark
 import kotlinx.coroutines.launch
@@ -30,6 +32,7 @@ import kotlinx.coroutines.launch
 )
 @Composable
 fun PlayerBottomSheet(
+    playerAppViewActions: PlayerAppViewActions,
     playerActions: PlayerActions,
     state: PlayerViewState,
     bottomSheetState: ModalBottomSheetState = rememberModalBottomSheetState(
@@ -70,7 +73,9 @@ fun PlayerBottomSheet(
         sheetShape = RoundedCornerShape(topEnd = 16.dp, topStart = 16.dp),
         sheetContent = {
 
-            LazyColumn(modifier = Modifier.systemBarsPadding().padding(bottom = 20.dp)) {
+            LazyColumn(modifier = Modifier
+                .systemBarsPadding()
+                .padding(bottom = 20.dp)) {
                 stickyHeader {
                     Text(
                         "Bookmarks",
@@ -92,7 +97,11 @@ fun PlayerBottomSheet(
                         modifier = Modifier.clickable {
                             scope.launch {
                                 playerActions.seekToPosition(
-                                    PlayerViewState.getMediaId(bookmark.bookId, bookmark.chapterId),
+                                    playerAppViewActions,
+                                    PlayerAppViewState.getMediaId(
+                                        bookmark.bookId,
+                                        bookmark.chapterId,
+                                    ),
                                     bookmark.chapterPosition.ms,
                                     bookmark.chapterDuration.ms,
                                 )

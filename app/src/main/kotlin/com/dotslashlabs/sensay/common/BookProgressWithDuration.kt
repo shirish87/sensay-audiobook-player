@@ -1,7 +1,7 @@
 package com.dotslashlabs.sensay.common
 
 import android.net.Uri
-import com.dotslashlabs.sensay.ui.screen.player.PlayerViewState
+import com.dotslashlabs.sensay.ui.PlayerAppViewState
 import data.BookCategory
 import data.BookProgressUpdate
 import data.entity.*
@@ -40,7 +40,7 @@ data class BookProgressWithDuration(
 
             return chaptersSorted
                 .mapIndexed { idx, chapter ->
-                    val mediaId = PlayerViewState.getMediaId(book.bookId, chapter.chapterId)
+                    val mediaId = PlayerAppViewState.getMediaId(book.bookId, chapter.chapterId)
 
                     val chapterProgress = if (chapter.chapterId == bookProgress.chapterId) {
                         bookProgress.chapterProgress

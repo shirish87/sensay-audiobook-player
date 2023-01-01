@@ -59,7 +59,7 @@ abstract class BasePlayerViewModel<S : MavericksState>(
         player = null
     }
 
-    protected fun prepareMediaItems(
+    fun prepareMediaItems(
         selectedMedia: Media,
         mediaList: List<Media>,
         mediaIds: List<String>,

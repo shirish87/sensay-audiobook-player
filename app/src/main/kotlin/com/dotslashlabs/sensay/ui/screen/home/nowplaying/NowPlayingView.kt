@@ -2,6 +2,7 @@ package com.dotslashlabs.sensay.ui.screen.home.nowplaying
 
 import android.content.Context
 import android.net.Uri
+import android.os.Bundle
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
@@ -9,11 +10,9 @@ import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
@@ -21,39 +20,39 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
 import androidx.lifecycle.LifecycleOwner
+import androidx.media3.session.SessionCommand
+import androidx.media3.session.SessionResult
 import com.airbnb.mvrx.Success
 import com.airbnb.mvrx.compose.collectAsState
-import com.airbnb.mvrx.compose.mavericksViewModel
+import com.airbnb.mvrx.compose.mavericksActivityViewModel
 import com.dotslashlabs.sensay.common.BookProgressWithDuration
+import com.dotslashlabs.sensay.ui.PlayerAppViewActions
+import com.dotslashlabs.sensay.ui.PlayerAppViewModel
+import com.dotslashlabs.sensay.ui.PlayerAppViewState
 import com.dotslashlabs.sensay.ui.screen.Destination
 import com.dotslashlabs.sensay.ui.screen.SensayScreen
 import com.dotslashlabs.sensay.ui.screen.common.CoverImage
+import com.dotslashlabs.sensay.ui.screen.player.Media
 import com.dotslashlabs.sensay.util.PlayerState
 import com.dotslashlabs.sensay.util.joinWith
 import com.google.accompanist.flowlayout.FlowMainAxisAlignment
 import com.google.accompanist.flowlayout.FlowRow
+import com.google.common.util.concurrent.ListenableFuture
+import data.entity.BookProgressWithBookAndChapters
 import data.util.ContentDuration
 import kotlin.text.Typography.bullet
 import kotlin.text.Typography.ellipsis
 
 @Composable
 fun NowPlayingView(
+    @Suppress("UNUSED_PARAMETER")
     lifecycleOwner: LifecycleOwner,
     onNavigate: (Uri) -> Unit,
     modifier: Modifier,
 ) {
-    val viewModel: NowPlayingViewModel = mavericksViewModel(lifecycleOwner)
+
+    val viewModel: PlayerAppViewModel = mavericksActivityViewModel()
     val state by viewModel.collectAsState()
-
-    val context = LocalContext.current
-
-    DisposableEffect(viewModel, context) {
-        viewModel.attachPlayer(context)
-
-        onDispose {
-            viewModel.detachPlayer()
-        }
-    }
 
     NowPlayingViewContent(viewModel, state, modifier, onClick = { bookId ->
         val deepLink = SensayScreen.getUriString(
@@ -66,8 +65,8 @@ fun NowPlayingView(
 
 @Composable
 fun NowPlayingViewContent(
-    actions: NowPlayingViewActions,
-    state: NowPlayingViewState,
+    actions: PlayerAppViewActions,
+    state: PlayerAppViewState,
     modifier: Modifier,
     onClick: (bookId: Long) -> Unit,
 ) {
@@ -162,11 +161,11 @@ fun BookAuthorAndSeries(
     author: String?,
     series: String?,
     bookTitle: String,
+    modifier: Modifier = Modifier,
     maxLengthEach: Int = 40,
     style: TextStyle = MaterialTheme.typography.labelSmall,
     mainAxisAlignment: FlowMainAxisAlignment = FlowMainAxisAlignment.Start,
     mainAxisSpacing: Dp = 4.dp,
-    modifier: Modifier = Modifier,
 ) {
 
     if (author == null && series == null) return
@@ -287,12 +286,43 @@ fun resolveContentMaxHeight(
 @Preview
 fun NowPlayingViewContentPreview() {
     NowPlayingViewContent(
-        actions = object : NowPlayingViewActions {
+        actions = object : PlayerAppViewActions {
+            override fun play(bookProgressWithChapters: BookProgressWithBookAndChapters): Unit? {
+                TODO("Not yet implemented")
+            }
+
             override fun play(): Unit? {
                 TODO("Not yet implemented")
             }
 
             override fun pause(): Unit? {
+                TODO("Not yet implemented")
+            }
+
+            override fun seekBack(): Unit? {
+                TODO("Not yet implemented")
+            }
+
+            override fun seekForward(): Unit? {
+                TODO("Not yet implemented")
+            }
+
+            override fun seekTo(mediaItemIndex: Int, positionMs: Long): Unit? {
+                TODO("Not yet implemented")
+            }
+
+            override fun sendCustomCommand(
+                command: SessionCommand,
+                args: Bundle
+            ): ListenableFuture<SessionResult>? {
+                TODO("Not yet implemented")
+            }
+
+            override fun startLiveTracker(): Unit? {
+                TODO("Not yet implemented")
+            }
+
+            override fun stopLiveTracker(): Unit? {
                 TODO("Not yet implemented")
             }
 
@@ -303,26 +333,34 @@ fun NowPlayingViewContentPreview() {
             override fun detachPlayer() {
                 TODO("Not yet implemented")
             }
+
+            override fun prepareMediaItems(
+                selectedMedia: Media,
+                mediaList: List<Media>,
+                mediaIds: List<String>,
+                playerMediaIds: List<String>
+            ): Unit? {
+                TODO("Not yet implemented")
+            }
         },
-        state = NowPlayingViewState(
-            data = Success(
-                BookProgressWithDuration(
-                    mediaId = "0",
-                    bookProgressId = 0L,
-                    bookId = 0L,
-                    chapterId = 0L,
-                    bookTitle = List(1024) { "Book Title" }.joinToString(" "),
-                    chapterTitle = List(1024) { "Chapter Title" }.joinToString(" "),
-                    author = List(1024) { "Author" }.joinToString(" "),
-                    series = List(1024) { "Series" }.joinToString(" "),
-                    coverUri = null,
-                    totalChapters = 10,
-                    bookChapterStart = ContentDuration.ms(0L),
-                    bookDuration = ContentDuration.ms(10_000L),
-                ) to PlayerState(
-                    isPlaying = false,
-                )
-            )
+        state = PlayerAppViewState(
+            nowPlayingBook = BookProgressWithDuration(
+                mediaId = "0",
+                bookProgressId = 0L,
+                bookId = 0L,
+                chapterId = 0L,
+                bookTitle = List(1024) { "Book Title" }.joinToString(" "),
+                chapterTitle = List(1024) { "Chapter Title" }.joinToString(" "),
+                author = List(1024) { "Author" }.joinToString(" "),
+                series = List(1024) { "Series" }.joinToString(" "),
+                coverUri = null,
+                totalChapters = 10,
+                bookChapterStart = ContentDuration.ms(0L),
+                bookDuration = ContentDuration.ms(10_000L),
+            ),
+            playerState = Success(
+                PlayerState(isPlaying = false),
+            ),
         ),
         modifier = Modifier,
         onClick = {},
