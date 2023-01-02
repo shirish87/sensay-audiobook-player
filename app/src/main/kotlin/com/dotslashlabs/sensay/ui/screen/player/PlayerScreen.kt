@@ -3,6 +3,9 @@ package com.dotslashlabs.sensay.ui.screen.player
 import android.annotation.SuppressLint
 import android.net.Uri
 import android.os.Bundle
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -126,26 +129,31 @@ fun PlayerContentView(
                     PlayerAppBar(playerActions, state, bottomSheetState, onBackPress = onBackPress)
                 },
                 content = { contentPadding ->
-                    if (state.isLoading) return@Scaffold
 
-                    if (useLandscapeLayout) {
-                        PlayerContentViewLandscape(
-                            playerAppViewActions,
-                            playerAppViewState,
-                            playerActions,
-                            state,
-                            modifier = Modifier.padding(contentPadding),
-                            onBackPress = onBackPress,
-                        )
-                    } else {
-                        PlayerContentViewNormal(
-                            playerAppViewActions,
-                            playerAppViewState,
-                            playerActions,
-                            state,
-                            modifier = Modifier.padding(contentPadding),
-                            onBackPress = onBackPress,
-                        )
+                    AnimatedVisibility(
+                        visible = !state.isLoading,
+                        enter = fadeIn(),
+                        exit = fadeOut(),
+                    ) {
+                        if (useLandscapeLayout) {
+                            PlayerContentViewLandscape(
+                                playerAppViewActions,
+                                playerAppViewState,
+                                playerActions,
+                                state,
+                                modifier = Modifier.padding(contentPadding),
+                                onBackPress = onBackPress,
+                            )
+                        } else {
+                            PlayerContentViewNormal(
+                                playerAppViewActions,
+                                playerAppViewState,
+                                playerActions,
+                                state,
+                                modifier = Modifier.padding(contentPadding),
+                                onBackPress = onBackPress,
+                            )
+                        }
                     }
                 }
             )
