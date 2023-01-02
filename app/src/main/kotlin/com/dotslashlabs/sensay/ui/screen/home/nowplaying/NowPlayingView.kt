@@ -49,12 +49,13 @@ fun NowPlayingView(
     lifecycleOwner: LifecycleOwner,
     onNavigate: (Uri) -> Unit,
     modifier: Modifier,
+    tonalElevation: Dp = NavigationBarDefaults.Elevation,
 ) {
 
     val viewModel: PlayerAppViewModel = mavericksActivityViewModel()
     val state by viewModel.collectAsState()
 
-    NowPlayingViewContent(viewModel, state, modifier, onClick = { bookId ->
+    NowPlayingViewContent(viewModel, state, modifier, tonalElevation, onClick = { bookId ->
         val deepLink = SensayScreen.getUriString(
             Destination.Player.useRoute(bookId)
         ).toUri()
@@ -68,6 +69,7 @@ fun NowPlayingViewContent(
     actions: PlayerAppViewActions,
     state: PlayerAppViewState,
     modifier: Modifier,
+    tonalElevation: Dp = NavigationBarDefaults.Elevation,
     onClick: (bookId: Long) -> Unit,
 ) {
 
@@ -76,82 +78,89 @@ fun NowPlayingViewContent(
 
     Surface(
         modifier = modifier.fillMaxWidth(),
-        shadowElevation = 8.dp,
+        tonalElevation = tonalElevation,
     ) {
 
-        Row(
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier
-                .fillMaxWidth()
-                .sizeIn(maxHeight = maxHeight),
+        Column(
+            modifier = Modifier.fillMaxWidth(),
         ) {
+            Row(
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .sizeIn(maxHeight = maxHeight),
+            ) {
 
-            nowPlayingBook.coverUri?.let { coverUri ->
+                nowPlayingBook.coverUri?.let { coverUri ->
+                    Column(
+                        modifier = Modifier
+                            .weight(0.2F, fill = true)
+                            .fillMaxHeight()
+                            .clickable { onClick(nowPlayingBook.bookId) }
+                            .padding(16.dp),
+                    ) {
+                        CoverImage(
+                            coverUri = coverUri,
+                            modifier = Modifier.fillMaxWidth(),
+                        )
+                    }
+                }
+
                 Column(
+                    verticalArrangement = Arrangement.SpaceEvenly,
                     modifier = Modifier
-                        .weight(0.2F, fill = true)
+                        .weight(0.75F, fill = true)
                         .fillMaxHeight()
                         .clickable { onClick(nowPlayingBook.bookId) }
                         .padding(16.dp),
                 ) {
-                    CoverImage(
-                        coverUri = coverUri,
-                        modifier = Modifier.fillMaxWidth(),
+
+                    BookAuthorAndSeries(
+                        nowPlayingBook.author,
+                        nowPlayingBook.series,
+                        nowPlayingBook.bookTitle,
+                        style = MaterialTheme.typography.labelSmall,
+                    )
+
+                    BookTitleAndChapter(
+                        nowPlayingBook.bookTitle,
+                        nowPlayingBook.chapterTitle,
+                    )
+                }
+
+                Column(
+                    verticalArrangement = Arrangement.Center,
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    modifier = Modifier
+                        .weight(0.25F, fill = true)
+                        .fillMaxHeight()
+                        .clickable {
+                            if (state.isPlaying) {
+                                actions.pause()
+                            } else {
+                                actions.play()
+                            }
+                        },
+                ) {
+                    Icon(
+                        modifier = Modifier,
+                        imageVector = if (state.isPlaying) {
+                            Icons.Filled.Pause
+                        } else {
+                            Icons.Filled.PlayArrow
+                        },
+                        contentDescription = null,
                     )
                 }
             }
 
-            Column(
-                verticalArrangement = Arrangement.SpaceEvenly,
-                modifier = Modifier
-                    .weight(0.75F, fill = true)
-                    .fillMaxHeight()
-                    .clickable { onClick(nowPlayingBook.bookId) }
-                    .padding(16.dp),
-            ) {
-
-                BookAuthorAndSeries(
-                    nowPlayingBook.author,
-                    nowPlayingBook.series,
-                    nowPlayingBook.bookTitle,
-                    style = MaterialTheme.typography.labelSmall,
-                )
-
-                BookTitleAndChapter(
-                    nowPlayingBook.bookTitle,
-                    nowPlayingBook.chapterTitle,
+            state.bookProgressFraction?.let { bookProgress ->
+                LinearProgressIndicator(
+                    modifier = Modifier.fillMaxWidth(),
+                    progress = bookProgress,
                 )
             }
-
-            Column(
-                verticalArrangement = Arrangement.Center,
-                horizontalAlignment = Alignment.CenterHorizontally,
-                modifier = Modifier
-                    .weight(0.25F, fill = true)
-                    .fillMaxHeight()
-                    .clickable {
-                        if (state.isPlaying) {
-                            actions.pause()
-                        } else {
-                            actions.play()
-                        }
-                    },
-            ) {
-                Icon(
-                    modifier = Modifier,
-                    imageVector = if (state.isPlaying) {
-                        Icons.Filled.Pause
-                    } else {
-                        Icons.Filled.PlayArrow
-                    },
-                    contentDescription = null,
-                )
-            }
-        }
-
-        state.bookProgressFraction?.let { bookProgress ->
-            LinearProgressIndicator(progress = bookProgress)
         }
     }
 }
@@ -334,7 +343,7 @@ fun NowPlayingViewContentPreview() {
                 TODO("Not yet implemented")
             }
 
-            override fun prepareMediaItems(
+            override suspend fun prepareMediaItems(
                 selectedMedia: Media,
                 mediaList: List<Media>,
                 mediaIds: List<String>,

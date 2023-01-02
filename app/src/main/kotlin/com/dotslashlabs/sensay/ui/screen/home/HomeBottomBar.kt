@@ -3,13 +3,11 @@ package com.dotslashlabs.sensay.ui.screen.home
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Headphones
 import androidx.compose.material.icons.outlined.LibraryBooks
-import androidx.compose.material3.Icon
-import androidx.compose.material3.NavigationBar
-import androidx.compose.material3.NavigationBarItem
-import androidx.compose.material3.Text
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.Dp
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
@@ -20,9 +18,14 @@ import com.dotslashlabs.sensay.ui.screen.Destination
 fun HomeBottomBar(
     homeNavController: NavHostController,
     childDestinations: Collection<Destination>,
+    useLandscapeLayout: Boolean,
     modifier: Modifier = Modifier,
+    tonalElevation: Dp = NavigationBarDefaults.Elevation,
 ) {
-    NavigationBar(modifier) {
+    NavigationBar(
+        modifier = modifier,
+        tonalElevation = tonalElevation,
+    ) {
         val navBackStackEntry by homeNavController.currentBackStackEntryAsState()
         val currentDestination = navBackStackEntry?.destination
 
@@ -37,7 +40,7 @@ fun HomeBottomBar(
                         contentDescription = null,
                     )
                 },
-                label = { Text(text = dest.route) },
+                label = if (useLandscapeLayout) null else ({ Text(text = dest.screen.toString()) }),
                 selected = currentDestination?.hierarchy?.any { it.route == dest.route } == true,
                 onClick = {
                     homeNavController.navigate(dest.route) {
@@ -48,7 +51,7 @@ fun HomeBottomBar(
                         launchSingleTop = true
                         restoreState = true
                     }
-                }
+                },
             )
         }
     }
