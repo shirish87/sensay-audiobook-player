@@ -23,6 +23,9 @@ typealias OnNavToBook = (bookId: Long) -> Unit
 typealias OnPlay = ((bookProgressWithChapters: BookProgressWithBookAndChapters) -> Unit)
 
 object LibraryScreen : SensayScreen {
+
+    override fun toString(): String = "Library"
+
     @Composable
     override fun Content(
         destination: Destination,

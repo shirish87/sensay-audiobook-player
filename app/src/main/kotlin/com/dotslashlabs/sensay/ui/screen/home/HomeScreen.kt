@@ -3,19 +3,22 @@ package com.dotslashlabs.sensay.ui.screen.home
 import android.annotation.SuppressLint
 import android.content.Context
 import android.widget.Toast
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.ExperimentalAnimationApi
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.TopAppBarDefaults
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.LayoutDirection
+import androidx.compose.ui.unit.dp
 import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavHostController
 import com.airbnb.mvrx.compose.collectAsState
@@ -53,7 +56,11 @@ fun HomeContent(
     val state by appViewModel.collectAsState()
 
     val homeNavController = rememberAnimatedNavController()
+
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
+    val isTopBarCollapsed =
+        (scrollBehavior.state.heightOffset == scrollBehavior.state.heightOffsetLimit)
+
     val context: Context = LocalContext.current
 
     SensayFrame {
@@ -83,19 +90,38 @@ fun HomeContent(
                 )
             },
             bottomBar = {
-                Column {
-                    NowPlayingView(
-                        backStackEntry,
-                        navHostController::navigate,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .wrapContentHeight(),
-                    )
+                Column(
+                    modifier = Modifier
+                        .padding(start = 24.dp, end = 24.dp, bottom = 24.dp)
+                        .border(1.dp, MaterialTheme.colorScheme.surface.copy(alpha = 0.5F))
+                        .shadow(elevation = 6.dp, shape = RoundedCornerShape(24.dp), clip = true),
+                ) {
 
-                    HomeBottomBar(
-                        homeNavController,
-                        destination.children,
-                    )
+                    val nowPlayingView = @Composable {
+                        NowPlayingView(
+                            backStackEntry,
+                            navHostController::navigate,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .wrapContentHeight(),
+                        )
+                    }
+
+                    if (state.useLandscapeLayout) {
+                        AnimatedVisibility(visible = isTopBarCollapsed) {
+                            nowPlayingView()
+                        }
+                    } else {
+                        nowPlayingView()
+                    }
+
+                    AnimatedVisibility(visible = !isTopBarCollapsed) {
+                        HomeBottomBar(
+                            homeNavController,
+                            destination.children,
+                            useLandscapeLayout = state.useLandscapeLayout,
+                        )
+                    }
                 }
             },
         ) { innerPadding ->
@@ -103,9 +129,6 @@ fun HomeContent(
             val startDestination = destination.defaultChild?.route ?: return@Scaffold
 
             val layoutDirection = LocalLayoutDirection.current
-            val isTopBarCollapsed =
-                (scrollBehavior.state.heightOffset == scrollBehavior.state.heightOffsetLimit)
-
             val contentPadding = computeContentPadding(
                 innerPadding,
                 isTopBarCollapsed,
@@ -133,7 +156,6 @@ fun computeContentPadding(
 ) = remember(innerPadding, isTopBarCollapsed, layoutDirection) {
     if (isTopBarCollapsed) {
         PaddingValues(
-            bottom = innerPadding.calculateBottomPadding(),
             start = innerPadding.calculateStartPadding(layoutDirection),
             end = innerPadding.calculateEndPadding(layoutDirection),
         )

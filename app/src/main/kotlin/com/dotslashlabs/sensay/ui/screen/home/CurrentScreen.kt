@@ -18,6 +18,9 @@ import config.HomeLayout
 import data.BookCategory
 
 object CurrentScreen : SensayScreen {
+
+    override fun toString(): String = "Current"
+
     @Composable
     override fun Content(
         destination: Destination,
