@@ -33,7 +33,7 @@ fun PlayerAppBar(
     val context = LocalContext.current
 
     SimpleTopAppBar(
-        isBusy = state.isLoading,
+        isBusy = !state.isPlayerLoaded,
         title = {},
         onBackPress = onBackPress,
         actions = {

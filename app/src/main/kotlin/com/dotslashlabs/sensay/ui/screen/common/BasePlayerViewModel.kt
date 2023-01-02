@@ -20,6 +20,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.guava.await
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import kotlin.math.absoluteValue
 
 abstract class BasePlayerViewModel<S : MavericksState>(
@@ -59,12 +60,12 @@ abstract class BasePlayerViewModel<S : MavericksState>(
         player = null
     }
 
-    fun prepareMediaItems(
+    suspend fun prepareMediaItems(
         selectedMedia: Media,
         mediaList: List<Media>,
         mediaIds: List<String>,
         playerMediaIds: List<String>,
-    ) {
+    ) = withContext(Dispatchers.Main) {
 
         val playerMediaIdx = playerMediaIds.indexOf(selectedMedia.mediaId)
         val hasCurrentChapterEnded =
@@ -72,37 +73,35 @@ abstract class BasePlayerViewModel<S : MavericksState>(
 
         val startPositionMs = if (hasCurrentChapterEnded) 0L else selectedMedia.chapterProgress.ms
 
-        viewModelScope.launch {
-            val player = this@BasePlayerViewModel.player ?: return@launch
+        val player = this@BasePlayerViewModel.player ?: return@withContext
 
-            player.apply {
-                if (playerMediaIdx != -1) {
-                    // selectedMediaId already exists in the player's media items
-                    seekTo(playerMediaIdx, startPositionMs)
-                } else {
-                    val chapterIdx = mediaIds.indexOf(selectedMedia.mediaId)
+        player.apply {
+            if (playerMediaIdx != -1) {
+                // selectedMediaId already exists in the player's media items
+                seekTo(playerMediaIdx, startPositionMs)
+            } else {
+                val chapterIdx = mediaIds.indexOf(selectedMedia.mediaId)
 
-                    val mediaItems = mediaList.map { c ->
-                        MediaItem.Builder()
-                            .setMediaId(c.mediaId)
-                            .setMediaMetadata(
-                                MediaMetadata.Builder()
-                                    .setExtras(
-                                        bundleOf(
-                                            BUNDLE_KEY_BOOK_ID to c.bookId,
-                                            BUNDLE_KEY_CHAPTER_ID to c.chapterId,
-                                        )
+                val mediaItems = mediaList.map { c ->
+                    MediaItem.Builder()
+                        .setMediaId(c.mediaId)
+                        .setMediaMetadata(
+                            MediaMetadata.Builder()
+                                .setExtras(
+                                    bundleOf(
+                                        BUNDLE_KEY_BOOK_ID to c.bookId,
+                                        BUNDLE_KEY_CHAPTER_ID to c.chapterId,
                                     )
-                                    .build()
-                            )
-                            .build()
-                    }
-
-                    setMediaItems(mediaItems, chapterIdx, startPositionMs)
+                                )
+                                .build()
+                        )
+                        .build()
                 }
 
-                prepare()
+                setMediaItems(mediaItems, chapterIdx, startPositionMs)
             }
+
+            prepare()
         }
     }
 }

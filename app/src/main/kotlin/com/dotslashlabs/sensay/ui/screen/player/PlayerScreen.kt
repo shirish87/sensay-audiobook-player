@@ -131,8 +131,8 @@ fun PlayerContentView(
                 content = { contentPadding ->
 
                     AnimatedVisibility(
-                        visible = !state.isLoading,
-                        enter = fadeIn(),
+                        visible = state.isPlayerLoaded,
+                        enter = fadeIn(initialAlpha = 0.4F),
                         exit = fadeOut(),
                     ) {
                         if (useLandscapeLayout) {
@@ -486,7 +486,7 @@ private fun PlayerProgress(
             }
 
             Slider(
-                enabled = !state.isLoading,
+                enabled = state.isPlayerLoaded,
                 modifier = Modifier.semantics { contentDescription = "Localized Description" },
                 value = state.sliderPosition,
                 valueRange = 0F..0.99F,
@@ -521,7 +521,7 @@ private fun PlayerButtons(
 
         OutlinedIconButton(
             enabled = state.isActiveMedia &&
-                !state.isLoading &&
+                state.isPlayerLoaded &&
                 state.hasPreviousChapter,
             onClick = { playerActions.previousChapter(playerAppViewActions, playerAppViewState) },
             modifier = buttonsModifier,
@@ -533,7 +533,7 @@ private fun PlayerButtons(
         }
 
         OutlinedIconButton(
-            enabled = state.isActiveMedia && !state.isLoading,
+            enabled = state.isActiveMedia && state.isPlayerLoaded,
             onClick = { playerAppViewActions.seekBack() },
             modifier = buttonsModifier,
         ) {
@@ -544,14 +544,12 @@ private fun PlayerButtons(
         }
 
         OutlinedIconButton(
-            enabled = !state.isLoading,
+            enabled = state.isPlayerLoaded && !state.isPreparing,
             onClick = {
-                playerAppViewActions.apply {
-                    if (state.isPlayingMedia) {
-                        pause()
-                    } else {
-                        playerActions.play(playerAppViewActions)
-                    }
+                if (state.isPlayingMedia) {
+                    playerAppViewActions.pause()
+                } else {
+                    playerActions.play(playerAppViewActions)
                 }
             },
             modifier = Modifier.size(playerButtonSize),
@@ -568,7 +566,7 @@ private fun PlayerButtons(
         }
 
         OutlinedIconButton(
-            enabled = state.isActiveMedia && !state.isLoading,
+            enabled = state.isActiveMedia && state.isPlayerLoaded,
             onClick = { playerAppViewActions.seekForward() },
             modifier = buttonsModifier,
         ) {
@@ -580,7 +578,7 @@ private fun PlayerButtons(
 
         OutlinedIconButton(
             enabled = state.isActiveMedia &&
-                !state.isLoading &&
+                state.isPlayerLoaded &&
                 state.hasNextChapter,
             onClick = { playerActions.nextChapter(playerAppViewActions, playerAppViewState) },
             modifier = buttonsModifier,

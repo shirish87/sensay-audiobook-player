@@ -25,12 +25,9 @@ import data.entity.Bookmark
 import data.entity.BookmarkType
 import data.entity.BookmarkWithChapter
 import data.util.ContentDuration
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
+import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.take
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import logcat.logcat
 import okhttp3.internal.toHexString
 
@@ -52,6 +49,7 @@ data class PlayerViewState(
     val bookmarks: Async<List<BookmarkWithChapter>> = Uninitialized,
 
     val isEqPanelVisible: Boolean = false,
+    val isPreparing: Boolean = false,
 
     val playbackConnectionState: Async<PlaybackConnectionState> = Uninitialized,
 ) : MavericksState {
@@ -67,9 +65,12 @@ data class PlayerViewState(
     }
 
     val coverUri: Uri? = media?.coverUri
-    val mediaId: MediaId? = media?.mediaId
 
     val connState = playbackConnectionState()
+
+    private val isConnected = (connState?.isConnected == true)
+    val isPlayerLoaded = (!isLoading && isConnected)
+
     val playerMediaId = connState?.playerState?.mediaId
 
     val playerMediaIds = connState?.playerMediaIds ?: emptyList()
@@ -252,10 +253,9 @@ class PlayerViewModel @AssistedInject constructor(
                 }
 
             onEach(
-                PlayerViewState::mediaId,
-                PlayerViewState::playerMediaId,
-            ) { mediaId, playerMediaId ->
-                if (mediaId != null && mediaId == playerMediaId) {
+                PlayerViewState::isPlayingMedia,
+            ) { isPlayingMedia ->
+                if (isPlayingMedia) {
                     player?.startLiveTracker(viewModelScope)
                 } else {
                     player?.stopLiveTracker()
@@ -311,7 +311,7 @@ class PlayerViewModel @AssistedInject constructor(
     ) {
         setSelectedMediaId(mediaId)
 
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.Main) {
             if (playerAppViewState.isPlaying) {
                 playerAppViewActions.play()
             } else {
@@ -382,16 +382,26 @@ class PlayerViewModel @AssistedInject constructor(
         }
     }
 
-    private fun prepareMediaItems(playerAppViewActions: PlayerAppViewActions) = withState { state ->
-        val media = state.media ?: return@withState
+    private fun prepareMediaItems(playerAppViewActions: PlayerAppViewActions) =
+        withState { state ->
+            val media = state.media ?: return@withState
 
-        playerAppViewActions.prepareMediaItems(
-            media,
-            state.mediaList,
-            state.mediaIds,
-            state.playerMediaIds,
-        )
-    }
+            setState { copy(isPreparing = true) }
+
+            viewModelScope.launch(Dispatchers.Main) {
+                playerAppViewActions.prepareMediaItems(
+                    media,
+                    state.mediaList,
+                    state.mediaIds,
+                    state.playerMediaIds,
+                )
+
+                withContext(Dispatchers.IO) {
+                    delay(500)
+                    setState { copy(isPreparing = false) }
+                }
+            }
+        }
 
     override fun setSelectedMediaId(mediaId: String) {
         setState {

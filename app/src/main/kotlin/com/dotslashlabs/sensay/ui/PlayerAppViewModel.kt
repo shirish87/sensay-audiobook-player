@@ -13,6 +13,7 @@ import com.airbnb.mvrx.hilt.AssistedViewModelFactory
 import com.airbnb.mvrx.hilt.hiltMavericksViewModelFactory
 import com.dotslashlabs.sensay.common.BookProgressWithDuration
 import com.dotslashlabs.sensay.common.MediaSessionQueue
+import com.dotslashlabs.sensay.common.PlaybackConnectionState
 import com.dotslashlabs.sensay.ui.screen.common.BasePlayerViewModel
 import com.dotslashlabs.sensay.ui.screen.player.Media
 import com.dotslashlabs.sensay.util.PlayerState
@@ -76,7 +77,7 @@ interface PlayerAppViewActions {
     fun attachPlayer(context: Context): Unit?
     fun detachPlayer(): Unit?
 
-    fun prepareMediaItems(
+    suspend fun prepareMediaItems(
         selectedMedia: Media,
         mediaList: List<Media>,
         mediaIds: List<String>,
@@ -156,7 +157,9 @@ class PlayerAppViewModel @AssistedInject constructor(
 
     override fun play(bookProgressWithChapters: BookProgressWithBookAndChapters) {
         viewModelScope.launch(Dispatchers.Main) {
-            if (prepareMediaItems(bookProgressWithChapters)) {
+            val connState = player?.playerEvents?.firstOrNull()
+
+            if (prepareMediaItems(bookProgressWithChapters, connState)) {
                 player?.playWhenReady = true
                 play()
             }
@@ -165,14 +168,13 @@ class PlayerAppViewModel @AssistedInject constructor(
 
     private suspend fun prepareMediaItems(
         bookProgressWithChapters: BookProgressWithBookAndChapters,
+        connState: PlaybackConnectionState?,
     ): Boolean {
-        val player = player ?: return false
 
         val (bookProgress, book, _, chapters) = bookProgressWithChapters
         val selectedMediaId =
             PlayerAppViewState.getMediaId(bookProgress.bookId, bookProgress.chapterId)
 
-        val connState = player.playerEvents.firstOrNull()
         if (connState?.playerState?.mediaId == selectedMediaId) {
             // already prepared
             return true
