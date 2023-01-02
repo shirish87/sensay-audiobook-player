@@ -18,6 +18,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.airbnb.mvrx.Async
 import com.airbnb.mvrx.Loading
@@ -47,6 +48,7 @@ fun <SortMenuType> BooksList(
     sortMenuOptions: SortMenuOptions<SortMenuType>,
     filterMenuOptions: FilterMenuOptions,
     filterListOptions: FilterListOptions<String>,
+    bottomPadding: Dp = 140.dp,
     onNavToBook: OnNavToBook,
     onPlay: ((bookProgressWithChapters: BookProgressWithBookAndChapters) -> Unit)? = null,
 ) {
@@ -101,12 +103,16 @@ fun <SortMenuType> BooksList(
             }
 
             item {
-                Spacer(modifier = Modifier.height(36.dp))
+                Spacer(modifier = Modifier.height(bottomPadding))
             }
         }
 
         if (expandedHiddenBooks) {
-            hiddenBooksListView(books = hiddenBooks, config = config) {
+            hiddenBooksListView(
+                books = hiddenBooks,
+                config = config,
+                bottomPadding = bottomPadding,
+            ) {
                 expandedHiddenBooks = it
             }
         }
@@ -120,6 +126,7 @@ fun <SortMenuType> BooksGrid(
     sortMenuOptions: SortMenuOptions<SortMenuType>,
     filterMenuOptions: FilterMenuOptions,
     filterListOptions: FilterListOptions<String>,
+    bottomPadding: Dp = 140.dp,
     onNavToBook: OnNavToBook,
     onPlay: ((bookProgressWithChapters: BookProgressWithBookAndChapters) -> Unit)? = null,
 ) {
@@ -184,10 +191,19 @@ fun <SortMenuType> BooksGrid(
                     }
                 }
             }
+
+            item(span = { GridItemSpan(cellCount) }) {
+                Spacer(modifier = Modifier.height(bottomPadding))
+            }
         }
 
         if (expandedHiddenBooks) {
-            hiddenBooksGridView(books = hiddenBooks, config = config, cellCount = cellCount) {
+            hiddenBooksGridView(
+                books = hiddenBooks,
+                config = config,
+                cellCount = cellCount,
+                bottomPadding = bottomPadding,
+            ) {
                 expandedHiddenBooks = it
             }
         }
@@ -264,6 +280,7 @@ private fun hiddenBooksListView(
     books: List<BookProgressWithBookAndChapters>,
     config: BookContextMenuConfig,
     modifier: Modifier = Modifier,
+    bottomPadding: Dp = 100.dp,
     setExpanded: (Boolean) -> Unit,
 ) {
 
@@ -287,7 +304,7 @@ private fun hiddenBooksListView(
         }
 
         item {
-            Spacer(modifier = Modifier.height(36.dp))
+            Spacer(modifier = Modifier.height(bottomPadding))
         }
     }
 }
@@ -298,6 +315,7 @@ private fun hiddenBooksGridView(
     cellCount: Int,
     config: BookContextMenuConfig,
     modifier: Modifier = Modifier,
+    bottomPadding: Dp = 100.dp,
     setExpanded: (Boolean) -> Unit,
 ) {
 
@@ -327,6 +345,10 @@ private fun hiddenBooksGridView(
                     ),
                 )
             }
+        }
+
+        item(span = { GridItemSpan(cellCount) }) {
+            Spacer(modifier = Modifier.height(bottomPadding))
         }
     }
 }
