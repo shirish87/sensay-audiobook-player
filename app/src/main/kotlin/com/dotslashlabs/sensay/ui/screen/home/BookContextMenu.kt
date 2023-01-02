@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.PlayCircle
 import androidx.compose.material.icons.outlined.*
@@ -15,6 +16,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import com.dotslashlabs.sensay.ui.screen.common.ConfirmDialog
 import com.dotslashlabs.sensay.ui.screen.restore.OnNavToRestore
@@ -128,8 +130,24 @@ fun BookContextMenu(
                 .fillMaxSize()
                 .wrapContentSize(Alignment.TopStart),
         ) {
-            IconButton(onClick = { it(bookProgressWithChapters) }) {
-                Icon(Icons.Default.PlayCircle, contentDescription = "Localized description")
+            if (bookCategory == BookCategory.FINISHED) {
+                IconButton(onClick = {
+                    Toast.makeText(
+                        context,
+                        "Finished on ${bookProgressWithChapters.bookProgress.lastUpdatedAt}",
+                        Toast.LENGTH_SHORT,
+                    ).show()
+                }) {
+                    Icon(
+                        Icons.Default.Check,
+                        contentDescription = "Localized description",
+                        tint = Color.Green,
+                    )
+                }
+            } else {
+                IconButton(onClick = { it(bookProgressWithChapters) }) {
+                    Icon(Icons.Default.PlayCircle, contentDescription = "Localized description")
+                }
             }
         }
     }
@@ -164,10 +182,7 @@ fun BookContextMenu(
                 )
             }
 
-            if (config.isRestoreBookEnabled &&
-                bookProgressWithChapters.bookProgress.bookCategory == BookCategory.NOT_STARTED
-            ) {
-
+            if (config.isRestoreBookEnabled && bookCategory == BookCategory.NOT_STARTED) {
                 DropdownMenuItem(
                     text = { Text("Restore Progress") },
                     onClick = {
