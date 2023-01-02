@@ -95,10 +95,10 @@ fun NowPlayingViewContent(
                 nowPlayingBook.coverUri?.let { coverUri ->
                     Column(
                         modifier = Modifier
-                            .weight(0.2F, fill = true)
+                            .weight(0.2F)
                             .fillMaxHeight()
                             .clickable { onClick(nowPlayingBook.bookId) }
-                            .padding(16.dp),
+                            .padding(vertical = 16.dp, horizontal = 6.dp),
                     ) {
                         CoverImage(
                             coverUri = coverUri,
@@ -108,32 +108,22 @@ fun NowPlayingViewContent(
                 }
 
                 Column(
-                    verticalArrangement = Arrangement.SpaceEvenly,
+                    verticalArrangement = Arrangement.Center,
                     modifier = Modifier
-                        .weight(0.75F, fill = true)
+                        .weight(0.75F)
                         .fillMaxHeight()
                         .clickable { onClick(nowPlayingBook.bookId) }
                         .padding(16.dp),
                 ) {
 
-                    BookAuthorAndSeries(
-                        nowPlayingBook.author,
-                        nowPlayingBook.series,
-                        nowPlayingBook.bookTitle,
-                        style = MaterialTheme.typography.labelSmall,
-                    )
-
-                    BookTitleAndChapter(
-                        nowPlayingBook.bookTitle,
-                        nowPlayingBook.chapterTitle,
-                    )
+                    BookTitleAndChapterFlow(nowPlayingBook)
                 }
 
                 Column(
                     verticalArrangement = Arrangement.Center,
                     horizontalAlignment = Alignment.CenterHorizontally,
                     modifier = Modifier
-                        .weight(0.25F, fill = true)
+                        .weight(0.25F)
                         .fillMaxHeight()
                         .clickable {
                             if (state.isPlaying) {
@@ -208,6 +198,40 @@ fun BookAuthorAndSeries(
 }
 
 @Composable
+fun BookTitleAndChapterFlow(
+    nowPlayingBook: BookProgressWithDuration,
+    modifier: Modifier = Modifier,
+    sourceStyle: TextStyle = MaterialTheme.typography.labelSmall,
+    mainStyle: TextStyle = MaterialTheme.typography.titleSmall,
+) {
+
+    Column(modifier = modifier.fillMaxSize()) {
+        Text(
+            text = listOfNotNull(
+                nowPlayingBook.author,
+                nowPlayingBook.series,
+            ).joinToString(" $bullet ") { it.trim() },
+            style = sourceStyle,
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis,
+        )
+
+        Text(
+            modifier = Modifier.padding(top = 4.dp),
+            text = listOfNotNull(
+                nowPlayingBook.chapterTitle,
+                if (nowPlayingBook.bookTitle != nowPlayingBook.series)
+                    nowPlayingBook.bookTitle
+                else null,
+            ).joinToString(" $bullet ") { it.trim() },
+            style = mainStyle,
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis,
+        )
+    }
+}
+
+@Composable
 fun BookTitleAndChapter(
     bookTitle: String,
     chapterTitle: String?,
@@ -273,14 +297,14 @@ fun BookTitle(
 fun resolveContentMaxHeight(
     bookProgressWithDuration: BookProgressWithDuration,
     heightLow: Dp = 96.dp,
-    heightHigh: Dp = 120.dp,
-    charThreshold: Int = 150,
+    heightHigh: Dp = 110.dp,
+    charThreshold: Int = 80,
 ): Dp {
 
     return bookProgressWithDuration.run {
         val contentLength = listOfNotNull(
             author,
-            series,
+            if (series != bookTitle) series else null,
             bookTitle,
             chapterTitle,
         ).joinToString(" ").length
@@ -358,9 +382,9 @@ fun NowPlayingViewContentPreview() {
                 bookProgressId = 0L,
                 bookId = 0L,
                 chapterId = 0L,
-                bookTitle = List(1024) { "Book Title" }.joinToString(" "),
-                chapterTitle = List(1024) { "Chapter Title" }.joinToString(" "),
-                author = List(1024) { "Author" }.joinToString(" "),
+                bookTitle = List(1024) { "Moontide Quartet #1: Mage's Blood" }.joinToString(" "),
+                chapterTitle = List(1024) { "Chapter 001" }.joinToString(" "),
+                author = List(1024) { "David Hair" }.joinToString(" "),
                 series = List(1024) { "Series" }.joinToString(" "),
                 coverUri = null,
                 totalChapters = 10,
