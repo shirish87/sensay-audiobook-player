@@ -37,6 +37,7 @@ fun BookCell(
     onNavToBook: OnNavToBook,
     modifier: Modifier = Modifier,
     onPlay: OnPlay? = null,
+    onBookLookup: OnBookLookup? = null,
 ) {
 
     var isMenuExpanded by remember { mutableStateOf(false) }
@@ -48,6 +49,7 @@ fun BookCell(
             .combinedClickable(
                 onClick = { onNavToBook(bookProgressWithChapters.book.bookId) },
                 onLongClick = { setMenuExpanded(!isMenuExpanded) },
+                onDoubleClick = { onBookLookup?.invoke(bookProgressWithChapters.book) }
             ),
     ) {
         Box {
@@ -58,6 +60,7 @@ fun BookCell(
                 isMenuExpanded,
                 setMenuExpanded,
                 onPlay = onPlay,
+                onBookLookup = onBookLookup,
             )
         }
     }

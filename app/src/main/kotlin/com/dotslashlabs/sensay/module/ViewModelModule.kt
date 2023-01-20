@@ -6,6 +6,7 @@ import com.airbnb.mvrx.hilt.ViewModelKey
 import com.dotslashlabs.sensay.ui.PlayerAppViewModel
 import com.dotslashlabs.sensay.ui.SensayAppViewModel
 import com.dotslashlabs.sensay.ui.screen.home.HomeViewModel
+import com.dotslashlabs.sensay.ui.screen.lookup.LookupViewModel
 import com.dotslashlabs.sensay.ui.screen.player.PlayerViewModel
 import com.dotslashlabs.sensay.ui.screen.restore.RestoreViewModel
 import com.dotslashlabs.sensay.ui.screen.sources.SourcesViewModel
@@ -46,6 +47,11 @@ interface ViewModelModule {
     @IntoMap
     @ViewModelKey(RestoreViewModel::class)
     fun restoreViewModelFactory(factory: RestoreViewModel.Factory): AssistedViewModelFactory<*, *>
+
+    @Binds
+    @IntoMap
+    @ViewModelKey(LookupViewModel::class)
+    fun lookupViewModelFactory(factory: LookupViewModel.Factory): AssistedViewModelFactory<*, *>
 
     @Binds
     @IntoMap

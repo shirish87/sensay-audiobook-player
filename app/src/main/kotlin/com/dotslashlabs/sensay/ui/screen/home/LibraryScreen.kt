@@ -16,9 +16,12 @@ import com.dotslashlabs.sensay.ui.screen.common.SensayFrame
 import com.dotslashlabs.sensay.util.isLifecycleResumed
 import config.HomeLayout
 import data.BookCategory
+import data.entity.Book
 import data.entity.BookProgressWithBookAndChapters
 
 typealias OnNavToBook = (bookId: Long) -> Unit
+
+typealias OnBookLookup = (book: Book) -> Unit
 
 typealias OnPlay = ((bookProgressWithChapters: BookProgressWithBookAndChapters) -> Unit)
 
@@ -45,6 +48,12 @@ object LibraryScreen : SensayScreen {
         val onNavToBook: OnNavToBook = { bookId ->
             if (backStackEntry.isLifecycleResumed()) {
                 navHostController.navigate(Destination.Player.useRoute(bookId))
+            }
+        }
+
+        val onBookLookup: OnBookLookup = { book ->
+            if (backStackEntry.isLifecycleResumed()) {
+                navHostController.navigate(Destination.Lookup.useRoute(book.bookId))
             }
         }
 
@@ -100,6 +109,7 @@ object LibraryScreen : SensayScreen {
                     filterListOptions = filterListOptions,
                     onNavToBook = onNavToBook,
                     onPlay = playerAppViewModel::play,
+                    onBookLookup = onBookLookup,
                 )
                 HomeLayout.GRID -> BooksGrid(
                     state.books,
@@ -109,6 +119,7 @@ object LibraryScreen : SensayScreen {
                     filterListOptions = filterListOptions,
                     onNavToBook = onNavToBook,
                     onPlay = playerAppViewModel::play,
+                    onBookLookup = onBookLookup,
                 )
             }
         }

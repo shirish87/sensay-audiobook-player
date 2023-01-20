@@ -178,6 +178,19 @@ object Libraries {
         const val kotlinxSerializationJson = "org.jetbrains.kotlinx:kotlinx-serialization-json:$version"
     }
 
+    object OkHttp {
+        private const val version = "4.10.0"
+
+        const val okhttp = "com.squareup.okhttp3:okhttp:$version"
+    }
+
+    object Moshi {
+        private const val version = "1.14.0"
+
+        const val moshi = "com.squareup.moshi:moshi:$version"
+        const val moshiKapt = "com.squareup.moshi:moshi-kotlin-codegen:$version"
+    }
+
     object Logcat {
         private const val version = "0.1"
 

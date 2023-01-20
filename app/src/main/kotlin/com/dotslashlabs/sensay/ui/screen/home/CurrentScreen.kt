@@ -43,6 +43,12 @@ object CurrentScreen : SensayScreen {
             }
         }
 
+        val onBookLookup: OnBookLookup = { book ->
+            if (backStackEntry.isLifecycleResumed()) {
+                navHostController.navigate(Destination.Lookup.useRoute(book.bookId))
+            }
+        }
+
         val sortMenuOptions = SortMenuOptions(
             state.sortMenuItems,
             state.sortFilter,
@@ -95,6 +101,7 @@ object CurrentScreen : SensayScreen {
                     filterListOptions,
                     onNavToBook = onNavToBook,
                     onPlay = playerAppViewModel::play,
+                    onBookLookup = onBookLookup,
                 )
                 HomeLayout.GRID -> BooksGrid(
                     state.books,
@@ -104,6 +111,7 @@ object CurrentScreen : SensayScreen {
                     filterListOptions,
                     onNavToBook = onNavToBook,
                     onPlay = playerAppViewModel::play,
+                    onBookLookup = onBookLookup,
                 )
             }
         }

@@ -23,6 +23,7 @@ dependencies {
     implementation project(path: ":config")
     implementation project(path: ":data")
     implementation project(path: ":scanner")
+    implementation project(path: ':lookup')
 
     Libraries.Media3.bundle.each { lib ->
         implementation lib

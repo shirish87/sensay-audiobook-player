@@ -44,6 +44,7 @@ fun BookContextMenu(
     setMenuExpanded: (Boolean) -> Unit,
     modifier: Modifier = Modifier,
     onPlay: OnPlay? = null,
+    onBookLookup: OnBookLookup? = null,
 ) {
 
     if (bookProgressWithChapters.isEmpty || !config.isEnabled) return
@@ -165,6 +166,20 @@ fun BookContextMenu(
             expanded = isMenuExpanded,
             onDismissRequest = { setMenuExpanded(false) }
         ) {
+
+            DropdownMenuItem(
+                text = { Text("Book Lookup") },
+                onClick = {
+                    setMenuExpanded(false)
+                    onBookLookup?.invoke(bookProgressWithChapters.book)
+                },
+                leadingIcon = {
+                    Icon(
+                        Icons.Outlined.Info,
+                        contentDescription = null,
+                    )
+                },
+            )
 
             categoryMenuItems.forEach { (category, imageVector) ->
                 DropdownMenuItem(

@@ -6,13 +6,14 @@ import androidx.navigation.navArgument
 import com.dotslashlabs.sensay.ui.screen.home.CurrentScreen
 import com.dotslashlabs.sensay.ui.screen.home.HomeScreen
 import com.dotslashlabs.sensay.ui.screen.home.LibraryScreen
+import com.dotslashlabs.sensay.ui.screen.lookup.LookupScreen
 import com.dotslashlabs.sensay.ui.screen.player.PlayerScreen
 import com.dotslashlabs.sensay.ui.screen.restore.RestoreScreen
 import com.dotslashlabs.sensay.ui.screen.settings.SettingsScreen
 import com.dotslashlabs.sensay.ui.screen.sources.SourcesScreen
 import java.io.File
 
-abstract class Destination(vararg routeSegments: String) {
+abstract class Destination(vararg routeSegments: String, val isDialog: Boolean = false) {
     val route: String = routeSegments.joinToString(File.separator)
 
     abstract val screen: SensayScreen?
@@ -27,7 +28,8 @@ abstract class Destination(vararg routeSegments: String) {
         override val screen: SensayScreen? = null
         override val arguments: List<NamedNavArgument> = emptyList()
 
-        override val children: List<Destination> = listOf(Home, Player, Restore, Sources, Settings)
+        override val children: List<Destination> =
+            listOf(Home, Player, Restore, Lookup, Sources, Settings)
         override val defaultChild: Destination = Home
     }
 
@@ -72,6 +74,21 @@ abstract class Destination(vararg routeSegments: String) {
 
     object Restore : Destination("books", "{bookId}", "restore") {
         override val screen: SensayScreen = RestoreScreen
+        override val arguments: List<NamedNavArgument> = listOf(
+            navArgument("bookId") {
+                type = NavType.LongType
+                nullable = false
+            }
+        )
+
+        override val children: List<Destination> = emptyList()
+        override val defaultChild: Destination? = null
+
+        fun useRoute(bookId: Long) = this.route.replace("{bookId}", "$bookId")
+    }
+
+    object Lookup : Destination("books", "{bookId}", "lookup", isDialog = true) {
+        override val screen: SensayScreen = LookupScreen
         override val arguments: List<NamedNavArgument> = listOf(
             navArgument("bookId") {
                 type = NavType.LongType

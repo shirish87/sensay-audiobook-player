@@ -5,6 +5,7 @@ import androidx.compose.runtime.Composable
 import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
+import androidx.navigation.compose.dialog
 import androidx.navigation.navDeepLink
 import com.google.accompanist.navigation.animation.composable
 
@@ -21,20 +22,38 @@ interface SensayScreen {
         destination: Destination,
         navGraphBuilder: NavGraphBuilder,
         navHostController: NavHostController,
-    ) = navGraphBuilder.composable(
-        route = destination.route,
-        arguments = destination.arguments,
-        deepLinks = listOf(
-            navDeepLink {
-                uriPattern = getUriString(destination.route)
-            }
-        ),
-    ) {
-        Content(
-            destination,
-            navHostController,
-            it,
-        )
+    ) = if (destination.isDialog) {
+        navGraphBuilder.dialog(
+            route = destination.route,
+            arguments = destination.arguments,
+            deepLinks = listOf(
+                navDeepLink {
+                    uriPattern = getUriString(destination.route)
+                },
+            ),
+        ) {
+            Content(
+                destination,
+                navHostController,
+                it,
+            )
+        }
+    } else {
+        navGraphBuilder.composable(
+            route = destination.route,
+            arguments = destination.arguments,
+            deepLinks = listOf(
+                navDeepLink {
+                    uriPattern = getUriString(destination.route)
+                },
+            ),
+        ) {
+            Content(
+                destination,
+                navHostController,
+                it,
+            )
+        }
     }
 
     @Composable

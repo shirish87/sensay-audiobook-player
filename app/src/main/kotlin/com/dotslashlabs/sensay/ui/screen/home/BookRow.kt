@@ -34,6 +34,7 @@ fun BookRow(
     onNavToBook: OnNavToBook,
     modifier: Modifier = Modifier,
     onPlay: OnPlay? = null,
+    onBookLookup: OnBookLookup? = null,
 ) {
 
     var isMenuExpanded by remember { mutableStateOf(false) }
@@ -46,6 +47,7 @@ fun BookRow(
             .combinedClickable(
                 onClick = { onNavToBook(bookProgressWithChapters.book.bookId) },
                 onLongClick = { setMenuExpanded(!isMenuExpanded) },
+                onDoubleClick = { onBookLookup?.invoke(bookProgressWithChapters.book) },
             ),
     ) {
         Box {
@@ -56,6 +58,7 @@ fun BookRow(
                 isMenuExpanded,
                 setMenuExpanded,
                 onPlay = onPlay,
+                onBookLookup = onBookLookup,
             )
         }
     }
