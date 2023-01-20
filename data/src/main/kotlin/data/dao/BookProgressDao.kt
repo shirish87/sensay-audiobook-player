@@ -147,6 +147,9 @@ interface BookProgressDao : BaseDao<BookProgress> {
     fun booksProgress(bookIds: Collection<BookId>): Flow<List<BookProgress>>
 
     @Update(entity = BookProgress::class)
+    override suspend fun update(entity: BookProgress): Int
+
+    @Update(entity = BookProgress::class)
     suspend fun update(bookProgressUpdate: BookProgressUpdate): Int
 
     @Update(entity = BookProgress::class)
