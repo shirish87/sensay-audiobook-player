@@ -17,7 +17,7 @@ object Libraries {
     )
 
     object Gradle {
-        private const val version = "7.3.1"
+        private const val version = "7.4.0"
 
         const val gradlePlugin = "com.android.tools.build:gradle:$version"
     }
@@ -108,7 +108,7 @@ object Libraries {
     }
 
     object Room {
-        private const val version = "2.4.3"
+        private const val version = "2.5.0"
 
         const val room = "androidx.room:room-ktx:$version"
         const val roomPaging = "androidx.room:room-paging:$version"
