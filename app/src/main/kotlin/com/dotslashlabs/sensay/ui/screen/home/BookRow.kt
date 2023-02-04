@@ -67,7 +67,7 @@ fun BookRow(
 @Composable
 fun ListBookView(
     bookProgressWithChapters: BookProgressWithBookAndChapters,
-    height: Dp = 160.dp,
+    height: Dp = 140.dp,
     useCoverImage: Boolean = true,
 ) {
 
@@ -110,6 +110,7 @@ fun ListBookView(
 
             BookTitle(
                 bookTitle = book.title,
+                bookTitleMaxLines = 3,
             )
 
             BookChapter(
@@ -138,16 +139,16 @@ private fun ListBookViewPreview() {
                 series = List(1024) { "Series" }.joinToString(" "),
                 duration = ContentDuration(120.hours + 55.minutes),
             ),
-            chapter = Chapter.empty().copy(
+            chapter = Chapter.empty(bookId = 0).copy(
                 title = "Chapter 1",
                 duration = ContentDuration(1.hours),
             ),
             chapters = listOf(
-                Chapter.empty().copy(
+                Chapter.empty(bookId = 0).copy(
                     title = "Chapter 1",
                     duration = ContentDuration(1.hours),
                 ),
-                Chapter.empty().copy(
+                Chapter.empty(bookId = 0).copy(
                     title = "Chapter 2",
                     duration = ContentDuration(1.hours),
                 ),

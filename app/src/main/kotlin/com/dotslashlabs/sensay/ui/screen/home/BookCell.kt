@@ -112,7 +112,7 @@ private fun GridBookView(
 
             BookTitle(
                 bookTitle = book.title,
-                bookTitleMaxLines = 3,
+                bookTitleMaxLines = 4,
             )
 
             BookChapter(
@@ -143,16 +143,16 @@ private fun GridBookViewPreview() {
                 series = List(1024) { "Series" }.joinToString(" "),
                 duration = ContentDuration(120.hours + 55.minutes),
             ),
-            chapter = Chapter.empty().copy(
+            chapter = Chapter.empty(bookId = 0).copy(
                 title = List(1024) { "Chapter 1" }.joinToString(" "),
                 duration = ContentDuration(1.hours),
             ),
             chapters = listOf(
-                Chapter.empty().copy(
+                Chapter.empty(bookId = 0).copy(
                     title = "Chapter 1",
                     duration = ContentDuration(1.hours),
                 ),
-                Chapter.empty().copy(
+                Chapter.empty(bookId = 0).copy(
                     title = "Chapter 2",
                     duration = ContentDuration(1.hours),
                 ),
