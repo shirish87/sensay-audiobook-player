@@ -23,7 +23,7 @@ object Libraries {
     }
 
     object Kotlin {
-        private const val version = "1.7.22"
+        private const val version = "1.8.0"
 
         const val gradlePlugin = "org.jetbrains.kotlin:kotlin-gradle-plugin:$version"
     }
@@ -66,29 +66,29 @@ object Libraries {
     }
 
     object Compose {
-        private const val version = "1.3.2"
+        private const val version = "1.4.0-alpha05"
         private const val material3ComposeVersion = "1.0.1"
 
         const val activityCompose = "androidx.activity:activity-compose:1.6.1"
         const val navigationCompose = "androidx.navigation:navigation-compose:2.5.3"
 
-        const val foundation = "androidx.compose.foundation:foundation:1.3.1"
-        const val foundationLayout = "androidx.compose.foundation:foundation-layout:1.3.1"
+        const val foundation = "androidx.compose.foundation:foundation:$version"
+        const val foundationLayout = "androidx.compose.foundation:foundation-layout:$version"
         const val constraintLayout = "androidx.constraintlayout:constraintlayout-compose:1.0.1"
 
 
         const val material3 = "androidx.compose.material3:material3:$material3ComposeVersion"
         const val material3WindowSizeClass = "androidx.compose.material3:material3-window-size-class:$material3ComposeVersion"
 
-        const val material = "androidx.compose.material:material:1.3.1"
-        const val materialIcons = "androidx.compose.material:material-icons-core:1.3.1"
-        const val materialIconsExtended = "androidx.compose.material:material-icons-extended:1.3.1"
+        const val material = "androidx.compose.material:material:$version"
+        const val materialIcons = "androidx.compose.material:material-icons-core:$version"
+        const val materialIconsExtended = "androidx.compose.material:material-icons-extended:$version"
 
         const val composeTooling = "androidx.compose.ui:ui-tooling:$version"
         const val composeToolingPreview = "androidx.compose.ui:ui-tooling-preview:$version"
 
         object Compiler {
-            const val version = "1.3.2"
+            const val version = "1.4.0"
         }
     }
 
@@ -103,7 +103,6 @@ object Libraries {
         private const val version = "0.28.0"
 
         const val accompanistNavigation = "com.google.accompanist:accompanist-navigation-animation:$version"
-        const val accompanistFlowLayout = "com.google.accompanist:accompanist-flowlayout:$version"
         const val systemUiController = "com.google.accompanist:accompanist-systemuicontroller:$version"
     }
 

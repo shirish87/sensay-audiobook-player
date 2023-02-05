@@ -90,7 +90,7 @@ fun KotlinCompile.configure(extension: AutoConfigBuildPluginExtension) {
             "-opt-in=kotlin.RequiresOptIn",
             "-opt-in=kotlinx.coroutines.ExperimentalCoroutinesApi",
             "-opt-in=kotlinx.coroutines.FlowPreview",
-            "-opt-in=kotlin.Experimental",
+            // "-opt-in=kotlin.Experimental",
         )
     }
 }
