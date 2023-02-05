@@ -39,6 +39,7 @@ enum class HomeSortType(
 data class HomeViewState(
     @PersistState val bookCategories: Collection<BookCategory>,
     val books: Async<List<BookProgressWithBookAndChapters>> = Uninitialized,
+    val authors: Async<List<String>> = Uninitialized,
     val progressRestorableCount: Async<Int> = Uninitialized,
 
     val sortMenuItems: Collection<Pair<HomeSortType, ImageVector>> = HomeSortType.values()
@@ -50,15 +51,11 @@ data class HomeViewState(
     val filter: String = "",
 
     val isAuthorFilterEnabled: Boolean = false,
+    val isAuthorFilterVisible: Boolean = false,
     val authorsFilter: List<String> = emptyList(),
 ) : MavericksState {
 
     constructor(args: HomeViewArgs) : this(bookCategories = args.bookCategories)
-
-    val authors: List<String> = books()?.fold(mutableSetOf<String>()) { acc, b ->
-        b.book.author?.let { acc.add(it) }
-        acc
-    }?.sorted() ?: emptyList()
 }
 
 class HomeViewModel @AssistedInject constructor(
@@ -89,6 +86,11 @@ class HomeViewModel @AssistedInject constructor(
             }
         }
 
+        store.bookAuthors(bookCategories)
+            .execute(retainValue = HomeViewState::authors) {
+                copy(authors = it)
+            }
+
         store.progressRestorableCount()
             .execute(retainValue = HomeViewState::progressRestorableCount) {
                 copy(progressRestorableCount = it)
@@ -116,11 +118,22 @@ class HomeViewModel @AssistedInject constructor(
     fun setAuthorFilterEnabled(enabled: Boolean) {
         setState {
             if (enabled) {
-                copy(isAuthorFilterEnabled = enabled)
+                copy(
+                    isAuthorFilterEnabled = enabled,
+                    isAuthorFilterVisible = enabled,
+                )
             } else {
-                copy(isAuthorFilterEnabled = enabled, authorsFilter = emptyList())
+                copy(
+                    isAuthorFilterEnabled = enabled,
+                    isAuthorFilterVisible = enabled,
+                    authorsFilter = emptyList(),
+                )
             }
         }
+    }
+
+    fun setAuthorFilterVisible(visible: Boolean) {
+        setState { copy(isAuthorFilterVisible = visible) }
     }
 
     fun setAuthorsFilter(authorsFilter: List<String>) {

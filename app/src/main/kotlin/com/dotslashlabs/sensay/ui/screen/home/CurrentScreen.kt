@@ -66,7 +66,9 @@ object CurrentScreen : SensayScreen {
         val filterListOptions = FilterListOptions(
             isFilterEnabled = state.isAuthorFilterEnabled,
             onFilterEnabled = viewModel::setAuthorFilterEnabled,
-            items = state.authors,
+            isFilterVisible = state.isAuthorFilterVisible,
+            onFilterVisible = viewModel::setAuthorFilterVisible,
+            items = state.authors() ?: emptyList(),
             selection = state.authorsFilter,
             filterLabel = "Authors",
             onAdd = {

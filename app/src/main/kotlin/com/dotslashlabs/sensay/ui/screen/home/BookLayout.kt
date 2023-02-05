@@ -1,5 +1,6 @@
 package com.dotslashlabs.sensay.ui.screen.home
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
@@ -7,13 +8,12 @@ import androidx.compose.foundation.lazy.grid.*
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Clear
 import androidx.compose.material.icons.outlined.ExpandLess
 import androidx.compose.material.icons.outlined.ExpandMore
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.OutlinedCard
-import androidx.compose.material3.Text
+import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
@@ -41,6 +41,47 @@ private fun resolveAsyncState(
     }
 }
 
+@ExperimentalLayoutApi
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun ActiveFilterListOptions(filterListOptions: FilterListOptions<String>) {
+    if (filterListOptions.isFilterEnabled && filterListOptions.selection.isNotEmpty()) {
+        Divider()
+
+        FlowRow(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.Start,
+            verticalAlignment = Alignment.Top,
+        ) {
+            filterListOptions.selection.forEach {
+                FilterChip(
+                    modifier = Modifier.padding(horizontal = 4.dp),
+                    selected = false,
+                    onClick = {},
+                    label = { Text(text = it) },
+                    trailingIcon = {
+                        Icon(
+                            imageVector = Icons.Outlined.Clear,
+                            contentDescription = null,
+                            modifier = Modifier
+                                .size(InputChipDefaults.IconSize)
+                                .clickable {
+                                    filterListOptions.onDelete(it)
+
+                                    if ((filterListOptions.selection - it).isEmpty()) {
+                                        filterListOptions.onFilterEnabled(false)
+                                    }
+                                },
+                        )
+                    },
+                )
+            }
+        }
+    }
+}
+
+
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun <SortMenuType> BooksList(
     items: Async<List<BookProgressWithBookAndChapters>>,
@@ -69,7 +110,12 @@ fun <SortMenuType> BooksList(
                 sortMenuOptions = sortMenuOptions,
                 filterMenuOptions = filterMenuOptions,
                 filterListOptions = filterListOptions,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(min = 40.dp),
             )
+
+            ActiveFilterListOptions(filterListOptions)
         }
 
         LazyColumn(state = state, modifier = Modifier.weight(1F)) {
@@ -121,6 +167,7 @@ fun <SortMenuType> BooksList(
     }
 }
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun <SortMenuType> BooksGrid(
     items: Async<List<BookProgressWithBookAndChapters>>,
@@ -153,7 +200,12 @@ fun <SortMenuType> BooksGrid(
                 sortMenuOptions = sortMenuOptions,
                 filterMenuOptions = filterMenuOptions,
                 filterListOptions = filterListOptions,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(min = 40.dp),
             )
+
+            ActiveFilterListOptions(filterListOptions)
         }
 
         LazyVerticalGrid(
