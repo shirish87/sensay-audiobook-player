@@ -10,8 +10,8 @@ import dagger.assisted.AssistedInject
 import data.BookWithChaptersAndTags
 import data.SensayStore
 import kotlinx.coroutines.flow.firstOrNull
-import scanner.CoverScanner
 import scanner.MediaScanner
+import java.time.Instant
 import java.util.regex.Pattern
 
 @HiltWorker
@@ -20,7 +20,6 @@ class BookScannerWorker @AssistedInject constructor(
     @Assisted workerParams: WorkerParameters,
     private val store: SensayStore,
     private val mediaScanner: MediaScanner,
-    @Suppress("UNUSED_PARAMETER") private val coverScanner: CoverScanner,
 ) : CoroutineWorker(appContext, workerParams) {
 
     companion object {
@@ -68,6 +67,7 @@ class BookScannerWorker @AssistedInject constructor(
             .sortedBy { -it.createdAt.toEpochMilli() }
 
         val batchSize = inputData.getInt(KEY_BATCH_SIZE, DEFAULT_BATCH_SIZE)
+        val scanInstant = Instant.now()
 
         val booksAddedCount = BookScanner.scanSources(
             applicationContext,
@@ -83,6 +83,8 @@ class BookScannerWorker @AssistedInject constructor(
             },
         ) { sourceId, sourceBooks ->
 
+            store.startSourceScan(sourceId)
+
             store.createOrUpdateBooksWithChapters(
                 sourceId,
                 sourceBooks.map { (booksWithChapters, f) ->
@@ -91,7 +93,10 @@ class BookScannerWorker @AssistedInject constructor(
                         tags = getTags(f),
                     )
                 },
-            ).size
+                scanInstant,
+            ).size.also {
+                store.endSourceScan(sourceId)
+            }
         }
 
         return Result.success(

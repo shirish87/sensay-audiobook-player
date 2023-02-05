@@ -3,10 +3,7 @@ package com.dotslashlabs.sensay.scan
 import android.content.Context
 import androidx.documentfile.provider.DocumentFile
 import com.dotslashlabs.sensay.util.chunked
-import data.entity.Book
-import data.entity.BookWithChapters
-import data.entity.Chapter
-import data.entity.Source
+import data.entity.*
 import data.util.ContentDuration
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.fold
@@ -72,6 +69,7 @@ fun MediaScannerResult.toBookWithChapters() = BookWithChapters(
     ),
     chapters = chapters.map { c ->
         Chapter(
+            bookId = 0,
             uri = c.uri,
             coverUri = c.coverUri,
             hash = c.chapter.hash,
