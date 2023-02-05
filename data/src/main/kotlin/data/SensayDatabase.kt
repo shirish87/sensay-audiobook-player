@@ -2,6 +2,7 @@ package data
 
 import android.content.Context
 import androidx.room.*
+import androidx.room.migration.AutoMigrationSpec
 import data.dao.*
 import data.entity.*
 import data.util.DataTypeConverters
@@ -11,21 +12,18 @@ import data.util.DataTypeConverters
         Book::class,
         Chapter::class,
         Shelf::class,
-        Tag::class,
         BookProgress::class,
         Source::class,
         Bookmark::class,
-        BookChapterCrossRef::class,
         BookShelfCrossRef::class,
-        BookTagCrossRef::class,
-        SourceBookCrossRef::class,
+        BookSourceScan::class,
         Progress::class,
         BookConfig::class,
     ],
     version = SensayDatabase.VERSION,
     exportSchema = true,
     autoMigrations = [
-        AutoMigration(from = 1, to = 2),
+        AutoMigration(from = 1, to = 2, spec = DeleteTableTag::class),
     ],
 )
 @TypeConverters(DataTypeConverters::class)
@@ -44,10 +42,14 @@ abstract class SensayDatabase : RoomDatabase() {
     abstract fun bookDao(): BookDao
     abstract fun chapterDao(): ChapterDao
     abstract fun shelfDao(): ShelfDao
-    abstract fun tagDao(): TagDao
     abstract fun bookProgressDao(): BookProgressDao
     abstract fun sourceDao(): SourceDao
     abstract fun bookmarkDao(): BookmarkDao
     abstract fun progressDao(): ProgressDao
     abstract fun bookConfigDao(): BookConfigDao
 }
+
+@DeleteTable.Entries(
+    DeleteTable(tableName = "Tag"),
+)
+class DeleteTableTag : AutoMigrationSpec

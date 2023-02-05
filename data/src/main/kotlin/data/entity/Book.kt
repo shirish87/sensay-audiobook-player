@@ -5,6 +5,7 @@ import android.os.Parcelable
 import androidx.room.Entity
 import androidx.room.Index
 import androidx.room.PrimaryKey
+import data.InactiveReason
 import data.util.ContentDuration
 import data.util.ContentDurationParceler
 import kotlinx.parcelize.Parcelize
@@ -36,6 +37,10 @@ data class Book(
     val year: String? = null,
     val coverUri: Uri? = null,
     val lastModified: Instant? = null,
+
+    val isActive: Boolean = true,
+    val inactiveReason: InactiveReason? = null,
+    val scanInstant: Instant? = null,
 
     val createdAt: Instant = Instant.now(),
 ) : Parcelable {

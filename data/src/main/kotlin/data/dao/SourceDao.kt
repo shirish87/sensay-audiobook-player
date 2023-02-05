@@ -2,6 +2,7 @@ package data.dao
 
 import android.net.Uri
 import androidx.room.*
+import data.InactiveReason
 import data.entity.*
 import kotlinx.coroutines.flow.Flow
 import java.time.Instant
@@ -26,19 +27,35 @@ interface SourceDao : BaseDao<Source> {
     @Query("SELECT MAX(createdAt) FROM Source")
     fun sourcesMaxCreatedAtTime(): Flow<Instant?>
 
-    @Transaction
-    @Query("SELECT * FROM Source WHERE sourceId = :sourceId")
-    fun sourceWithBooks(sourceId: SourceId): Flow<SourceWithBooks>
+    @Update(entity = Source::class)
+    suspend fun updateSource(vararg sourceScanUpdate: SourceScanUpdate): Int
 
-    @Query("SELECT * FROM SourceBookCrossRef WHERE sourceId = :sourceId")
-    fun sourceBookCrossRefs(sourceId: SourceId): Flow<List<SourceBookCrossRef>>
+    @Query("UPDATE BookSourceScan SET isActive = :isActive, inactiveReason = :inactiveReason WHERE sourceId = :sourceId")
+    suspend fun updateSourceBooks(
+        sourceId: SourceId,
+        isActive: Boolean,
+        inactiveReason: InactiveReason? = null,
+    ): Int
 
-    @Query("SELECT * FROM SourceBookCrossRef WHERE bookId = :bookId")
-    fun sourceBookCrossRefsByBook(bookId: BookId): Flow<List<SourceBookCrossRef>>
+    @Query("UPDATE BookSourceScan SET isActive = :isActive, inactiveReason = :inactiveReason WHERE bookId = :bookId AND sourceId = :sourceId")
+    suspend fun updateBookSource(
+        bookId: BookId,
+        sourceId: SourceId,
+        isActive: Boolean,
+        inactiveReason: InactiveReason? = null,
+    ): Int
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertSourceBookCrossRef(ref: SourceBookCrossRef): Long
+    @Upsert(entity = BookSourceScan::class)
+    suspend fun upsertBookSourceScan(vararg bookSourceScan: BookSourceScan)
 
-    @Delete
-    suspend fun deleteSourceBookCrossRefs(refs: Collection<SourceBookCrossRef>): Int
+    @Query("SELECT * FROM BookSourceScan WHERE sourceId = :sourceId")
+    fun sourceBooks(sourceId: SourceId): Flow<List<BookSourceScan>>
+
+    @Query("SELECT * FROM BookSourceScan WHERE sourceId = :sourceId AND isActive = :isActive")
+    fun sourceBooks(sourceId: SourceId, isActive: Boolean): Flow<List<BookSourceScan>>
 }
+
+data class SourceScanUpdate(
+    val sourceId: SourceId,
+    val isScanning: Boolean,
+)

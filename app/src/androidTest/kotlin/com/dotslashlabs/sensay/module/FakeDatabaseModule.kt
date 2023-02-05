@@ -16,11 +16,11 @@ import dagger.hilt.testing.TestInstallIn
 import data.SensayDatabase
 import data.SensayStore
 import data.repository.*
-import javax.inject.Singleton
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestDispatcher
 import kotlinx.coroutines.test.TestScope
+import javax.inject.Singleton
 
 @TestInstallIn(
     components = [SingletonComponent::class],
@@ -70,9 +70,6 @@ object FakeDatabaseModule {
     fun provideShelfDao(database: SensayDatabase) = database.shelfDao()
 
     @Provides
-    fun provideTagDao(database: SensayDatabase) = database.tagDao()
-
-    @Provides
     fun provideBookProgressDao(database: SensayDatabase) = database.bookProgressDao()
 
     @Provides
@@ -93,7 +90,6 @@ object FakeDatabaseModule {
         bookRepository: BookRepository,
         chapterRepository: ChapterRepository,
         shelfRepository: ShelfRepository,
-        tagRepository: TagRepository,
         bookProgressRepository: BookProgressRepository,
         sourceRepository: SourceRepository,
         bookmarkRepository: BookmarkRepository,
@@ -103,7 +99,6 @@ object FakeDatabaseModule {
         bookRepository,
         chapterRepository,
         shelfRepository,
-        tagRepository,
         bookProgressRepository,
         sourceRepository,
         bookmarkRepository,

@@ -7,14 +7,6 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface ChapterDao : BaseDao<Chapter> {
-    @Query("SELECT * FROM BookChapterCrossRef WHERE bookId IN (:bookIds)")
-    fun booksChapterCrossRefs(bookIds: Collection<BookId>): Flow<List<BookChapterCrossRef>>
-
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertBookChapterCrossRefs(refs: Collection<BookChapterCrossRef>): Array<Long>
-
-    @Delete
-    suspend fun deleteBookChapterCrossRefs(refs: Collection<BookChapterCrossRef>): Int
 
     @Query("SELECT * FROM Chapter WHERE uri = :uri")
     fun chaptersByUri(uri: Uri): Flow<List<Chapter>>
@@ -29,10 +21,6 @@ interface ChapterDao : BaseDao<Chapter> {
     fun chaptersCount(): Flow<Int>
 
     @Transaction
-    @Query("SELECT * FROM Chapter WHERE chapterId = :chapterId")
-    fun chapterWithBook(chapterId: ChapterId): Flow<ChapterWithBook>
-
-    @Transaction
     @Query("SELECT * FROM Book")
     fun booksWithChapters(): Flow<List<BookWithChapters>>
 
@@ -43,4 +31,11 @@ interface ChapterDao : BaseDao<Chapter> {
     @Transaction
     @Query("SELECT * FROM Book WHERE uri = :uri")
     fun bookWithChaptersByUri(uri: String): Flow<BookWithChapters>
+
+    @Delete(entity = Chapter::class)
+    fun deleteByBookId(vararg deleteByBookId: DeleteByBookId)
 }
+
+data class DeleteByBookId(
+    val bookId: BookId,
+)

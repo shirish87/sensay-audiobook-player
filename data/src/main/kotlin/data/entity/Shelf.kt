@@ -27,8 +27,19 @@ data class Shelf(
 
 @Entity(
     primaryKeys = ["bookId", "shelfId"],
-    indices = [
-        Index(value = ["shelfId"]),
+    foreignKeys = [
+        ForeignKey(
+            entity = Book::class,
+            parentColumns = arrayOf("bookId"),
+            childColumns = arrayOf("bookId"),
+            onDelete = ForeignKey.CASCADE,
+        ),
+        ForeignKey(
+            entity = Shelf::class,
+            parentColumns = arrayOf("shelfId"),
+            childColumns = arrayOf("shelfId"),
+            onDelete = ForeignKey.CASCADE,
+        ),
     ],
 )
 data class BookShelfCrossRef(

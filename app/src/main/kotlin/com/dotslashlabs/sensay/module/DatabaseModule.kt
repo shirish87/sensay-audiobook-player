@@ -34,9 +34,6 @@ object DatabaseModule {
     fun provideShelfDao(database: SensayDatabase) = database.shelfDao()
 
     @Provides
-    fun provideTagDao(database: SensayDatabase) = database.tagDao()
-
-    @Provides
     fun provideBookProgressDao(database: SensayDatabase) = database.bookProgressDao()
 
     @Provides
@@ -57,7 +54,6 @@ object DatabaseModule {
         bookRepository: BookRepository,
         chapterRepository: ChapterRepository,
         shelfRepository: ShelfRepository,
-        tagRepository: TagRepository,
         bookProgressRepository: BookProgressRepository,
         sourceRepository: SourceRepository,
         bookmarkRepository: BookmarkRepository,
@@ -67,7 +63,6 @@ object DatabaseModule {
         bookRepository,
         chapterRepository,
         shelfRepository,
-        tagRepository,
         bookProgressRepository,
         sourceRepository,
         bookmarkRepository,

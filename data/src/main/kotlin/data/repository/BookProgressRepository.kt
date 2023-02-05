@@ -30,6 +30,12 @@ class BookProgressRepository @Inject constructor(
     fun booksProgressWithBookAndChapters(bookCategories: Collection<BookCategory>) =
         bookProgressDao.booksProgressWithBookAndChapters(bookCategories)
 
+    fun bookAuthors(bookCategories: Collection<BookCategory>) =
+        bookProgressDao.bookAuthors(bookCategories)
+
+    fun bookSeries(bookCategories: Collection<BookCategory>) =
+        bookProgressDao.bookSeries(bookCategories)
+
     fun booksProgressWithBookAndChapters(
         bookCategories: Collection<BookCategory>,
         filter: String,

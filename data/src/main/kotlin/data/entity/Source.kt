@@ -2,7 +2,9 @@ package data.entity
 
 import android.net.Uri
 import android.os.Parcelable
-import androidx.room.*
+import androidx.room.Entity
+import androidx.room.Index
+import androidx.room.PrimaryKey
 import kotlinx.parcelize.Parcelize
 import java.time.Instant
 
@@ -22,28 +24,15 @@ data class Source(
     val isActive: Boolean = true,
     val inactiveReason: String? = null,
 
-    val createdAt: Instant = Instant.now(),
-) : Parcelable
-
-@Entity(
-    primaryKeys = ["sourceId", "bookId"],
-    indices = [
-        Index(value = ["bookId"], unique = true),
-    ],
-)
-data class SourceBookCrossRef(
-    val sourceId: SourceId,
-    val bookId: BookId,
+    val isScanning: Boolean = false,
 
     val createdAt: Instant = Instant.now(),
-)
+) : Parcelable {
 
-data class SourceWithBooks(
-    @Embedded val source: Source,
-    @Relation(
-        parentColumn = "sourceId",
-        entityColumn = "bookId",
-        associateBy = Junction(SourceBookCrossRef::class),
-    )
-    val books: List<Book>,
-)
+    companion object {
+        fun empty() = Source(
+            uri = Uri.EMPTY,
+            displayName = "",
+        )
+    }
+}

@@ -17,6 +17,20 @@ enum class BookmarkType {
 }
 
 @Entity(
+    foreignKeys = [
+        ForeignKey(
+            entity = Book::class,
+            parentColumns = arrayOf("bookId"),
+            childColumns = arrayOf("bookId"),
+            onDelete = ForeignKey.CASCADE,
+        ),
+        ForeignKey(
+            entity = Chapter::class,
+            parentColumns = arrayOf("chapterId"),
+            childColumns = arrayOf("chapterId"),
+            onDelete = ForeignKey.CASCADE,
+        ),
+    ],
     indices = [
         Index(value = ["chapterId", "chapterPosition"], unique = true),
     ],

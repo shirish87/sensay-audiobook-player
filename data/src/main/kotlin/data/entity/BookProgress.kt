@@ -13,6 +13,14 @@ import java.time.Instant
 typealias BookProgressId = Long
 
 @Entity(
+    foreignKeys = [
+        ForeignKey(
+            entity = Book::class,
+            parentColumns = arrayOf("bookId"),
+            childColumns = arrayOf("bookId"),
+            onDelete = ForeignKey.CASCADE,
+        ),
+    ],
     indices = [
         Index(value = ["bookId"], unique = true),
     ],
@@ -110,8 +118,7 @@ data class BookProgressWithBookAndChapters(
 
     @Relation(
         parentColumn = "bookId",
-        entityColumn = "chapterId",
-        associateBy = Junction(BookChapterCrossRef::class),
+        entityColumn = "bookId",
     )
     val chapters: List<Chapter>,
 ) : Parcelable {
@@ -156,7 +163,7 @@ data class BookProgressWithBookAndChapters(
         fun empty() = BookProgressWithBookAndChapters(
             bookProgress = BookProgress.empty(),
             book = Book.empty(),
-            chapter = Chapter.empty(),
+            chapter = Chapter.empty(bookId = 0),
             chapters = emptyList(),
         )
     }

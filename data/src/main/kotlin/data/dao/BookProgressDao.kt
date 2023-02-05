@@ -59,6 +59,30 @@ interface BookProgressDao : BaseDao<BookProgress> {
     ): Flow<List<BookProgressWithBookAndChapters>>
 
     @Transaction
+    @Query("""
+        SELECT DISTINCT bookAuthor
+        FROM BookProgress
+        WHERE
+            bookCategory IN (:bookCategories)
+        ORDER BY bookAuthor
+    """)
+    fun bookAuthors(
+        bookCategories: Collection<BookCategory>,
+    ): Flow<List<String>>
+
+    @Transaction
+    @Query("""
+        SELECT DISTINCT bookSeries
+        FROM BookProgress
+        WHERE
+            bookCategory IN (:bookCategories)
+        ORDER BY bookSeries
+    """)
+    fun bookSeries(
+        bookCategories: Collection<BookCategory>,
+    ): Flow<List<String>>
+
+    @Transaction
     @Query(
         """
         SELECT *
