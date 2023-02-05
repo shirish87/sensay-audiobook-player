@@ -45,8 +45,6 @@ import com.dotslashlabs.sensay.ui.theme.MinContrastOfPrimaryVsSurface
 import com.dotslashlabs.sensay.ui.theme.contrastAgainst
 import com.dotslashlabs.sensay.ui.theme.rememberDominantColorState
 import com.dotslashlabs.sensay.util.verticalGradientScrim
-import com.google.accompanist.flowlayout.FlowMainAxisAlignment
-import com.google.accompanist.flowlayout.FlowRow
 import logcat.logcat
 
 object PlayerScreen : SensayScreen {
@@ -161,6 +159,7 @@ fun PlayerContentView(
     }
 }
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun PlayerContentViewNormal(
     playerAppViewActions: PlayerAppViewActions,
@@ -242,6 +241,7 @@ fun PlayerContentViewNormal(
     }
 }
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun PlayerContentViewLandscape(
     playerAppViewActions: PlayerAppViewActions,
@@ -307,6 +307,7 @@ fun PlayerContentViewLandscape(
     }
 }
 
+@ExperimentalLayoutApi
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun PlayerEq(
@@ -320,7 +321,6 @@ private fun PlayerEq(
 
     FlowRow(
         modifier = modifier,
-        mainAxisSpacing = 10.dp,
     ) {
 
         InputChip(
@@ -411,6 +411,7 @@ private fun PlayerImage(
     )
 }
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun PlayerInfo(
     state: PlayerViewState,
@@ -429,7 +430,7 @@ private fun PlayerInfo(
             author = book.author,
             series = book.series,
             bookTitle = book.bookTitle,
-            mainAxisAlignment = FlowMainAxisAlignment.Center,
+            horizontalArrangement = Arrangement.Center,
             style = MaterialTheme.typography.titleSmall,
             maxLengthEach = 100,
         )

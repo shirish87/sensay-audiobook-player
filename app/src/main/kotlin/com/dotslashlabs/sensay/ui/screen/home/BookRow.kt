@@ -64,6 +64,7 @@ fun BookRow(
     }
 }
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun ListBookView(
     bookProgressWithChapters: BookProgressWithBookAndChapters,

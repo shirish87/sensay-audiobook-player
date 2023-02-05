@@ -35,8 +35,6 @@ import com.dotslashlabs.sensay.ui.screen.common.CoverImage
 import com.dotslashlabs.sensay.ui.screen.player.Media
 import com.dotslashlabs.sensay.util.PlayerState
 import com.dotslashlabs.sensay.util.joinWith
-import com.google.accompanist.flowlayout.FlowMainAxisAlignment
-import com.google.accompanist.flowlayout.FlowRow
 import com.google.common.util.concurrent.ListenableFuture
 import data.entity.BookProgressWithBookAndChapters
 import data.util.ContentDuration
@@ -156,6 +154,7 @@ fun NowPlayingViewContent(
 }
 
 @Composable
+@ExperimentalLayoutApi
 fun BookAuthorAndSeries(
     author: String?,
     series: String?,
@@ -163,17 +162,14 @@ fun BookAuthorAndSeries(
     modifier: Modifier = Modifier,
     maxLengthEach: Int = 40,
     style: TextStyle = MaterialTheme.typography.labelSmall,
-    mainAxisAlignment: FlowMainAxisAlignment = FlowMainAxisAlignment.Start,
-    mainAxisSpacing: Dp = 4.dp,
+    horizontalArrangement: Arrangement.Horizontal = Arrangement.Start,
 ) {
 
     if (author == null && series == null) return
 
     FlowRow(
-        modifier = modifier
-            .fillMaxWidth(0.95F),
-        mainAxisAlignment = mainAxisAlignment,
-        mainAxisSpacing = mainAxisSpacing,
+        modifier = modifier.fillMaxWidth(0.95F),
+        horizontalArrangement = horizontalArrangement,
     ) {
         listOfNotNull(
             author,

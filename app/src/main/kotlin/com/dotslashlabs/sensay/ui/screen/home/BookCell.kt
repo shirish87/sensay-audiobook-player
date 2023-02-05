@@ -18,7 +18,6 @@ import com.dotslashlabs.sensay.ui.screen.common.CoverImage
 import com.dotslashlabs.sensay.ui.screen.home.nowplaying.BookAuthorAndSeries
 import com.dotslashlabs.sensay.ui.screen.home.nowplaying.BookChapter
 import com.dotslashlabs.sensay.ui.screen.home.nowplaying.BookTitle
-import com.google.accompanist.flowlayout.FlowMainAxisAlignment
 import data.BookCategory
 import data.BookCategory.NOT_STARTED
 import data.entity.Book
@@ -66,6 +65,7 @@ fun BookCell(
     }
 }
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun GridBookView(
     bookProgressWithChapters: BookProgressWithBookAndChapters,
@@ -94,7 +94,7 @@ private fun GridBookView(
                 book.title,
                 maxLengthEach = 25,
                 style = MaterialTheme.typography.labelSmall,
-                mainAxisAlignment = FlowMainAxisAlignment.Center,
+                horizontalArrangement = Arrangement.Center,
                 modifier = Modifier
                     .fillMaxWidth()
                     .align(Alignment.BottomCenter)
