@@ -5,15 +5,12 @@ import android.content.Context
 import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.ExperimentalAnimationApi
-import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLayoutDirection
@@ -93,7 +90,6 @@ fun HomeContent(
                 Column(
                     modifier = Modifier
                         .padding(start = 24.dp, end = 24.dp, bottom = 24.dp)
-                        .border(1.dp, MaterialTheme.colorScheme.surface.copy(alpha = 0.5F))
                         .shadow(elevation = 6.dp, shape = RoundedCornerShape(24.dp), clip = true),
                 ) {
 
