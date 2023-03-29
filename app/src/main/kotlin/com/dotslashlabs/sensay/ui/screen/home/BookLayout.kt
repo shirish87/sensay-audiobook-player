@@ -21,6 +21,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.airbnb.mvrx.Async
+import com.airbnb.mvrx.Fail
 import com.airbnb.mvrx.Loading
 import com.airbnb.mvrx.Success
 import data.entity.BookProgressWithBookAndChapters
@@ -105,6 +106,10 @@ fun <SortMenuType> BooksList(
     val books = allBooks.filter { !it.isEmpty }
 
     Column(Modifier.fillMaxSize()) {
+        if (items is Fail) {
+            Text("${items.error.message}")
+        }
+
         if (isFilterEnabled || (!isLoading && results.isNotEmpty())) {
             FilterBar(
                 sortMenuOptions = sortMenuOptions,
@@ -195,6 +200,10 @@ fun <SortMenuType> BooksGrid(
     val books = allBooks.filter { !it.isEmpty }
 
     Column(Modifier.fillMaxSize()) {
+        if (items is Fail) {
+            Text("${items.error.message}")
+        }
+
         if (isFilterEnabled || (!isLoading && results.isNotEmpty())) {
             FilterBar(
                 sortMenuOptions = sortMenuOptions,

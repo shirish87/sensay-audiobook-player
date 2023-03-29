@@ -16,6 +16,7 @@ import com.dotslashlabs.sensay.ui.screen.common.SensayFrame
 import com.dotslashlabs.sensay.util.isLifecycleResumed
 import config.HomeLayout
 import data.BookCategory
+import logcat.logcat
 
 object CurrentScreen : SensayScreen {
 
@@ -31,11 +32,12 @@ object CurrentScreen : SensayScreen {
         val appViewModel: SensayAppViewModel = mavericksActivityViewModel()
         val homeLayout by appViewModel.collectAsState(SensayAppState::homeLayout)
 
-        val viewModel: HomeViewModel = mavericksViewModel(backStackEntry, argsFactory = {
+        val viewModel: HomeViewModel = mavericksViewModel(backStackEntry, keyFactory = { toString() }, argsFactory = {
             HomeViewArgs(listOf(BookCategory.CURRENT))
         })
 
         val state by viewModel.collectAsState()
+        logcat { "CurrentScreen destination=${destination.route} bookCategories=${state.bookCategories}" }
 
         val onNavToBook: OnNavToBook = { bookId ->
             if (backStackEntry.isLifecycleResumed()) {

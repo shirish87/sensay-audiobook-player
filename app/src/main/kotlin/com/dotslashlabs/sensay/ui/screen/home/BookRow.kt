@@ -3,11 +3,14 @@ package com.dotslashlabs.sensay.ui.screen.home
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.material3.Card
 import androidx.compose.material3.ElevatedCard
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -42,6 +45,7 @@ fun BookRow(
 
     ElevatedCard(
         modifier = modifier
+            .alpha(if (bookProgressWithChapters.book.isActive) 1F else 0.25F)
             .padding(horizontal = 16.dp, vertical = 8.dp)
             .fillMaxWidth()
             .combinedClickable(

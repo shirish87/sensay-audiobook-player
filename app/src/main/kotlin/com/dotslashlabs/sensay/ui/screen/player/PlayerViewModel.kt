@@ -29,7 +29,6 @@ import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.take
 import logcat.logcat
-import okhttp3.internal.toHexString
 
 typealias Media = BookProgressWithDuration
 
@@ -243,7 +242,7 @@ class PlayerViewModel @AssistedInject constructor(
     override fun attachPlayer(context: Context) {
         setState { copy(isLoading = true) }
         attach(context) { err, playerEvents, _ ->
-            logcat { "attachPlayer: ${player?.hashCode()?.toHexString()}" }
+            logcat { "attachPlayer" }
             setState { copy(isLoading = false, error = err?.message) }
 
             job?.cancel()
@@ -265,7 +264,7 @@ class PlayerViewModel @AssistedInject constructor(
     }
 
     override fun detachPlayer() {
-        logcat { "detachPlayer: ${player?.hashCode()?.toHexString()}" }
+        logcat { "detachPlayer" }
         setState { copy(isLoading = false, error = null) }
         detach()
 

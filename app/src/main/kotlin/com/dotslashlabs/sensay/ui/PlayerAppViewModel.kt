@@ -30,7 +30,6 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
 import logcat.logcat
-import okhttp3.internal.toHexString
 import kotlin.time.Duration.Companion.milliseconds
 
 data class PlayerAppViewState(
@@ -69,7 +68,7 @@ data class PlayerAppViewState(
     }
 
     init {
-        logcat { "PlayerAppViewState: init ${hashCode().toHexString()}" }
+        logcat { "PlayerAppViewState: init" }
     }
 }
 
@@ -111,7 +110,7 @@ class PlayerAppViewModel @AssistedInject constructor(
             setState { copy(nowPlayingBook = media) }
         }
 
-        logcat { "PlayerAppViewModel: init ${hashCode().toHexString()}" }
+        logcat { "PlayerAppViewModel: init" }
     }
 
     override fun onCleared() {
@@ -123,7 +122,7 @@ class PlayerAppViewModel @AssistedInject constructor(
     override fun attachPlayer(context: Context) {
         setState { copy(isLoading = true) }
         attach(context) { err, _, serviceEvents ->
-            logcat { "attachPlayer: ${player?.hashCode()?.toHexString()}" }
+            logcat { "attachPlayer" }
             setState { copy(isLoading = false, error = err?.message) }
 
             job?.cancel()
@@ -135,7 +134,7 @@ class PlayerAppViewModel @AssistedInject constructor(
     }
 
     override fun detachPlayer() {
-        logcat { "detachPlayer: ${player?.hashCode()?.toHexString()}" }
+        logcat { "detachPlayer" }
         setState { copy(isLoading = false, error = null) }
         detach()
 

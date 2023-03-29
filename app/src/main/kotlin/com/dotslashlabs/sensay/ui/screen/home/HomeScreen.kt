@@ -18,6 +18,8 @@ import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavHostController
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.rememberNavController
 import com.airbnb.mvrx.compose.collectAsState
 import com.airbnb.mvrx.compose.mavericksActivityViewModel
 import com.dotslashlabs.sensay.ui.SensayAppViewModel
@@ -25,9 +27,8 @@ import com.dotslashlabs.sensay.ui.screen.Destination
 import com.dotslashlabs.sensay.ui.screen.SensayScreen
 import com.dotslashlabs.sensay.ui.screen.common.SensayFrame
 import com.dotslashlabs.sensay.ui.screen.home.nowplaying.NowPlayingView
-import com.google.accompanist.navigation.animation.AnimatedNavHost
-import com.google.accompanist.navigation.animation.rememberAnimatedNavController
 import kotlinx.coroutines.launch
+import logcat.logcat
 
 object HomeScreen : SensayScreen {
     @Composable
@@ -52,7 +53,7 @@ fun HomeContent(
     val appViewModel: SensayAppViewModel = mavericksActivityViewModel()
     val state by appViewModel.collectAsState()
 
-    val homeNavController = rememberAnimatedNavController()
+    val homeNavController = rememberNavController()
 
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior()
     val isTopBarCollapsed =
@@ -123,6 +124,7 @@ fun HomeContent(
         ) { innerPadding ->
 
             val startDestination = destination.defaultChild?.route ?: return@Scaffold
+            logcat { "HomeScreen destination=${destination.route} ${navHostController.currentDestination?.route} startDestination=$startDestination" }
 
             val layoutDirection = LocalLayoutDirection.current
             val contentPadding = computeContentPadding(
@@ -131,9 +133,10 @@ fun HomeContent(
                 layoutDirection,
             )
 
-            AnimatedNavHost(
+            NavHost(
                 homeNavController,
                 startDestination = startDestination,
+                route = destination.route,
                 modifier = Modifier.padding(contentPadding),
             ) {
                 destination.children.map { dest ->

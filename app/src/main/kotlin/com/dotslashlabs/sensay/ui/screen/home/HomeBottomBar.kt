@@ -13,6 +13,7 @@ import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import com.dotslashlabs.sensay.ui.screen.Destination
+import logcat.logcat
 
 @Composable
 fun HomeBottomBar(
@@ -43,9 +44,12 @@ fun HomeBottomBar(
                 label = if (useLandscapeLayout) null else ({ Text(text = dest.screen.toString()) }),
                 selected = currentDestination?.hierarchy?.any { it.route == dest.route } == true,
                 onClick = {
+                    logcat { "NavigationBarItem: ${dest.route}" }
                     homeNavController.navigate(dest.route) {
-                        popUpTo(homeNavController.graph.findStartDestination().id) {
-                            saveState = true
+                        homeNavController.graph.startDestinationRoute?.let { route ->
+                            popUpTo(route) {
+                                saveState = true
+                            }
                         }
 
                         launchSingleTop = true

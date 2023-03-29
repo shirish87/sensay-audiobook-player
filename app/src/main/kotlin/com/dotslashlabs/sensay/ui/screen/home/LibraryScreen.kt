@@ -18,6 +18,7 @@ import config.HomeLayout
 import data.BookCategory
 import data.entity.Book
 import data.entity.BookProgressWithBookAndChapters
+import logcat.logcat
 
 typealias OnNavToBook = (bookId: Long) -> Unit
 
@@ -39,11 +40,12 @@ object LibraryScreen : SensayScreen {
         val appViewModel: SensayAppViewModel = mavericksActivityViewModel()
         val homeLayout by appViewModel.collectAsState(SensayAppState::homeLayout)
 
-        val viewModel: HomeViewModel = mavericksViewModel(backStackEntry, argsFactory = {
+        val viewModel: HomeViewModel = mavericksViewModel(backStackEntry, keyFactory = { toString() }, argsFactory = {
             HomeViewArgs(listOf(BookCategory.NOT_STARTED, BookCategory.FINISHED))
         })
 
         val state by viewModel.collectAsState()
+        logcat { "LibraryScreen destination=${destination.route} bookCategories=${state.bookCategories}" }
 
         val onNavToBook: OnNavToBook = { bookId ->
             if (backStackEntry.isLifecycleResumed()) {
