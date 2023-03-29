@@ -1,11 +1,12 @@
 package data.entity
 
 import android.os.Parcelable
-import androidx.room.Entity
-import androidx.room.ForeignKey
-import androidx.room.PrimaryKey
+import androidx.room.*
 import data.InactiveReason
+import data.util.ContentDuration
+import data.util.ContentDurationParceler
 import kotlinx.parcelize.Parcelize
+import kotlinx.parcelize.TypeParceler
 import java.time.Instant
 
 @Entity(
@@ -25,6 +26,7 @@ import java.time.Instant
     ],
 )
 @Parcelize
+@TypeParceler<ContentDuration, ContentDurationParceler>()
 data class BookSourceScan(
     @PrimaryKey(autoGenerate = false) val bookId: BookId,
     val sourceId: SourceId,
@@ -35,3 +37,12 @@ data class BookSourceScan(
 
     val createdAt: Instant = Instant.now(),
 ) : Parcelable
+
+data class BookSourceScanWithBook(
+    @Embedded val bookSourceScan: BookSourceScan,
+    @Relation(
+        parentColumn = "bookId",
+        entityColumn = "bookId",
+    )
+    val book: Book,
+)

@@ -49,6 +49,9 @@ interface SourceDao : BaseDao<Source> {
     suspend fun upsertBookSourceScan(vararg bookSourceScan: BookSourceScan)
 
     @Query("SELECT * FROM BookSourceScan WHERE sourceId = :sourceId")
+    fun bookSourceScansWithBooks(sourceId: SourceId): Flow<List<BookSourceScanWithBook>>
+
+    @Query("SELECT * FROM BookSourceScan WHERE sourceId = :sourceId")
     fun sourceBooks(sourceId: SourceId): Flow<List<BookSourceScan>>
 
     @Query("SELECT * FROM BookSourceScan WHERE sourceId = :sourceId AND isActive = :isActive")

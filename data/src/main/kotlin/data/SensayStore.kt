@@ -12,7 +12,7 @@ import java.time.Instant
 import javax.inject.Inject
 
 data class BookWithChaptersAndTags(
-    val booksWithChapters: BookWithChapters,
+    val bookWithChapters: BookWithChapters,
     val tags: Collection<String>,
 )
 
@@ -48,24 +48,12 @@ class SensayStore @Inject constructor(
         logcat { "endSourceScan: sourceId=$sourceId" }
 
         runInTransaction {
-            val sourceBooks =
-                sourceRepository.sourceBooks(sourceId, isActive = false).firstOrNull()
-
-            val inactiveReason = InactiveReason.NOT_FOUND
-
-            sourceBooks?.forEach { sourceBook ->
-                sourceRepository.updateSourceBook(
-                    sourceId = sourceId,
-                    bookId = sourceBook.bookId,
-                    isActive = sourceBook.isActive,
-                    inactiveReason = inactiveReason,
-                )
-
+            sourceRepository.sourceBooks(sourceId).firstOrNull()?.forEach { sourceBook ->
                 bookRepository.updateBook(
                     bookId = sourceBook.bookId,
-                    isActive = sourceBook.isActive,
-                    inactiveReason = inactiveReason,
                     scanInstant = sourceBook.scanInstant,
+                    isActive = sourceBook.isActive,
+                    inactiveReason = if (sourceBook.isActive) null else InactiveReason.NOT_FOUND,
                 )
             }
 
@@ -77,6 +65,18 @@ class SensayStore @Inject constructor(
         }
     }
 
+    suspend fun updateSourceBook(
+        sourceId: SourceId,
+        bookId: BookId,
+        isActive: Boolean,
+        inactiveReason: InactiveReason? = null,
+    ) = sourceRepository.updateSourceBook(sourceId, bookId, isActive, inactiveReason)
+
+    suspend fun updateBook(
+        bookId: BookId,
+        coverUri: Uri,
+    ) = bookRepository.updateBook(bookId, coverUri)
+
     suspend fun createOrUpdateBooksWithChapters(
         sourceId: SourceId,
         booksWithChaptersAndTags: Collection<BookWithChaptersAndTags>,
@@ -84,10 +84,10 @@ class SensayStore @Inject constructor(
     ): List<Long> {
 
         return booksWithChaptersAndTags.mapNotNull {
-            val book = it.booksWithChapters.book
+            val book = it.bookWithChapters.book
             logcat { "Attempting book: ${book.title}" }
 
-            val chapters = it.booksWithChapters.chapters.sortedBy { o -> o.trackId }.toMutableList()
+            val chapters = it.bookWithChapters.chapters.sortedBy { o -> o.trackId }.toMutableList()
 
             if (chapters.isEmpty() && !book.duration.isEmpty()) {
                 // book is not chapterized
@@ -115,30 +115,25 @@ class SensayStore @Inject constructor(
                     val existingBook = bookRepository.bookByHash(book.hash).firstOrNull()
                         ?: bookRepository.bookByUri(book.uri).firstOrNull()
 
-                    bookId = if (existingBook != null) {
-                        bookRepository.updateBook(book.copy(bookId = existingBook.bookId))
-                        existingBook.bookId
-                    } else {
-                        bookRepository.createBook(book)
+                    if (existingBook != null) {
+//                        val oldBookProgress = bookProgressRepository.bookProgressWithBookAndChapters(
+//                            existingBook.bookId,
+//                        )
+                        bookRepository.deleteBooks(listOf(existingBook))
                     }
+
+                    bookId = bookRepository.createBook(book)
 
                     if (bookId == -1L) return@mapNotNull null
 
                     logcat { "Found book: bookId=$bookId sourceId=$sourceId" }
-
-                    if (existingBook != null) {
-                        chapterRepository.deleteChapters(DeleteByBookId(bookId))
-                        bookProgressRepository.deleteOrResetBooksProgress(listOf(bookId))
-                        // TODO: code to restore bookProgress
-                    } else {
-                        bookConfigRepository.insertBookConfig(BookConfig(bookId))
-                    }
+                    bookConfigRepository.insertBookConfig(BookConfig(bookId))
 
                     val chapterIds = chapterRepository.createChapters(
                         chapters.map { c -> c.copy(bookId = bookId) }
                     )
 
-                    if (chapterIds.any { c -> c == -1L }) {
+                    if (chapterIds.isEmpty() || chapterIds.any { c -> c == -1L }) {
                         return@mapNotNull null
                     }
 
@@ -159,6 +154,7 @@ class SensayStore @Inject constructor(
                     bookId
                 }.also { processedBookId ->
                     logcat { "upsertBookSourceScan: bookId=$processedBookId sourceId=$sourceId scanInstant=$scanInstant ${book.title}" }
+
                     sourceRepository.upsertBookSourceScan(
                         BookSourceScan(
                             bookId = processedBookId,
@@ -221,9 +217,13 @@ class SensayStore @Inject constructor(
 
     fun chaptersByUri(uri: Uri) = chapterRepository.chaptersByUri(uri)
 
+    fun chaptersMaxLastModifiedByUri(uri: Uri) = chapterRepository.chaptersMaxLastModifiedByUri(uri)
+
     fun sourceById(sourceId: SourceId) = sourceRepository.sourceById(sourceId)
     fun sources() = sourceRepository.sources()
     fun sources(isActive: Boolean = true) = sourceRepository.sources(isActive)
+
+    fun bookSourceScansWithBooks(sourceId: SourceId) = sourceRepository.bookSourceScansWithBooks(sourceId)
 
     suspend fun addSources(sources: Collection<Source>) = sourceRepository.addSources(sources)
 
@@ -231,12 +231,12 @@ class SensayStore @Inject constructor(
         return try {
             runInTransaction {
                 val sourceBooks =
-                    sourceRepository.sourceBooks(sourceId).firstOrNull() ?: return emptyList()
-                val bookIds = sourceBooks.map { it.bookId }
+                    sourceRepository.bookSourceScansWithBooks(sourceId).firstOrNull() ?: return emptyList()
+                val books = sourceBooks.map { it.book }
 
-                deleteBooks(bookIds.map { Book.empty().copy(bookId = it) })
+                deleteBooks(books)
                 sourceRepository.deleteSource(sourceId)
-                bookIds
+                books.map { it.bookId }
             }
         } catch (ex: Exception) {
             ex.printStackTrace()

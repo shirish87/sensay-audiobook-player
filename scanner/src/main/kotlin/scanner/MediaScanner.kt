@@ -178,6 +178,7 @@ class MediaScanner @Inject constructor(private val mediaAnalyzer: MediaAnalyzer)
         context: Context,
         rootDir: DocumentFile,
         acceptFileFilter: suspend (file: DocumentFile) -> Boolean,
+        skipCoverScan: Boolean = true,
         maxLevels: Int = 4,
     ): Flow<MediaScannerResult> = channelFlow {
         if (!rootDir.isDirectory || !rootDir.canRead()) return@channelFlow
@@ -198,8 +199,10 @@ class MediaScanner @Inject constructor(private val mediaAnalyzer: MediaAnalyzer)
                 val pendingFiles = scan.singleAudioFiles + scan.audioFiles
 
                 scan.levelDirs.flatMap { it.listFiles().filter(audioFileFilter) }
-                    .mapNotNull { f -> analyzeFile(context, f, acceptFileFilter) }
-                    .plus(pendingFiles.mapNotNull { f -> analyzeFile(context, f, acceptFileFilter) })
+                    .mapNotNull { f -> analyzeFile(context, f, acceptFileFilter, skipCoverScan) }
+                    .plus(pendingFiles.mapNotNull { f ->
+                        analyzeFile(context, f, acceptFileFilter, skipCoverScan)
+                    })
                     .consolidate(::consolidateMediaScannerResults)
                     .groupBy { it.chapters.isNotEmpty() }
                     .flatMap { (hasChapters, grp) ->
@@ -209,7 +212,7 @@ class MediaScanner @Inject constructor(private val mediaAnalyzer: MediaAnalyzer)
                         consolidateSingleMediaScannerResults(grp)
                     }
                     .filter { acceptFileFilter(it.root) }
-                    .also { l -> logcat { "ADDING: ${l.joinToString { it.fileName }}" } }
+                    /// .also { l -> logcat { "ADDING: ${l.joinToString { it.fileName }}" } }
                     .map { send(it) }
             }
 
@@ -401,33 +404,32 @@ class MediaScanner @Inject constructor(private val mediaAnalyzer: MediaAnalyzer)
         context: Context,
         file: DocumentFile,
         acceptFileFilter: suspend (file: DocumentFile) -> Boolean,
+        skipCoverScan: Boolean,
     ): MediaScannerResult? {
 
         if (file.type?.startsWith("audio/", true) != true &&
             !validSupportedFileExtension.matches(file.name!!)
         ) {
-            logcat { "analyzeFile.REJECTED: ${file.name} Failed mimetype or extension" }
+            // logcat { "analyzeFile.REJECTED: ${file.name} Failed mimetype or extension" }
             return null
         }
 
         if (!acceptFileFilter(file)) {
-            logcat { "analyzeFile.REJECTED: ${file.name} Failed acceptFileFilter" }
+            // logcat { "analyzeFile.REJECTED: ${file.name} Failed acceptFileFilter" }
             return null
         }
 
         val metadata = mediaAnalyzer.analyze(context, file)
-        if (metadata == null) {
-            logcat { "analyzeFile.REJECTED: ${file.name} Failed metadata analyzer" }
+            ?: // logcat { "analyzeFile.REJECTED: ${file.name} Failed metadata analyzer" }
             return null
-        }
 
-        val coverFile = coverScanner.scanCover(
+        val coverFile = if (skipCoverScan) null else coverScanner.scanCover(
             context,
             file,
             metadata.hash,
         )
 
-        logcat { "analyzeFile.ACCEPTED: file=${file.name} / metadata=${metadata.duration} / ${metadata.chapters.size}" }
+        // logcat { "analyzeFile.ACCEPTED: file=${file.name} / metadata=${metadata.duration} / ${metadata.chapters.size}" }
         return MediaScannerResult.create(file, coverFile, metadata)
     }
 }

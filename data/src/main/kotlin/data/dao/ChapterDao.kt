@@ -4,12 +4,16 @@ import android.net.Uri
 import androidx.room.*
 import data.entity.*
 import kotlinx.coroutines.flow.Flow
+import java.time.Instant
 
 @Dao
 interface ChapterDao : BaseDao<Chapter> {
 
     @Query("SELECT * FROM Chapter WHERE uri = :uri")
     fun chaptersByUri(uri: Uri): Flow<List<Chapter>>
+
+    @Query("SELECT MAX(lastModified) AS lastModified FROM Chapter WHERE uri = :uri")
+    fun chaptersMaxLastModifiedByUri(uri: Uri): Flow<Instant>
 
     @Query("SELECT * FROM Chapter")
     fun chapters(): Flow<List<Chapter>>

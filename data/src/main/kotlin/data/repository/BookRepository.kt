@@ -2,6 +2,7 @@ package data.repository
 
 import android.net.Uri
 import data.InactiveReason
+import data.dao.BookCoverScanUpdate
 import data.dao.BookDao
 import data.dao.BookScanUpdate
 import data.entity.Book
@@ -36,6 +37,16 @@ class BookRepository @Inject constructor(
             isActive,
             inactiveReason,
             scanInstant,
+        ),
+    )
+
+    suspend fun updateBook(
+        bookId: BookId,
+        coverUri: Uri? = null,
+    ): Int = bookDao.updateBook(
+        BookCoverScanUpdate(
+            bookId,
+            coverUri,
         ),
     )
 

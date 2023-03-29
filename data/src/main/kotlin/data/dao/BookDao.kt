@@ -29,6 +29,9 @@ interface BookDao : BaseDao<Book> {
 
     @Update(entity = Book::class)
     suspend fun updateBook(vararg bookScanUpdate: BookScanUpdate): Int
+
+    @Update(entity = Book::class)
+    suspend fun updateBook(vararg bookCoverScanUpdate: BookCoverScanUpdate): Int
 }
 
 data class BookScanUpdate(
@@ -36,4 +39,9 @@ data class BookScanUpdate(
     val isActive: Boolean,
     val inactiveReason: InactiveReason? = null,
     val scanInstant: Instant? = null,
+)
+
+data class BookCoverScanUpdate(
+    val bookId: BookId,
+    val coverUri: Uri? = null,
 )

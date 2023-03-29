@@ -2,7 +2,6 @@ package data
 
 import android.content.Context
 import androidx.room.*
-import androidx.room.migration.AutoMigrationSpec
 import data.dao.*
 import data.entity.*
 import data.util.DataTypeConverters
@@ -23,14 +22,14 @@ import data.util.DataTypeConverters
     version = SensayDatabase.VERSION,
     exportSchema = true,
     autoMigrations = [
-        AutoMigration(from = 1, to = 2, spec = DeleteTableTag::class),
+//        AutoMigration(from = 1, to = 2),
     ],
 )
 @TypeConverters(DataTypeConverters::class)
 abstract class SensayDatabase : RoomDatabase() {
 
     companion object {
-        const val VERSION = 2
+        const val VERSION = 1
 
         fun instance(appContext: Context) = Room.databaseBuilder(
             appContext,
@@ -48,8 +47,3 @@ abstract class SensayDatabase : RoomDatabase() {
     abstract fun progressDao(): ProgressDao
     abstract fun bookConfigDao(): BookConfigDao
 }
-
-@DeleteTable.Entries(
-    DeleteTable(tableName = "Tag"),
-)
-class DeleteTableTag : AutoMigrationSpec

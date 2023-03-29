@@ -59,6 +59,8 @@ class SourceRepository @Inject constructor(
 
     fun sourceBooks(sourceId: SourceId) = sourceDao.sourceBooks(sourceId)
 
+    fun bookSourceScansWithBooks(sourceId: SourceId) = sourceDao.bookSourceScansWithBooks(sourceId)
+
     fun sourceBooks(sourceId: SourceId, isActive: Boolean) =
         sourceDao.sourceBooks(sourceId, isActive)
 

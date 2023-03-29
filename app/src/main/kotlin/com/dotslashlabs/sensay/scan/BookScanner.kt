@@ -6,7 +6,7 @@ import com.dotslashlabs.sensay.util.chunked
 import data.entity.*
 import data.util.ContentDuration
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.fold
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.withContext
 import logcat.logcat
 import scanner.MediaScanner
@@ -19,8 +19,30 @@ object BookScanner {
         context: Context,
         sources: Collection<Source>,
         mediaScanner: MediaScanner,
+        skipCoverScan: Boolean = true,
+        acceptFileFilter: suspend (sourceId: SourceId, file: DocumentFile) -> Boolean = { _, _ -> true },
+    ): Flow<Pair<SourceId, MediaScannerResult>> {
+
+        return sources.asFlow().flatMapConcat { source ->
+            val df = DocumentFile.fromTreeUri(context, source.uri)
+            if (df == null || !df.isDirectory || !df.canRead()) return@flatMapConcat emptyFlow()
+
+            mediaScanner.scan(
+                context,
+                df,
+                { f -> acceptFileFilter(source.sourceId, f) },
+                skipCoverScan,
+            ).map { source.sourceId to it }
+        }
+    }
+
+    private suspend fun scanSourcesOld(
+        context: Context,
+        sources: Collection<Source>,
+        mediaScanner: MediaScanner,
         batchSize: Int = 4,
-        bookFileFilter: suspend (file: DocumentFile) -> Boolean,
+        skipCoverScan: Boolean = true,
+        acceptFileFilter: suspend (file: DocumentFile) -> Boolean = { true },
         callback: suspend (
             sourceId: Long,
             booksWithChapters: List<Pair<BookWithChapters, DocumentFile>>,
@@ -44,7 +66,8 @@ object BookScanner {
             mediaScanner.scan(
                 context,
                 df,
-                bookFileFilter,
+                acceptFileFilter,
+                skipCoverScan,
             )
                 .chunked(batchSize)
                 .fold(booksCount) { sourceBooksCount, results ->
