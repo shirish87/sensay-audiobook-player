@@ -15,7 +15,7 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 
 fun Project.applyCommonPlugins() {
-    plugins.apply("kotlin-android")
+    plugins.apply("org.jetbrains.kotlin.android")
     plugins.apply("kotlin-kapt")
 }
 
