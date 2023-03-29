@@ -26,9 +26,15 @@ fun Project.applyCommonDependencies(@Suppress("UNUSED_PARAMETER") plugin: Plugin
 
     dependencies {
         if (plugin is AppPlugin) {
+            val composeBom = platform(Libraries.Compose.bom)
+            add("implementation", composeBom)
+            add("androidTestImplementation", composeBom)
+
             add("implementation", Libraries.AndroidX.window)
-            add("implementation", Libraries.Compose.activityCompose)
-            add("implementation", Libraries.Compose.navigationCompose)
+
+            add("implementation", Libraries.ComposeLibs.activityCompose)
+            add("implementation", Libraries.ComposeLibs.navigationCompose)
+            add("implementation", Libraries.ComposeLibs.constraintLayout)
 
             // Hilt
             val kapt by configurations.creating
@@ -42,7 +48,6 @@ fun Project.applyCommonDependencies(@Suppress("UNUSED_PARAMETER") plugin: Plugin
             // Compose
             add("implementation", Libraries.Compose.foundation)
             add("implementation", Libraries.Compose.foundationLayout)
-            add("implementation", Libraries.Compose.constraintLayout)
             add("implementation", Libraries.Compose.composeToolingPreview)
             add("debugImplementation", Libraries.Compose.composeTooling)
 

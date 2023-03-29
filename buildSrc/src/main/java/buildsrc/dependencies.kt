@@ -17,13 +17,13 @@ object Libraries {
     )
 
     object Gradle {
-        private const val version = "7.4.0"
+        private const val version = "7.4.2"
 
         const val gradlePlugin = "com.android.tools.build:gradle:$version"
     }
 
     object Kotlin {
-        private const val version = "1.8.0"
+        private const val version = "1.8.10"
 
         const val gradlePlugin = "org.jetbrains.kotlin:kotlin-gradle-plugin:$version"
     }
@@ -39,7 +39,7 @@ object Libraries {
     }
 
     object Hilt {
-        const val version = "2.44.2"
+        const val version = "2.45"
 
         const val gradlePlugin = "com.google.dagger:hilt-android-gradle-plugin:$version"
         const val hilt = "com.google.dagger:hilt-android:$version"
@@ -66,48 +66,53 @@ object Libraries {
     }
 
     object Compose {
-        private const val version = "1.4.0-alpha05"
-        private const val material3ComposeVersion = "1.0.1"
+        private const val bomVersion = "2023.03.00"
+        const val bom = "androidx.compose:compose-bom:$bomVersion"
 
-        const val activityCompose = "androidx.activity:activity-compose:1.6.1"
-        const val navigationCompose = "androidx.navigation:navigation-compose:2.5.3"
+        const val foundation = "androidx.compose.foundation:foundation"
+        const val foundationLayout = "androidx.compose.foundation:foundation-layout"
 
-        const val foundation = "androidx.compose.foundation:foundation:$version"
-        const val foundationLayout = "androidx.compose.foundation:foundation-layout:$version"
-        const val constraintLayout = "androidx.constraintlayout:constraintlayout-compose:1.0.1"
+        const val material3 = "androidx.compose.material3:material3"
+        const val material3WindowSizeClass = "androidx.compose.material3:material3-window-size-class"
 
+        const val material = "androidx.compose.material:material"
+        const val materialIcons = "androidx.compose.material:material-icons-core"
+        const val materialIconsExtended = "androidx.compose.material:material-icons-extended"
 
-        const val material3 = "androidx.compose.material3:material3:$material3ComposeVersion"
-        const val material3WindowSizeClass = "androidx.compose.material3:material3-window-size-class:$material3ComposeVersion"
-
-        const val material = "androidx.compose.material:material:$version"
-        const val materialIcons = "androidx.compose.material:material-icons-core:$version"
-        const val materialIconsExtended = "androidx.compose.material:material-icons-extended:$version"
-
-        const val composeTooling = "androidx.compose.ui:ui-tooling:$version"
-        const val composeToolingPreview = "androidx.compose.ui:ui-tooling-preview:$version"
+        const val composeTooling = "androidx.compose.ui:ui-tooling"
+        const val composeToolingPreview = "androidx.compose.ui:ui-tooling-preview"
 
         object Compiler {
-            const val version = "1.4.0"
+            const val version = "1.4.4"
         }
     }
 
+    object ComposeLibs {
+        private const val activityComposeVersion = "1.7.0"
+        private const val navigationComposeVersion = "2.5.3"
+        private const val constraintLayoutComposeVersion = "1.0.1"
+
+        const val activityCompose = "androidx.activity:activity-compose:$activityComposeVersion"
+        const val navigationCompose = "androidx.navigation:navigation-compose:$navigationComposeVersion"
+        const val constraintLayout = "androidx.constraintlayout:constraintlayout-compose:$constraintLayoutComposeVersion"
+    }
+
     object Mavericks {
-        const val version = "3.0.1"
+        const val version = "3.0.2"
 
         const val mavericksCompose = "com.airbnb.android:mavericks-compose:$version"
         const val mavericksHilt = "com.airbnb.android:mavericks-hilt:$version"
     }
 
     object Accompanist {
-        private const val version = "0.28.0"
+        private const val version = "0.30.0"
 
         const val accompanistNavigation = "com.google.accompanist:accompanist-navigation-animation:$version"
         const val systemUiController = "com.google.accompanist:accompanist-systemuicontroller:$version"
     }
 
     object Room {
-        private const val version = "2.5.0"
+        private const val version = "2.5.1"
 
         const val room = "androidx.room:room-ktx:$version"
         const val roomPaging = "androidx.room:room-paging:$version"
@@ -119,7 +124,7 @@ object Libraries {
     }
 
     object Coil {
-        private const val version = "2.2.2"
+        private const val version = "2.3.0"
 
         const val coil = "io.coil-kt:coil-compose:$version"
     }
@@ -137,7 +142,7 @@ object Libraries {
     }
 
     object Media3 {
-        private const val version = "1.0.0-beta03"
+        private const val version = "1.0.0"
 
         // For media playback using ExoPlayer
         const val exoplayer = "androidx.media3:media3-exoplayer:$version"
@@ -153,7 +158,7 @@ object Libraries {
     }
 
     object WorkManager {
-        private const val version = "2.7.1"
+        private const val version = "2.8.1"
 
         const val work = "androidx.work:work-runtime-ktx:$version"
 
@@ -172,7 +177,7 @@ object Libraries {
     }
 
     object Json {
-        private const val version = "1.4.0"
+        private const val version = "1.5.0"
 
         const val kotlinxSerializationJson = "org.jetbrains.kotlinx:kotlinx-serialization-json:$version"
     }
