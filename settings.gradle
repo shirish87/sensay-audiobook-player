@@ -1,5 +1,0 @@
-include ':config'
-include ':data'
-include ':lookup'
-include ':scanner'
-include ':app'
