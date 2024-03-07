@@ -63,6 +63,7 @@ import com.dotslashlabs.sensay.ui.theme.SpacerSystemBarsBottomPadding
 import data.entity.BookProgressWithBookAndChapters
 import kotlinx.coroutines.launch
 import logcat.logcat
+import java.time.Instant
 import kotlin.math.roundToInt
 
 object HomeScreen : AppScreen {
@@ -146,10 +147,11 @@ object HomeScreen : AppScreen {
         }
 
         DisposableEffect(nowPlayingViewModel) {
-            nowPlayingViewModel.setActive(true)
+            val isActiveStateToken = Instant.now()
+            nowPlayingViewModel.setActive(true, isActiveStateToken)
 
             onDispose {
-                nowPlayingViewModel.setActive(false)
+                nowPlayingViewModel.setActive(false, isActiveStateToken)
             }
         }
     }

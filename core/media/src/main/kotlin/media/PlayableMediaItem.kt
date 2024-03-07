@@ -109,7 +109,7 @@ data class PlayableMediaItem(
 
     @get:UnstableApi
     private val mediaMetadata: MediaMetadata
-        get() = MediaMetadata.CREATOR.fromBundle(metadata)
+        get() = MediaMetadata.fromBundle(metadata)
 
     val chapters: List<MediaItem>
         get() {

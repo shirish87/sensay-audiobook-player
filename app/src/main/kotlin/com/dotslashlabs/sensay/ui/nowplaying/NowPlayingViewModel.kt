@@ -34,6 +34,7 @@ import media.MediaPlayerState
 import media.MediaPlaylistState
 import media.service.MediaService
 import media.service.MediaServiceState
+import java.time.Instant
 
 
 data class NowPlayingViewState(
@@ -41,53 +42,15 @@ data class NowPlayingViewState(
     val playerState: Async<MediaPlayerState> = Uninitialized,
     val playlistState: Async<MediaPlaylistState> = Uninitialized,
     val isActive: Boolean = false,
+    val isActiveStateToken: Instant = Instant.now(),
 ) : MavericksState {
 
-//    val isReady = (playerState is Success || playerState is Fail)
-
     val isPlayerAttached: Boolean = (playerState is Success)
-
-//    private val isPlaylistAttached: Boolean = (playlistState is Success)
-
-//    val isPlayerReady: Boolean = (isPlayerAttached && isPlaylistAttached)
-
-//    private val playlistMediaItems = playlistState()?.mediaItems
-
-//    private val playlistMediaIds by lazy {
-//        playlistMediaItems?.map { it.mediaId } ?: emptyList()
-//    }
-
-//    private val currentMediaItemIndex = playerState()?.currentMediaItemIndex
-
-//    val currentMediaItem: MediaItem? = currentMediaItemIndex?.let { mediaItemIndex ->
-//        playlistMediaItems?.getOrNull(mediaItemIndex)
-//    }
-
-//    val isPlaylistEmpty: Boolean = (playlistMediaItems?.isEmpty() ?: true)
-
-//    val hasNext: Boolean = isPlayerReady &&
-//            currentMediaItemIndex?.let { mediaItemIndex ->
-//                playlistMediaItems?.getOrNull(mediaItemIndex + 1) != null
-//            } == true
-//
-//    val hasPrevious: Boolean = isPlayerReady &&
-//            currentMediaItemIndex?.let { mediaItemIndex ->
-//                playlistMediaItems?.getOrNull(mediaItemIndex - 1) != null
-//            } == true
-
-//    val sliderPosition: Float = if (playerState is Success) {
-//        playerState()?.let {
-//            if ((it.position ?: 0) > 0 && (it.duration ?: 0) > 0)
-//                it.position!!.toFloat().div(it.duration!!)
-//            else null
-//        } ?: 0f
-//    } else -1f
-
-//    val isSliderEnabled: Boolean = (sliderPosition >= 0f)
 
     fun isCurrent(playerViewState: PlayerViewState): Boolean {
         val playerMediaId = playerState()?.currentMediaId
         val mediaId = playerViewState.visibleMediaItem?.mediaId
+        logcat { "isCurrent($playerMediaId, $mediaId)" }
         return (playerMediaId != null && playerMediaId == mediaId)
     }
 }
@@ -102,7 +65,6 @@ class NowPlayingViewModel @AssistedInject constructor(
     initialState,
     bindConnection,
     mediaServiceComponentName,
-    context,
 ) {
 
     @UnstableApi
@@ -137,15 +99,20 @@ class NowPlayingViewModel @AssistedInject constructor(
         }
     }
 
-    fun setActive(active: Boolean, progressUpdateInterval: Long = 2000L) {
+    fun setActive(
+        active: Boolean,
+        isActiveStateToken: Instant,
+        progressUpdateInterval: Long = 2000L
+    ) = withState {
+        if (!active && it.isActiveStateToken != isActiveStateToken) return@withState
+
+        logcat { "setActive($active, $progressUpdateInterval)" }
         setState {
-            copy(isActive = active)
+            copy(isActive = active, isActiveStateToken = isActiveStateToken)
         }
 
-        withState {
-            logcat { "updatePlayProgress(${it.isActive})" }
-            updatePlayProgress(it.isActive, progressUpdateInterval)
-        }
+        logcat { "updatePlayProgress($active)" }
+        updatePlayProgress(active, progressUpdateInterval)
     }
 
     override suspend fun shouldUpdateProgress(): Boolean {

@@ -1,5 +1,6 @@
 package com.dotslashlabs.sensay.ui.common
 
+import android.annotation.SuppressLint
 import android.content.ComponentName
 import android.content.Context
 import android.content.ServiceConnection
@@ -37,8 +38,7 @@ import java.io.IOException
 abstract class BasePlayerViewModel<S : MavericksState>(
     initialState: S,
     private val bindConnection: BindConnection<MediaService>,
-    mediaServiceComponentName: ComponentName,
-    context: Context,
+    private val mediaServiceComponentName: ComponentName,
     private val progressUpdateInterval: Long = 1000,
 ) : MavericksViewModel<S>(initialState) {
 
@@ -112,8 +112,9 @@ abstract class BasePlayerViewModel<S : MavericksState>(
         }
     }
 
-    init {
+    fun initialize(context: Context) {
         bindConnection.connect(object : ServiceConnection {
+            @SuppressLint("RestrictedApi")
             override fun onServiceConnected(name: ComponentName?, binder: IBinder?) {
                 disconnectService(false)
 
@@ -161,6 +162,10 @@ abstract class BasePlayerViewModel<S : MavericksState>(
         })
     }
 
+    fun release() {
+        disconnectService(false)
+    }
+
     override fun onCleared() {
         disconnectService(false)
 
@@ -185,6 +190,7 @@ abstract class BasePlayerViewModel<S : MavericksState>(
 
     fun next() = player?.seekToNext()
 
+    @SuppressLint("RestrictedApi")
     suspend fun resolveBook(bookId: Long, chapterIndex: Int = 0): Async<PlayableMediaItem> {
         val controller = (player as? MediaController?)
             ?: return Fail(Exception("Player is not connected"))
@@ -232,6 +238,7 @@ abstract class BasePlayerViewModel<S : MavericksState>(
     ): ListenableFuture<SessionResult>? =
         (player as? MediaController)?.sendCustomCommand(command, args)
 
+    @SuppressLint("RestrictedApi")
     fun toggleBassBoost(isEnabled: Boolean) = viewModelScope.async {
         sendCustomCommand(
             AudioEffectCommands.BASS_BOOST.toCommand(),
@@ -239,6 +246,7 @@ abstract class BasePlayerViewModel<S : MavericksState>(
         )?.await()
     }
 
+    @SuppressLint("RestrictedApi")
     fun toggleReverb(isEnabled: Boolean) = viewModelScope.async {
         sendCustomCommand(
             AudioEffectCommands.REVERB.toCommand(),
@@ -246,6 +254,7 @@ abstract class BasePlayerViewModel<S : MavericksState>(
         )?.await()
     }
 
+    @SuppressLint("RestrictedApi")
     fun toggleSkipSilence(isEnabled: Boolean) = viewModelScope.async {
         sendCustomCommand(
             ExtraSessionCommands.SKIP_SILENCE.toCommand(),

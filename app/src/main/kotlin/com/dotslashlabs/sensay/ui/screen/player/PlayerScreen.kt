@@ -118,6 +118,9 @@ import compose.icons.tablericons.PlayerPlayFilled
 import compose.icons.tablericons.PlayerTrackNext
 import compose.icons.tablericons.PlayerTrackPrev
 import data.util.ContentDuration
+import dev.chrisbanes.haze.HazeState
+import dev.chrisbanes.haze.haze
+import dev.chrisbanes.haze.hazeChild
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collectLatest
@@ -127,6 +130,7 @@ import kotlinx.coroutines.withContext
 import logcat.logcat
 import media.MediaPlayerState
 import media.chapterIndex
+import java.time.Instant
 import kotlin.time.Duration.Companion.milliseconds
 
 
@@ -149,14 +153,6 @@ object PlayerScreen : AppScreen {
 
         val viewModel: PlayerViewModel = mavericksViewModel(backStackEntry, argsFactory = { args })
         val viewState by viewModel.collectAsState()
-
-        logcat { "${viewState.visibleMediaItem?.mediaMetadata?.toBundle()}" }
-        logcat { "title=${viewState.visibleMediaItem?.mediaMetadata?.title}" }
-        logcat { "artist=${viewState.visibleMediaItem?.mediaMetadata?.artist}" }
-        logcat { "albumTitle=${viewState.visibleMediaItem?.mediaMetadata?.albumTitle}" }
-        logcat { "albumArtist=${viewState.visibleMediaItem?.mediaMetadata?.albumArtist}" }
-        logcat { "composer=${viewState.visibleMediaItem?.mediaMetadata?.composer}" }
-        logcat { "conductor=${viewState.visibleMediaItem?.mediaMetadata?.conductor}" }
 
         var openBottomSheet by rememberSaveable { mutableStateOf(false) }
 
@@ -184,7 +180,9 @@ object PlayerScreen : AppScreen {
                                 contentDescription = "",
                             )
                         }
-                        IconButton(onClick = {}) {
+                        IconButton(onClick = {
+                            openBottomSheet = true
+                        }) {
                             Icon(
                                 imageVector = MaterialIcons.Bookmarks,
                                 contentDescription = "",
@@ -239,16 +237,19 @@ object PlayerScreen : AppScreen {
             viewState.visiblePlayerState()?.currentMediaId,
             nowPlayingViewState.playerState()?.currentMediaId,
         ) {
+            val isActiveStateToken = Instant.now()
 
             if (nowPlayingViewState.isPlayerAttached) {
                 if (nowPlayingViewState.isCurrent(viewState)) {
-                    nowPlayingViewModel.setActive(true, 1000L)
+                    nowPlayingViewModel.setActive(true, isActiveStateToken, 1000L)
                 } else {
-                    nowPlayingViewModel.setActive(false)
+                    nowPlayingViewModel.setActive(false, isActiveStateToken)
                 }
             }
 
-            onDispose {}
+            onDispose {
+                nowPlayingViewModel.setActive(false, isActiveStateToken)
+            }
         }
     }
 }
@@ -260,6 +261,7 @@ fun MainLandscape(
     viewState: PlayerViewState,
     nowPlayingViewModel: NowPlayingViewModel,
     nowPlayingViewState: NowPlayingViewState,
+    modifier: Modifier = Modifier,
 ) {
 
     val horizontalSpacing = 8.dp
@@ -288,7 +290,7 @@ fun MainLandscape(
     }
 
     Row(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState()),
         horizontalArrangement = spacedBy(horizontalSpacing, Alignment.CenterHorizontally),
@@ -387,6 +389,7 @@ fun MainPortrait(
     viewState: PlayerViewState,
     nowPlayingViewModel: NowPlayingViewModel,
     nowPlayingViewState: NowPlayingViewState,
+    modifier: Modifier = Modifier,
 ) {
 
     val verticalSpacing = 16.dp
@@ -416,7 +419,7 @@ fun MainPortrait(
     }
 
     Column(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState()),
         verticalArrangement = spacedBy(verticalSpacing, Alignment.Top),
@@ -501,9 +504,8 @@ fun MainPortrait(
 fun PlayerTitleRow(
     viewState: PlayerViewState,
     modifier: Modifier = Modifier,
+    labelBackgroundColor: Color = MaterialTheme.colorScheme.surface.copy(alpha = 0.85F),
 ) {
-
-    val labelBackgroundColor: Color = MaterialTheme.colorScheme.surface.copy(alpha = 0.85F)
 
     viewState.visibleMediaItem?.let { mediaItem ->
         Surface(
@@ -531,10 +533,10 @@ fun PlayerChapterCover(
     mediaItems: List<MediaItem>,
     listState: LazyListState,
     modifier: Modifier = Modifier,
+    labelBackgroundColor: Color = MaterialTheme.colorScheme.surface.copy(alpha = 0.85F),
 ) {
 
     val context = LocalContext.current
-    val labelBackgroundColor: Color = MaterialTheme.colorScheme.surface.copy(alpha = 0.85F)
 
     LazyRow(
         state = listState,
@@ -608,10 +610,10 @@ fun PlayerChapterRow(
     viewState: PlayerViewState,
     triggerLoading: () -> Unit,
     modifier: Modifier = Modifier,
+    labelBackgroundColor: Color = MaterialTheme.colorScheme.surface.copy(alpha = 0.15F),
 ) {
 
     val scope = rememberCoroutineScope()
-    val labelBackgroundColor: Color = MaterialTheme.colorScheme.surface.copy(alpha = 0.85F)
 
     val scrollToDefault: () -> Unit = {
         (currentMediaListIndex.value.takeIf { it != -1 } ?: currentChapterIndex)
@@ -622,101 +624,100 @@ fun PlayerChapterRow(
             }
     }
 
-    viewState.visibleMediaItem?.let { mediaItem ->
-        val chapterCount = mediaItem.mediaMetadata.totalTrackCount ?: 0
-        val chapterIndex = mediaItem.chapterIndex
+    val mediaItem = viewState.visibleMediaItem ?: return
+    val chapterCount = mediaItem.mediaMetadata.totalTrackCount ?: 0
+    val chapterIndex = mediaItem.chapterIndex
 
-        Row(
-            modifier = modifier
-                .height(80.dp)
-                .shadow(6.dp, shape = RoundedCornerShape(6.dp), clip = true)
-                .background(labelBackgroundColor),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically,
+    Row(
+        modifier = modifier
+            .height(80.dp)
+            .shadow(6.dp, shape = RoundedCornerShape(6.dp), clip = true)
+            .background(labelBackgroundColor),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+
+        IconButton(
+            modifier = Modifier
+                .weight(0.17F)
+                .fillMaxHeight(),
+            enabled = (chapterIndex in 1 until chapterCount),
+            onClick = {
+                scope.launch {
+                    val newIndex = chapterIndex - 1
+
+                    mediaItems.getOrNull(newIndex)?.let {
+                        triggerLoading()
+                        listState.animateScrollToItem(newIndex, 0)
+                    }
+                }
+            },
+        ) {
+            Icon(
+                imageVector = FeatherIcons.ChevronLeft,
+                contentDescription = null,
+            )
+        }
+
+        Box(
+            modifier = Modifier
+                .width(1.dp)
+                .fillMaxHeight(0.7F)
+                .background(
+                    color = if (mediaItem.mediaId == currentMediaId)
+                        MaterialTheme.colorScheme.background
+                    else labelBackgroundColor,
+                ),
+        )
+
+        Column(
+            modifier = Modifier
+                .weight(0.66F)
+                .fillMaxHeight()
+                .combinedClickable(onClick = {}, onLongClick = scrollToDefault)
+                .padding(16.dp),
+            verticalArrangement = Arrangement.SpaceEvenly,
         ) {
 
-            IconButton(
-                modifier = Modifier
-                    .weight(0.17F)
-                    .fillMaxHeight(),
-                enabled = (chapterIndex in 1 until chapterCount),
-                onClick = {
-                    scope.launch {
-                        val newIndex = chapterIndex - 1
-
-                        mediaItems.getOrNull(newIndex)?.let {
-                            triggerLoading()
-                            listState.animateScrollToItem(newIndex, 0)
-                        }
-                    }
-                },
-            ) {
-                Icon(
-                    imageVector = FeatherIcons.ChevronLeft,
-                    contentDescription = null,
+            AnimatedReveal(visible = !isLoading) {
+                Text(
+                    text = mediaItem.mediaMetadata.title.toString(),
+                    fontWeight = if (mediaItem.mediaId == currentMediaId)
+                        FontWeight.Bold
+                    else FontWeight.Normal,
                 )
             }
 
-            Box(
-                modifier = Modifier
-                    .width(1.dp)
-                    .fillMaxHeight(0.7F)
-                    .background(
-                        color = if (mediaItem.mediaId == currentMediaId)
-                            MaterialTheme.colorScheme.background
-                        else Color.Transparent,
-                    ),
+            AnimatedReveal(visible = !isLoading) {
+                Text(
+                    text = listOf(
+                        formatTime(mediaItem.clippingConfiguration.startPositionMs),
+                        formatTime(mediaItem.clippingConfiguration.endPositionMs),
+                    ).joinToString(" - "),
+                )
+            }
+        }
+
+        IconButton(
+            modifier = Modifier
+                .weight(0.17F)
+                .fillMaxHeight(),
+            enabled = (chapterIndex in 0 until chapterCount - 1),
+            onClick = {
+                scope.launch {
+                    val newIndex = chapterIndex + 1
+
+                    mediaItems.getOrNull(newIndex)?.let {
+                        triggerLoading()
+                        listState.animateScrollToItem(newIndex, 0)
+                    }
+                }
+            },
+        ) {
+            Icon(
+                imageVector = FeatherIcons.ChevronRight,
+                contentDescription = null,
             )
-
-            Column(
-                modifier = Modifier
-                    .weight(0.66F)
-                    .fillMaxHeight()
-                    .combinedClickable(onClick = {}, onLongClick = scrollToDefault)
-                    .padding(16.dp),
-                verticalArrangement = Arrangement.SpaceEvenly,
-            ) {
-
-                AnimatedReveal(visible = !isLoading) {
-                    Text(
-                        text = mediaItem.mediaMetadata.title.toString(),
-                        fontWeight = if (mediaItem.mediaId == currentMediaId)
-                            FontWeight.Bold
-                        else FontWeight.Normal,
-                    )
-                }
-
-                AnimatedReveal(visible = !isLoading) {
-                    Text(
-                        text = listOf(
-                            formatTime(mediaItem.clippingConfiguration.startPositionMs),
-                            formatTime(mediaItem.clippingConfiguration.endPositionMs),
-                        ).joinToString(" - "),
-                    )
-                }
-            }
-
-            IconButton(
-                modifier = Modifier
-                    .weight(0.17F)
-                    .fillMaxHeight(),
-                enabled = (chapterIndex in 0 until chapterCount - 1),
-                onClick = {
-                    scope.launch {
-                        val newIndex = chapterIndex + 1
-
-                        mediaItems.getOrNull(newIndex)?.let {
-                            triggerLoading()
-                            listState.animateScrollToItem(newIndex, 0)
-                        }
-                    }
-                },
-            ) {
-                Icon(
-                    imageVector = FeatherIcons.ChevronRight,
-                    contentDescription = null,
-                )
-            }
         }
     }
 }
@@ -755,33 +756,6 @@ fun BookLabel(
                     }
             }
         }
-}
-
-fun Modifier.shimmerEffect(): Modifier = composed {
-    var size by remember { mutableStateOf(IntSize.Zero) }
-    val transition = rememberInfiniteTransition(label = "shimmer")
-    val startOffsetX by transition.animateFloat(
-        initialValue = -2 * size.width.toFloat(),
-        targetValue = 2 * size.width.toFloat(),
-        animationSpec = infiniteRepeatable(
-            animation = tween(1000)
-        ),
-        label = "shimmer",
-    )
-
-    background(
-        brush = Brush.linearGradient(
-            colors = listOf(
-                Color(0xFFB8B5B5),
-                Color(0xFF8F8B8B),
-                Color(0xFFB8B5B5),
-            ),
-            start = Offset(startOffsetX, 0f),
-            end = Offset(startOffsetX + size.width.toFloat(), size.height.toFloat())
-        )
-    ).onGloballyPositioned {
-        size = it.size
-    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
