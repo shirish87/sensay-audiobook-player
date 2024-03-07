@@ -8,13 +8,14 @@ sdkMin = "29"
 sdkTarget = "34"
 
 androidDesugarJdkLibs = "2.0.4"
-androidGradlePlugin = "8.2.2"
+androidGradlePlugin = "8.3.0"
 androidxActivityCompose = "1.8.2"
 androidxAppcompat = "1.6.1"
-androidxComposeBom = "2024.02.00"
+androidxComposeBom = "2024.02.02"
 androidxDatastorePreferences = "1.0.0"
 androidxDocumentfile = "1.0.1"
-androidxHiltCompiler = "1.1.0"
+androidxGlance = "1.1.0-alpha01"
+androidxHiltCompiler = "1.2.0"
 androidxNavigationCompose = "2.7.7"
 androidxPalette = "1.0.0"
 androidxWorkManager = "2.9.0"
@@ -22,10 +23,11 @@ coil = "2.4.0"
 constraintlayoutCompose = "1.0.1"
 coreKtx = "1.12.0"
 espressoCore = "3.5.1"
+haze = "0.5.3"
 hilt = "2.48"
 hiltCompiler = "2.48"
 hiltTest = "2.48"
-hiltWork = "1.1.0"
+hiltWork = "1.2.0"
 javaxInject = "1"
 jsoup = "1.14.2"
 junit = "4.13.2"
@@ -39,7 +41,7 @@ lifecycleRuntimeKtx = "2.7.0"
 logcat = "0.1"
 material = "1.11.0"
 mavericks = "3.0.9"
-media3 = "1.2.1"
+media3 = "1.3.0"
 media3ExtractorM4b = "1.0.5"
 moshi = "1.15.0"
 okhttp = "4.12.0"
@@ -66,9 +68,12 @@ androidx-core-ktx = { module = "androidx.core:core-ktx", version.ref = "coreKtx"
 androidx-datastore-preferences = { module = "androidx.datastore:datastore-preferences", version.ref = "androidxDatastorePreferences" }
 androidx-documentfile = { module = "androidx.documentfile:documentfile", version.ref = "androidxDocumentfile" }
 androidx-espresso-core = { module = "androidx.test.espresso:espresso-core", version.ref = "espressoCore" }
+androidx-glance = { module = "androidx.glance:glance", version.ref = "androidxGlance" }
+androidx-glance-appwidget = { module = "androidx.glance:glance-appwidget", version.ref = "androidxGlance" }
 androidx-hilt-compiler = { module = "androidx.hilt:hilt-compiler", version.ref = "androidxHiltCompiler" }
 androidx-junit = { module = "androidx.test.ext:junit", version.ref = "junitVersion" }
 androidx-lifecycle-runtime-ktx = { module = "androidx.lifecycle:lifecycle-runtime-ktx", version.ref = "lifecycleRuntimeKtx" }
+androidx-media3-ui = { module = "androidx.media3:media3-ui", version.ref = "media3" }
 #androidx-media3-datasource-okhttp = { module = "androidx.media3:media3-datasource-okhttp", version.ref = "media3" }
 androidx-media3-exoplayer = { module = "androidx.media3:media3-exoplayer", version.ref = "media3" }
 androidx-media3-exoplayer-workmanager = { module = "androidx.media3:media3-exoplayer-workmanager", version.ref = "media3" }
@@ -78,6 +83,7 @@ androidx-navigation-compose = { module = "androidx.navigation:navigation-compose
 androidx-palette = { module = "androidx.palette:palette-ktx", version.ref = "androidxPalette" }
 androidx-work-manager = { module = "androidx.work:work-runtime-ktx", version.ref = "androidxWorkManager" }
 coil = { module = "io.coil-kt:coil-compose", version.ref = "coil" }
+haze = { module = "dev.chrisbanes.haze:haze", version.ref = "haze" }
 hilt = { module = "com.google.dagger:hilt-android", version.ref = "hilt" }
 hilt-compiler = { module = "com.google.dagger:hilt-android-compiler", version.ref = "hiltCompiler" }
 hilt-test = { module = "com.google.dagger:hilt-android-testing", version.ref = "hiltTest" }
@@ -113,7 +119,6 @@ android-library = { id = "com.android.library", version.ref = "androidGradlePlug
 hilt = { id = "com.google.dagger.hilt.android", version.ref = "hilt" }
 kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlinAndroid" }
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlinAndroid" }
-#kotlin-kapt = { id = "org.jetbrains.kotlin.kapt", version.ref = "kotlinAndroid" }
 kotlin-ksp = { id = "com.google.devtools.ksp", version.ref = "kotlinKsp" }
 kotlin-serialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlinAndroid" }
 kotlin-parcelize = { id = "org.jetbrains.kotlin.plugin.parcelize", version.ref = "kotlinAndroid" }
